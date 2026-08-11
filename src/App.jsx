@@ -279,32 +279,32 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   const meshRef = useRef();
   const matRef = useRef();
   
-  const targetPositions = useMemo(() => new Float32Array(count * 3), [count]);
-  const currentPositions = useMemo(() => new Float32Array(count * 3), [count]);
-  const colors = useMemo(() => new Float32Array(count * 3), [count]);
-  
-  useEffect(() => {
-    // A standard html-panel in our 3D space is roughly 22 wide by 32 high
+  const { targetPositions, currentPositions, colors } = useMemo(() => {
+    const tPos = new Float32Array(count * 3);
+    const cPos = new Float32Array(count * 3);
+    const cols = new Float32Array(count * 3);
+    
     for(let i = 0; i < count; i++) {
-      targetPositions[i*3] = (Math.random() - 0.5) * 22;
-      targetPositions[i*3+1] = (Math.random() - 0.5) * 32;
-      targetPositions[i*3+2] = (Math.random() - 0.5) * 2;
+      tPos[i*3] = (Math.random() - 0.5) * 22;
+      tPos[i*3+1] = (Math.random() - 0.5) * 32;
+      tPos[i*3+2] = (Math.random() - 0.5) * 2;
       
       // Start scattered high up
-      currentPositions[i*3] = targetPositions[i*3] + (Math.random() - 0.5) * 40;
-      currentPositions[i*3+1] = targetPositions[i*3+1] + 30 + Math.random() * 40;
-      currentPositions[i*3+2] = targetPositions[i*3+2] + (Math.random() - 0.5) * 30;
+      cPos[i*3] = tPos[i*3] + (Math.random() - 0.5) * 40;
+      cPos[i*3+1] = tPos[i*3+1] + 30 + Math.random() * 40;
+      cPos[i*3+2] = tPos[i*3+2] + (Math.random() - 0.5) * 30;
       
       const r = Math.random();
       if(r > 0.6) {
-        colors[i*3] = 0; colors[i*3+1] = 0; colors[i*3+2] = 0; // Black
+        cols[i*3] = 0; cols[i*3+1] = 0; cols[i*3+2] = 0; // Black
       } else if (r > 0.3) {
-        colors[i*3] = 0.62; colors[i*3+1] = 0.12; colors[i*3+2] = 0.94; // Purple
+        cols[i*3] = 0.62; cols[i*3+1] = 0.12; cols[i*3+2] = 0.94; // Purple
       } else {
-        colors[i*3] = 0.8; colors[i*3+1] = 0.5; colors[i*3+2] = 1.0; // Light Purple
+        cols[i*3] = 0.8; cols[i*3+1] = 0.5; cols[i*3+2] = 1.0; // Light Purple
       }
     }
-  }, [count, targetPositions, currentPositions, colors]);
+    return { targetPositions: tPos, currentPositions: cPos, colors: cols };
+  }, [count]);
 
   useFrame((state, delta) => {
     if (!meshRef.current || !matRef.current || materialized) return;
