@@ -177,7 +177,7 @@ const HorizonTrees = () => {
 
 const VoidShapes = () => {
   const group = useRef();
-  const count = 55;
+  const count = 30;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   
   const shapesData = useMemo(() => {
@@ -229,7 +229,7 @@ const VoidShapes = () => {
 };
 
 const AmbientParticles = () => {
-  const count = 2000;
+  const count = 600;
   const mesh = useRef();
   const matRef = useRef();
   
@@ -383,7 +383,7 @@ const ReactiveFloor = () => {
   
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 0]}>
-      <planeGeometry args={[300, 300, 64, 64]} />
+      <planeGeometry args={[300, 300, 32, 32]} />
       <meshBasicMaterial color="#050000" wireframe transparent opacity={0.15} />
     </mesh>
   );
@@ -509,7 +509,7 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 // ═══════════════════════════════════════════════════════════
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
-  const count = 1500;
+  const count = 350;
   const meshRef = useRef();
   const matRef = useRef();
   
