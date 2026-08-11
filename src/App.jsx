@@ -238,19 +238,15 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   
   useFrame((state, delta) => {
     if (groupRef.current) {
-      if (playing && window.introTime && performance.now() - window.introTime > 3000 + data.index * 150) {
+      if (playing && window.introTime && performance.now() - window.introTime > 500 + data.index * 150) {
         spawnRef.current = THREE.MathUtils.lerp(spawnRef.current, 1, 4 * delta);
       }
       
-      const floatY = Math.sin(state.clock.elapsedTime * 2 + data.index) * 1.0;
+      const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5; // Slower, softer float
       const dropY = (1 - spawnRef.current) * 40;
       groupRef.current.position.y = floatY + dropY;
       
-      const isTarget = activeId === data.id;
-      const isHovered = window.isHoveringCard;
-      const bassScale = (isTarget || isHovered) ? 0 : audioState.bass * 0.02;
-      const scale = spawnRef.current * (1 + bassScale);
-      groupRef.current.scale.set(scale, scale, scale);
+      groupRef.current.scale.set(spawnRef.current, spawnRef.current, spawnRef.current); // No more bass jitter on cards
     }
   });
 
@@ -335,22 +331,22 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       
       if (activeSection) {
         // ZOOMED IN (CARD SELECTED)
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 6 * delta);
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
-        const targetCamPos = new THREE.Vector3(-4, -6, R + 14);
-        state.camera.position.lerp(targetCamPos, 5 * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(2, 4, R), 5 * delta);
+        const targetCamPos = new THREE.Vector3(0, -2, R + 14); // Cleaner straight-on view
+        state.camera.position.lerp(targetCamPos, 6 * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), 6 * delta);
         
       } else {
         // OVERVIEW (CHARACTER SELECT PANNING)
         if (!window.isHoveringCard) {
-          targetRot.current = -(state.pointer.x * Math.PI * 1.5); 
+          targetRot.current = -(state.pointer.x * Math.PI * 1.0); // Tighter spin limit to feel more solid
         }
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 6 * delta);
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
-        state.camera.position.lerp(targetCamPos, 5 * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 5 * delta);
+        state.camera.position.lerp(targetCamPos, 6 * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * delta);
       }
     }
     
@@ -381,10 +377,10 @@ function App() {
     playAudio();
     setStarted(true);
     
-    // Spawn the ASA text exactly when the intro dive finishes (3.5s)
+    // Spawn the ASA text as the camera dive starts (0.5s)
     setTimeout(() => {
       setIntroTextVisible(true);
-    }, 3500);
+    }, 500);
   };
 
   return (
@@ -410,8 +406,8 @@ function App() {
         }}>
           <h1 style={{
             fontSize: '12rem',
-            color: 'rgba(255, 255, 255, 0.1)',
-            textShadow: '0 0 40px rgba(160, 32, 240, 0.3)',
+            color: 'rgba(255, 255, 255, 0.03)',
+            textShadow: '0 0 40px rgba(160, 32, 240, 0.1)',
             margin: 0,
             animation: 'safe-glitch 0.5s infinite',
             mixBlendMode: 'screen'
