@@ -878,22 +878,10 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
 // ═══════════════════════════════════════════════════════════
 
 const Effects = () => {
-  const bloomRef = useRef();
-  const vignetteRef = useRef();
-  
-  useFrame(() => {
-    if (bloomRef.current) {
-      bloomRef.current.intensity = 0.8 + audioState.smoothBass * 4.5;
-    }
-    if (vignetteRef.current) {
-      vignetteRef.current.darkness = 1.0 + audioState.smoothBass * 0.6;
-    }
-  });
-  
   return (
     <EffectComposer>
-      <Bloom ref={bloomRef} intensity={1.5} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
-      <Vignette ref={vignetteRef} eskil={false} offset={0.1} darkness={1.0} />
+      <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.5} />
+      <Vignette eskil={false} offset={0.1} darkness={1.2} />
     </EffectComposer>
   );
 };
