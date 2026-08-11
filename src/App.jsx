@@ -246,7 +246,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const dropY = (1 - spawnRef.current) * 40;
       groupRef.current.position.y = floatY + dropY;
       
-      const bassScale = (activeId === data.id ? audioState.bass * 0.1 : audioState.bass * 0.02);
+      const isTarget = activeId === data.id;
+      const isHovered = window.isHoveringCard;
+      const bassScale = (isTarget || isHovered) ? 0 : audioState.bass * 0.02;
       const scale = spawnRef.current * (1 + bassScale);
       groupRef.current.scale.set(scale, scale, scale);
     }
@@ -303,7 +305,8 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   }, [activeSection, carouselRef]);
 
   useFrame((state, delta) => {
-    if (audioState.bass > 0.6) {
+    // Only shake if not looking at a specific card and not hovering
+    if (audioState.bass > 0.6 && !activeSection && !window.isHoveringCard) {
       const shakeAmt = (audioState.bass - 0.6) * 2.0;
       state.camera.position.x += (Math.random() - 0.5) * shakeAmt;
       state.camera.position.y += (Math.random() - 0.5) * shakeAmt;
@@ -378,10 +381,10 @@ function App() {
     playAudio();
     setStarted(true);
     
+    // Spawn the ASA text exactly when the intro dive finishes (3.5s)
     setTimeout(() => {
       setIntroTextVisible(true);
-      setTimeout(() => setIntroTextVisible(false), 2000);
-    }, 1000);
+    }, 3500);
   };
 
   return (
@@ -406,11 +409,11 @@ function App() {
           pointerEvents: 'none'
         }}>
           <h1 style={{
-            fontSize: '10rem',
-            color: '#fff',
-            textShadow: '0 0 30px #ffffff, 5px 5px 0 #a020f0',
+            fontSize: '12rem',
+            color: 'rgba(255, 255, 255, 0.1)',
+            textShadow: '0 0 40px rgba(160, 32, 240, 0.3)',
             margin: 0,
-            animation: 'safe-glitch 0.1s infinite',
+            animation: 'safe-glitch 0.5s infinite',
             mixBlendMode: 'screen'
           }}>
             ASA
