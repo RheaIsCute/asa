@@ -330,11 +330,19 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   }, [activeSection, carouselRef]);
 
   useFrame((state, delta) => {
-    // Only shake if not looking at a specific card and not hovering
-    if (audioState.bass > 0.6 && !activeSection && !window.isHoveringCard) {
-      const shakeAmt = (audioState.bass - 0.6) * 2.0;
-      state.camera.position.x += (Math.random() - 0.5) * shakeAmt;
-      state.camera.position.y += (Math.random() - 0.5) * shakeAmt;
+    // Variable camera shake based on state
+    if (audioState.bass > 0.6) {
+      let shakeAmt = 0;
+      if (!activeSection && !window.isHoveringCard) {
+        shakeAmt = (audioState.bass - 0.6) * 2.0; // Intense overview shake
+      } else if (activeSection) {
+        shakeAmt = (audioState.bass - 0.6) * 0.7; // Mild impact when zoomed in
+      }
+      
+      if (shakeAmt > 0) {
+        state.camera.position.x += (Math.random() - 0.5) * shakeAmt;
+        state.camera.position.y += (Math.random() - 0.5) * shakeAmt;
+      }
     }
 
     if (playing && !introFinished.current) {
@@ -362,14 +370,14 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         // ZOOMED IN (CARD SELECTED)
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
-        const targetCamPos = new THREE.Vector3(0, -2, R + 14); // Cleaner straight-on view
+        const targetCamPos = new THREE.Vector3(0, -2, R + 25); // Backed up to prevent pixelation
         state.camera.position.lerp(targetCamPos, 6 * delta);
         lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), 6 * delta);
         
       } else {
         // OVERVIEW (CHARACTER SELECT PANNING)
         if (!window.isHoveringCard) {
-          targetRot.current = -(state.pointer.x * Math.PI * 1.0); // Tighter spin limit to feel more solid
+          targetRot.current = (state.pointer.x * Math.PI * 1.0); // Follows mouse instead of fleeing
         }
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
