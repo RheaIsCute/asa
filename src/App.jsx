@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
 
@@ -880,8 +880,6 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
 const Effects = () => {
   const bloomRef = useRef();
   const vignetteRef = useRef();
-  const chromaRef = useRef();
-  const chromaOffset = useMemo(() => new THREE.Vector2(0.001, 0.001), []);
   
   useFrame(() => {
     if (bloomRef.current) {
@@ -890,16 +888,11 @@ const Effects = () => {
     if (vignetteRef.current) {
       vignetteRef.current.darkness = 1.0 + audioState.smoothBass * 0.6;
     }
-    if (chromaRef.current && chromaRef.current.offset) {
-      const off = audioState.smoothBass * 0.012;
-      chromaRef.current.offset.set(off, off);
-    }
   });
   
   return (
     <EffectComposer>
       <Bloom ref={bloomRef} intensity={1.5} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
-      <ChromaticAberration ref={chromaRef} offset={chromaOffset} />
       <Vignette ref={vignetteRef} eskil={false} offset={0.1} darkness={1.0} />
     </EffectComposer>
   );
