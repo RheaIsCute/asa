@@ -339,23 +339,9 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
 };
 
 const Effects = () => {
-  const chromRef = useRef();
-  const bloomRef = useRef();
-  
-  useFrame(() => {
-    if (chromRef.current) {
-      const offset = 0.001 + audioState.bass * 0.03;
-      chromRef.current.offset.setScalar(offset);
-    }
-    if (bloomRef.current) {
-      bloomRef.current.intensity = 1.2 + audioState.bass * 3.0;
-    }
-  });
-
   return (
     <EffectComposer>
-      <Bloom ref={bloomRef} luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.5} />
-      <ChromaticAberration ref={chromRef} offset={[0.002, 0.002]} />
+      <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.5} />
       <Vignette eskil={false} offset={0.1} darkness={1.2} />
     </EffectComposer>
   );
