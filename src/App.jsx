@@ -319,7 +319,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         
         // Scanner moves down over 0.8 seconds
         const progress = Math.min((timeSinceIntro - startTime) / 800, 1);
-        const scanY = 50 - progress * 80;
+        const scanY = 20 - progress * 40;
         
         for(let i = 0; i < count; i++) {
            const targetY = targetPositions[i*3+1];
