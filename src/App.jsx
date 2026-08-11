@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, useTexture, Text } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Html, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
@@ -261,31 +261,105 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
   };
 });
 
+const CardParticles = ({ materialized, playing, dataIndex }) => {
+  const count = 1500;
+  const meshRef = useRef();
+  
+  const targetPositions = useMemo(() => new Float32Array(count * 3), [count]);
+  const currentPositions = useMemo(() => new Float32Array(count * 3), [count]);
+  const colors = useMemo(() => new Float32Array(count * 3), [count]);
+  
+  useEffect(() => {
+    // A standard html-panel in our 3D space is roughly 22 wide by 32 high
+    for(let i = 0; i < count; i++) {
+      targetPositions[i*3] = (Math.random() - 0.5) * 22;
+      targetPositions[i*3+1] = (Math.random() - 0.5) * 32;
+      targetPositions[i*3+2] = (Math.random() - 0.5) * 2;
+      
+      // Start scattered high up
+      currentPositions[i*3] = targetPositions[i*3] + (Math.random() - 0.5) * 40;
+      currentPositions[i*3+1] = targetPositions[i*3+1] + 30 + Math.random() * 40;
+      currentPositions[i*3+2] = targetPositions[i*3+2] + (Math.random() - 0.5) * 30;
+      
+      const r = Math.random();
+      if(r > 0.6) {
+        colors[i*3] = 0; colors[i*3+1] = 0; colors[i*3+2] = 0; // Black
+      } else if (r > 0.3) {
+        colors[i*3] = 0.62; colors[i*3+1] = 0.12; colors[i*3+2] = 0.94; // Purple
+      } else {
+        colors[i*3] = 0.8; colors[i*3+1] = 0.5; colors[i*3+2] = 1.0; // Light Purple
+      }
+    }
+  }, [count, targetPositions, currentPositions, colors]);
+
+  useFrame((state, delta) => {
+    if (!meshRef.current || materialized) return;
+    
+    if (playing && window.introTime) {
+      const timeSinceIntro = performance.now() - window.introTime;
+      const startTime = 1000 + dataIndex * 250; // stagger spawn
+      
+      if (timeSinceIntro > startTime) {
+        const positions = meshRef.current.geometry.attributes.position.array;
+        // Scanner moves down from y=50 to y=-30 over ~1.2 seconds
+        const scanY = 50 - ((timeSinceIntro - startTime) / 1200) * 80;
+        
+        for(let i = 0; i < count; i++) {
+           const targetY = targetPositions[i*3+1];
+           if (targetY > scanY) {
+             // Snap to target rectangle
+             positions[i*3] = THREE.MathUtils.lerp(positions[i*3], targetPositions[i*3], 15 * delta);
+             positions[i*3+1] = THREE.MathUtils.lerp(positions[i*3+1], targetPositions[i*3+1], 15 * delta);
+             positions[i*3+2] = THREE.MathUtils.lerp(positions[i*3+2], targetPositions[i*3+2], 15 * delta);
+           } else {
+             // Let them float down gently before snapping
+             positions[i*3+1] -= delta * 5;
+           }
+        }
+        meshRef.current.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+  });
+
+  if (materialized) return null; // Unmount completely
+
+  return (
+    <points ref={meshRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.3} vertexColors transparent opacity={0.8} />
+    </points>
+  );
+};
+
 const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   const groupRef = useRef();
-  const spawnRef = useRef(0);
+  const [materialized, setMaterialized] = useState(false);
   
   useFrame((state, delta) => {
     if (groupRef.current) {
-      if (playing && window.introTime && performance.now() - window.introTime > 500 + data.index * 150) {
-        spawnRef.current = THREE.MathUtils.lerp(spawnRef.current, 1, 4 * delta);
+      const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
+      groupRef.current.position.y = floatY;
+      
+      // Card appears fully after materialization finishes (~2.2s after introTime)
+      if (playing && !materialized && window.introTime) {
+        if (performance.now() - window.introTime > 2200 + data.index * 250) {
+          setMaterialized(true);
+        }
       }
-      
-      const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5; // Slower, softer float
-      const dropY = (1 - spawnRef.current) * 40;
-      groupRef.current.position.y = floatY + dropY;
-      
-      groupRef.current.scale.set(spawnRef.current, spawnRef.current, spawnRef.current); // No more bass jitter on cards
     }
   });
 
   const isActive = activeId === data.id;
 
   return (
-    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]} scale={[0,0,0]}>
+    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
+      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} />
       <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
         <div 
-          className={`html-panel ${isActive ? 'active' : ''}`}
+          className={`html-panel ${isActive ? 'active' : ''} ${materialized ? 'materialized' : ''}`}
           onClick={() => { if (!isActive) onClick(data.id) }}
           onMouseEnter={() => { window.isHoveringCard = true; }}
           onMouseLeave={() => { window.isHoveringCard = false; }}
@@ -309,6 +383,44 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   const startTime = useRef(0);
   const targetRot = useRef(0);
   
+  const dragState = useRef({ isDragging: false, lastX: 0, rotVelocity: 0, currentRot: 0 });
+
+  useEffect(() => {
+    const handleDown = (e) => {
+      dragState.current.isDragging = true;
+      dragState.current.lastX = e.clientX;
+      dragState.current.rotVelocity = 0;
+    };
+    const handleMove = (e) => {
+      if (dragState.current.isDragging) {
+        const deltaX = e.clientX - dragState.current.lastX;
+        dragState.current.lastX = e.clientX;
+        const rotDelta = deltaX * 0.003; 
+        dragState.current.currentRot += rotDelta;
+        dragState.current.rotVelocity = rotDelta;
+      }
+    };
+    const handleUp = () => {
+      dragState.current.isDragging = false;
+    };
+    const handleWheel = (e) => {
+      const rotDelta = -e.deltaY * 0.001;
+      dragState.current.currentRot += rotDelta;
+      dragState.current.rotVelocity = rotDelta;
+    };
+    
+    window.addEventListener('pointerdown', handleDown);
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('wheel', handleWheel);
+    return () => {
+      window.removeEventListener('pointerdown', handleDown);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
   useEffect(() => {
     if (playing && startTime.current === 0) {
       startTime.current = performance.now();
@@ -325,7 +437,9 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       let diff = (-target - current) % (Math.PI * 2);
       if (diff < -Math.PI) diff += Math.PI * 2;
       if (diff > Math.PI) diff -= Math.PI * 2;
+      
       targetRot.current = current + diff;
+      dragState.current.currentRot = targetRot.current; // Sync drag state to snap
     }
   }, [activeSection, carouselRef]);
 
@@ -375,11 +489,14 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), 6 * delta);
         
       } else {
-        // OVERVIEW (CHARACTER SELECT PANNING)
-        if (!window.isHoveringCard) {
-          targetRot.current = (state.pointer.x * Math.PI * 1.0); // Follows mouse instead of fleeing
+        // OVERVIEW (DRAG TO SPIN)
+        if (!dragState.current.isDragging && Math.abs(dragState.current.rotVelocity) > 0.0001) {
+           dragState.current.currentRot += dragState.current.rotVelocity;
+           dragState.current.rotVelocity *= 0.95; // friction
         }
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
+        
+        targetRot.current = dragState.current.currentRot;
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
         state.camera.position.lerp(targetCamPos, 6 * delta);

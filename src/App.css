@@ -70,11 +70,11 @@ body, html {
 }
 
 @keyframes safe-glitch {
-  0% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #0ff; }
-  25% { transform: translate(-1px, 1px); text-shadow: -2px 0 var(--accent), 2px 0 #0ff; }
-  50% { transform: translate(1px, -1px); text-shadow: 2px 0 var(--accent), -1px 0 #0ff; }
-  75% { transform: translate(1px, 1px); text-shadow: -1px 0 var(--accent), 1px 0 #0ff; }
-  100% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #0ff; }
+  0% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #000; }
+  25% { transform: translate(-1px, 1px); text-shadow: -2px 0 var(--accent), 2px 0 rgba(160, 32, 240, 0.5); }
+  50% { transform: translate(1px, -1px); text-shadow: 2px 0 var(--accent), -1px 0 rgba(0, 0, 0, 0.8); }
+  75% { transform: translate(1px, 1px); text-shadow: -1px 0 var(--accent), 1px 0 rgba(160, 32, 240, 0.3); }
+  100% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #000; }
 }
 
 /* UI Overlay */
@@ -128,9 +128,14 @@ body, html {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: border-color 0.3s, background 0.3s;
+  transition: border-color 0.3s, background 0.3s, opacity 0.5s ease-out;
+  opacity: 0; /* Starts hidden until materialized */
   overflow: hidden;
   position: relative;
+}
+
+.html-panel.materialized {
+  opacity: 1;
 }
 
 .html-panel:hover {
