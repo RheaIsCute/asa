@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 :root {
-  --primary: #cc1111;
+  --primary: #ffffff;
+  --accent: #cc1111;
   --bg-color: #050505;
   --text-main: #ffffff;
   --text-muted: #888888;
@@ -34,7 +35,7 @@ body, html {
   justify-content: center;
   align-items: center;
   background-color: #000;
-  transition: opacity 1s ease-in-out;
+  transition: opacity 0.5s ease-out;
   cursor: pointer;
 }
 
@@ -54,9 +55,9 @@ body, html {
 }
 
 @keyframes pulseAvatar {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(204, 17, 17, 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(204, 17, 17, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(204, 17, 17, 0); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
 
 .enter-text {
@@ -65,16 +66,15 @@ body, html {
   font-weight: 700;
   color: #fff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  animation: glitch-anim 2s infinite linear alternate-reverse;
+  animation: safe-glitch 0.2s infinite;
 }
 
-@keyframes glitch-anim {
-  0% { clip-path: inset(10% 0 30% 0); transform: translate(-2px, 2px); }
-  20% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
-  40% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, 2px); }
-  60% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
-  80% { clip-path: inset(20% 0 70% 0); transform: translate(-2px, 2px); }
-  100% { clip-path: inset(50% 0 20% 0); transform: translate(2px, -2px); }
+@keyframes safe-glitch {
+  0% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #0ff; }
+  25% { transform: translate(-1px, 1px); text-shadow: -2px 0 var(--accent), 2px 0 #0ff; }
+  50% { transform: translate(1px, -1px); text-shadow: 2px 0 var(--accent), -1px 0 #0ff; }
+  75% { transform: translate(1px, 1px); text-shadow: -1px 0 var(--accent), 1px 0 #0ff; }
+  100% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #0ff; }
 }
 
 /* UI Overlay */
@@ -98,7 +98,7 @@ body, html {
   justify-content: center;
   gap: 2px;
   padding: 0 20px;
-  opacity: 0.8;
+  opacity: 0.5;
   mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
   -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
 }
@@ -113,88 +113,122 @@ body, html {
   border-radius: 2px 2px 0 0;
 }
 
-/* Navigation Overlay */
-.nav-container {
+/* Back Button Overlay */
+.back-btn {
   position: absolute;
   top: 40px;
-  right: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  pointer-events: auto;
-}
-
-.nav-btn {
+  left: 40px;
   background: transparent;
-  border: none;
-  color: var(--text-muted);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 10px 20px;
   font-family: 'Space Mono', monospace;
-  font-size: 1rem;
-  text-align: right;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s;
+  pointer-events: auto;
+  transition: all 0.2s ease-out;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  backdrop-filter: blur(5px);
+  background: rgba(0,0,0,0.5);
+}
+
+.back-btn:hover {
+  background: var(--primary);
+  color: #000;
+  box-shadow: 0 0 15px var(--primary);
+}
+
+/* HTML overlays for 3D objects - Character Selection Cards */
+.html-panel {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 30px;
+  color: var(--text-main);
+  width: 320px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  overflow: hidden;
   position: relative;
 }
 
-.nav-btn:hover, .nav-btn.active {
-  color: var(--text-main);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+.html-panel:hover {
+  border-color: #fff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+  background: rgba(10, 10, 10, 0.8);
 }
 
-.nav-btn::before {
-  content: '>';
-  position: absolute;
-  left: -20px;
-  opacity: 0;
-  color: var(--primary);
-  transition: all 0.3s;
-}
-
-.nav-btn.active::before {
-  opacity: 1;
-  left: -15px;
-}
-
-/* HTML overlays for 3D objects */
-.html-panel {
-  background: rgba(10, 10, 10, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 30px;
-  border-left: 3px solid var(--primary);
-  color: var(--text-main);
-  width: 350px;
-  pointer-events: auto;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+.html-panel.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 40px rgba(204, 17, 17, 0.4);
+  background: rgba(5, 5, 5, 0.9);
+  cursor: default;
 }
 
 .panel-title {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin: 0 0 20px 0;
+  margin: 0;
   color: var(--primary);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+.html-panel.active .panel-title {
+  top: 30px;
+  transform: translate(-50%, 0);
+  font-size: 1.4rem;
+  color: var(--accent);
+  text-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding-bottom: 10px;
+  width: calc(100% - 60px);
+}
+
+.panel-content-wrapper {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin-top: 60px;
+  pointer-events: none;
+}
+
+.html-panel.active .panel-content-wrapper {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .panel-content {
   font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  color: #ccc;
+  color: #ddd;
 }
 
 .panel-content a {
-  color: var(--primary);
+  color: var(--accent);
   text-decoration: none;
   transition: all 0.2s;
+  font-weight: bold;
 }
 
 .panel-content a:hover {
   text-decoration: underline;
-  text-shadow: 0 0 8px var(--primary);
+  text-shadow: 0 0 8px var(--accent);
 }
