@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, useTexture, CameraControls, Text } from '@react-three/drei';
+import { Html, useTexture, Text } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
@@ -261,7 +261,7 @@ const FloatingPanel = ({ data, activeId, onClick }) => {
 };
 
 const SceneController = ({ activeSection, playing, carouselRef }) => {
-  const controlsRef = useRef();
+  const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
   const startTime = useRef(0);
   const targetRot = useRef(0);
@@ -287,8 +287,6 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   }, [activeSection, carouselRef]);
 
   useFrame((state, delta) => {
-    if (!controlsRef.current) return;
-    
     if (audioState.bass > 0.7) {
       const shakeAmt = (audioState.bass - 0.7) * 0.8;
       state.camera.position.x += (Math.random() - 0.5) * shakeAmt;
@@ -306,7 +304,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         const targetPos = new THREE.Vector3(0, 0, 60);
         
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
-        controlsRef.current.setTarget(0, 0, 0, false);
+        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 5 * delta);
       } else {
         introFinished.current = true;
       }
@@ -321,7 +319,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         state.camera.position.lerp(targetCamPos, 5 * delta);
         
         // Look slightly up and right at the card (which is at [0,0,R])
-        controlsRef.current.setTarget(2, 4, R, false);
+        lookAtPos.current.lerp(new THREE.Vector3(2, 4, R), 5 * delta);
         
       } else {
         // OVERVIEW (CHARACTER SELECT PANNING)
@@ -330,21 +328,14 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
         state.camera.position.lerp(targetCamPos, 5 * delta);
-        controlsRef.current.setTarget(0, 0, 0, false);
+        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 5 * delta);
       }
     }
+    
+    state.camera.lookAt(lookAtPos.current);
   });
 
-  return (
-    <CameraControls 
-      ref={controlsRef} 
-      makeDefault 
-      minDistance={10}
-      maxDistance={200}
-      mouseButtons={{ left: 0, middle: 0, right: 0 }}
-      touches={{ one: 0, two: 0, three: 0 }}
-    />
-  );
+  return null;
 };
 
 const Effects = () => {
