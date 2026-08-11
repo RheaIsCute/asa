@@ -311,8 +311,8 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      // Start materializing the cards EXACTLY when the camera lands (3.5s)
-      const startTime = 3500 + dataIndex * 150; 
+      // Start materializing the cards EXACTLY when the camera lands (2.5s)
+      const startTime = 2500 + dataIndex * 150; 
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
@@ -365,9 +365,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       groupRef.current.position.y = floatY;
       
-      // Card appears fully right after materialization finishes (3.5s + 0.8s = 4.3s)
+      // Card appears fully right after materialization finishes (2.5s + 0.8s = 3.3s)
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 4300 + data.index * 150) {
+        if (performance.now() - window.introTime > 3300 + data.index * 150) {
           setMaterialized(true);
         }
       }
@@ -468,8 +468,8 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
 
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
-      if (elapsed < 3.5) {
-        const progress = Math.min(elapsed / 3.5, 1);
+      if (elapsed < 2.5) {
+        const progress = Math.min(elapsed / 2.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
         
         const startPos = new THREE.Vector3(0, 200, 50);
@@ -486,8 +486,8 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         introFinished.current = true;
       }
     } else if (introFinished.current && !introSpinFinished.current && playing) {
-      // Intro dramatic spin effect! Starts with a small delay AFTER materialization (5.0s)
-      const elapsedSinceSpinStart = (performance.now() - window.introTime - 5000) / 1000;
+      // Intro dramatic spin effect! Starts with a small delay AFTER materialization (4.0s)
+      const elapsedSinceSpinStart = (performance.now() - window.introTime - 4000) / 1000;
       if (elapsedSinceSpinStart > 0) {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
