@@ -312,13 +312,13 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
       // Start materializing the cards AFTER the camera lands! (Starts at 3.5s)
-      const startTime = 3500 + dataIndex * 200; 
+      const startTime = 3500 + dataIndex * 100; // faster stagger
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
         
-        // Scanner moves down over 1.5 seconds
-        const progress = Math.min((timeSinceIntro - startTime) / 1500, 1);
+        // Scanner moves down blazingly fast over 0.5 seconds
+        const progress = Math.min((timeSinceIntro - startTime) / 500, 1);
         const scanY = 50 - progress * 80;
         
         for(let i = 0; i < count; i++) {
@@ -365,9 +365,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       groupRef.current.position.y = floatY;
       
-      // Card appears fully after materialization finishes (3.5s start + 1.5s build = 5.0s)
+      // Card appears fully after materialization finishes (3.5s start + 0.5s build = 4.0s)
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 5000 + data.index * 200) {
+        if (performance.now() - window.introTime > 4000 + data.index * 100) {
           setMaterialized(true);
         }
       }
@@ -487,7 +487,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       }
     } else if (introFinished.current && !introSpinFinished.current && playing) {
       // Intro dramatic spin effect!
-      const elapsedSinceSpinStart = (performance.now() - window.introTime - 5000) / 1000;
+      const elapsedSinceSpinStart = (performance.now() - window.introTime - 4000) / 1000;
       if (elapsedSinceSpinStart > 0) {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
