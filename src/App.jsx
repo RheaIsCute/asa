@@ -144,8 +144,9 @@ const VoidShapes = () => {
 };
 
 const AmbientParticles = () => {
-  const count = 150;
+  const count = 1500;
   const mesh = useRef();
+  const matRef = useRef();
   
   const particles = useMemo(() => {
     const temp = new Float32Array(count * 3);
@@ -158,8 +159,15 @@ const AmbientParticles = () => {
   }, [count]);
   
   useFrame((state, delta) => {
-    if (mesh.current) {
+    if (mesh.current && matRef.current) {
       mesh.current.rotation.y += delta * 0.05; // Extremely slow drift
+      
+      // Insane audio-reactive warp speed surge
+      if (audioState.bass > 0) {
+         mesh.current.rotation.y += delta * audioState.bass * 0.8;
+         matRef.current.size = 0.4 + audioState.bass * 1.5;
+         matRef.current.opacity = 0.3 + audioState.bass * 0.7;
+      }
     }
   });
 
@@ -168,7 +176,7 @@ const AmbientParticles = () => {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.4} color="#a020f0" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial ref={matRef} size={0.4} color="#a020f0" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 };
@@ -447,23 +455,30 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       }
     }
     
-    // Dynamic ASA Text Animation (Parallax + Bass Scale + Dynamic Glow)
+    // Dynamic ASA Text Animation (Parallax + Intense Bass Reactivity)
     const textEl = document.getElementById('asa-bg-text');
     if (textEl) {
        const time = state.clock.elapsedTime;
        const floatY = Math.sin(time * 2) * 20; // Float up and down
        const floatX = Math.cos(time * 1.5) * 10;
-       const bassScale = 1 + (audioState.bass * 0.2); // Thump to the beat
+       
+       const bass = audioState.bass;
+       const bassScale = 1 + (bass * 0.4); // Much heavier thump
+       
        // Inverse parallax based on mouse
        const mouseX = state.pointer.x * -30;
        const mouseY = state.pointer.y * -30;
        
        textEl.style.transform = `translate(calc(${mouseX}px + ${floatX}px), calc(${mouseY}px + ${floatY}px)) scale(${bassScale})`;
        
-       // Dynamic Glow
-       const glowSize = 10 + audioState.bass * 150;
-       const glowOpacity = 0.1 + audioState.bass * 0.7;
-       textEl.style.textShadow = `0 0 ${glowSize}px rgba(160, 32, 240, ${glowOpacity})`;
+       // Insane Multi-Layered Neon Glow & Chromatic Aberration
+       const split = bass * 25; // Red/Cyan split distance
+       const coreGlow = `0 0 ${10 + bass * 150}px rgba(160, 32, 240, ${0.4 + bass * 0.6})`;
+       const outerGlow = `0 0 ${40 + bass * 400}px rgba(160, 32, 240, ${0.2 + bass * 0.5})`;
+       const aberration = `${split}px 0 ${split}px rgba(255,0,0,0.7), -${split}px 0 ${split}px rgba(0,255,255,0.7)`;
+       
+       textEl.style.textShadow = `${coreGlow}, ${outerGlow}, ${aberration}`;
+       textEl.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.15})`; // Flash solid on heavy bass
     }
 
     if (playing && !introFinished.current) {
@@ -526,6 +541,11 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
           if (Math.abs(px) > 0.05) {
              const speed = (Math.abs(px) - 0.05) * Math.sign(px) * 4.0;
              pointerTracker.current.target += speed * delta;
+          } else {
+             // AUTO-SNAP TO NEAREST CARD WHEN IN DEADZONE
+             const cardSpacing = Math.PI / 2;
+             const closestAngle = Math.round(pointerTracker.current.target / cardSpacing) * cardSpacing;
+             pointerTracker.current.target = THREE.MathUtils.lerp(pointerTracker.current.target, closestAngle, 3.0 * delta);
           }
         }
         
