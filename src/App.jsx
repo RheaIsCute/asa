@@ -311,8 +311,8 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      // Start materializing the cards DURING the camera sweep! (Starts at 0.5s)
-      const startTime = 500 + dataIndex * 200; 
+      // Start materializing the cards AFTER the camera lands! (Starts at 3.5s)
+      const startTime = 3500 + dataIndex * 200; 
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
@@ -365,9 +365,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       groupRef.current.position.y = floatY;
       
-      // Card appears fully after materialization finishes (0.5s start + 1.5s build = 2.0s)
+      // Card appears fully after materialization finishes (3.5s start + 1.5s build = 5.0s)
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 2000 + data.index * 200) {
+        if (performance.now() - window.introTime > 5000 + data.index * 200) {
           setMaterialized(true);
         }
       }
