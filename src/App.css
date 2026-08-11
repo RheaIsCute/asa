@@ -6,6 +6,10 @@
   --bg-color: #050505;
   --text-main: #ffffff;
   --text-muted: #888888;
+  --bass: 0;
+  --sub: 0;
+  --mid: 0;
+  --high: 0;
 }
 
 body, html {
@@ -30,7 +34,10 @@ body {
   height: 100%;
 }
 
-/* Splash Screen */
+/* ═══════════════════════════════════════════════════
+   SPLASH SCREEN
+   ═══════════════════════════════════════════════════ */
+
 .splash-screen {
   position: absolute;
   inset: 0;
@@ -82,7 +89,172 @@ body {
   100% { transform: translate(0); text-shadow: 2px 0 var(--accent), -2px 0 #000; }
 }
 
-/* UI Overlay */
+/* ═══════════════════════════════════════════════════
+   ASA TITLE — Multi-Layer Chromatic Glitch
+   ═══════════════════════════════════════════════════ */
+
+.asa-title-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.asa-title-container {
+  position: relative;
+  font-family: 'Inter', 'Space Mono', monospace;
+  font-weight: 900;
+  font-size: 22vw;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  transition: transform 0.06s ease-out;
+}
+
+/* Scanline overlay on the title */
+.asa-title-container::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.12) 1px,
+    rgba(0, 0, 0, 0.12) 3px
+  );
+  animation: asaScanlines 0.08s linear infinite;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes asaScanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(3px); }
+}
+
+.asa-layer {
+  display: block;
+  text-align: center;
+  transition: transform 0.04s ease-out, opacity 0.06s ease-out;
+  will-change: transform, opacity, clip-path;
+}
+
+.asa-layer-r {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color: rgba(255, 30, 30, 0.4);
+  mix-blend-mode: screen;
+  z-index: 1;
+  opacity: 0.1;
+}
+
+.asa-layer-c {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color: rgba(30, 255, 255, 0.4);
+  mix-blend-mode: screen;
+  z-index: 2;
+  opacity: 0.1;
+}
+
+.asa-layer-main {
+  position: relative;
+  color: rgba(255, 255, 255, 0.03);
+  z-index: 3;
+  text-shadow: 
+    0 0 40px rgba(160, 32, 240, 0.3),
+    0 0 120px rgba(160, 32, 240, 0.15);
+}
+
+/* Pulsing outline stroke effect */
+.asa-layer-main::before {
+  content: 'ASA';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(160, 32, 240, 0.15);
+  z-index: -1;
+  animation: strokePulse 2s ease-in-out infinite;
+}
+
+@keyframes strokePulse {
+  0%, 100% { -webkit-text-stroke-width: 1px; opacity: 0.3; }
+  50% { -webkit-text-stroke-width: 2px; opacity: 0.6; }
+}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN OVERLAYS
+   ═══════════════════════════════════════════════════ */
+
+.screen-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  z-index: 55;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: overlay;
+}
+
+.screen-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 56;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  opacity: 0.15;
+  animation: screenScanScroll 0.3s linear infinite;
+}
+
+@keyframes screenScanScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+.screen-edge-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 54;
+  pointer-events: none;
+  box-shadow: inset 0 0 60px rgba(160, 32, 240, 0.08);
+  transition: box-shadow 0.1s ease-out;
+}
+
+.audio-blur-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(160, 32, 240, calc(0.08 + var(--bass, 0) * 0.5)) 0%,
+    rgba(80, 0, 180, calc(var(--bass, 0) * 0.2)) 30%,
+    transparent 65%
+  );
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* ═══════════════════════════════════════════════════
+   UI OVERLAY
+   ═══════════════════════════════════════════════════ */
+
 .ui-layer {
   position: absolute;
   inset: 0;
@@ -92,7 +264,6 @@ body {
   flex-direction: column;
 }
 
-/* Back Button Overlay */
 .back-btn {
   position: absolute;
   top: 40px;
@@ -119,7 +290,10 @@ body {
   box-shadow: 0 0 15px var(--accent);
 }
 
-/* HUD Cards */
+/* ═══════════════════════════════════════════════════
+   HUD CARDS
+   ═══════════════════════════════════════════════════ */
+
 .html-panel {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid var(--accent);
@@ -129,28 +303,26 @@ body {
   height: 480px;
   display: flex;
   flex-direction: column;
-  pointer-events: none; /* Can't click while invisible/materializing */
+  pointer-events: none;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   transition: border-color 0.3s, background 0.3s, opacity 0.5s ease-out;
-  opacity: 0; /* Starts hidden until materialized */
+  opacity: 0;
   overflow: hidden;
   position: relative;
 }
 
 .html-panel.materialized {
   opacity: 1;
-  pointer-events: auto; /* Clickable once materialized! */
+  pointer-events: auto;
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="transparent" stroke="%23a020f0" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="white" /></svg>') 12 12, pointer;
 }
 
-.audio-blur-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(160, 32, 240, calc(0.1 + var(--bass, 0) * 0.4)) 0%, transparent 60%);
-  z-index: 5;
-  pointer-events: none;
-  mix-blend-mode: screen;
+/* Audio-reactive card border glow */
+.html-panel.materialized:not(.active) {
+  box-shadow: 
+    0 0 calc(10px + var(--bass, 0) * 30px) rgba(160, 32, 240, calc(0.2 + var(--bass, 0) * 0.3)),
+    inset 0 0 calc(var(--bass, 0) * 15px) rgba(160, 32, 240, calc(var(--bass, 0) * 0.1));
 }
 
 .html-panel:hover {
@@ -159,8 +331,9 @@ body {
 
 .html-panel.active {
   border-color: var(--accent);
-  /* The bass variable drives the box shadow size perfectly to the beat! */
-  box-shadow: 0 0 calc(20px + var(--bass, 0) * 80px) rgba(160, 32, 240, 0.8);
+  box-shadow: 
+    0 0 calc(20px + var(--bass, 0) * 100px) rgba(160, 32, 240, 0.8),
+    inset 0 0 calc(var(--bass, 0) * 30px) rgba(160, 32, 240, 0.15);
   background: rgba(0, 0, 0, 0.95);
   cursor: default;
 }
@@ -238,7 +411,10 @@ body {
   height: 100%;
 }
 
-/* HUD Grid Layout */
+/* ═══════════════════════════════════════════════════
+   HUD GRID LAYOUT
+   ═══════════════════════════════════════════════════ */
+
 .hud-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -320,7 +496,20 @@ body {
   text-shadow: 0 0 8px var(--accent);
 }
 
-/* Progress Bar */
+/* ═══════════════════════════════════════════════════
+   HUD COMPONENTS
+   ═══════════════════════════════════════════════════ */
+
+.hud-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--accent);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .hud-progress-bg {
   width: 100%;
   height: 2px;
@@ -338,7 +527,6 @@ body {
   box-shadow: 0 0 5px var(--accent);
 }
 
-/* Status Bar */
 .hud-status-bar {
   grid-column: 1 / -1;
   width: 100%;
