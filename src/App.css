@@ -55,9 +55,9 @@ body, html {
 }
 
 @keyframes pulseAvatar {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(160, 32, 240, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(160, 32, 240, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(160, 32, 240, 0); }
 }
 
 .enter-text {
@@ -65,7 +65,7 @@ body, html {
   letter-spacing: 0.5em;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  text-shadow: 0 0 10px rgba(160, 32, 240, 0.5);
   animation: safe-glitch 0.2s infinite;
 }
 
@@ -87,40 +87,14 @@ body, html {
   flex-direction: column;
 }
 
-.visualizer-container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 2px;
-  padding: 0 20px;
-  opacity: 0.5;
-  mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-}
-
-.vis-bar {
-  flex: 1;
-  background: var(--primary);
-  max-width: 8px;
-  min-width: 2px;
-  height: 0px;
-  transition: height 0.05s ease-out;
-  border-radius: 2px 2px 0 0;
-}
-
 /* Back Button Overlay */
 .back-btn {
   position: absolute;
   top: 40px;
   left: 40px;
   background: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
+  border: 1px solid var(--accent);
+  color: var(--accent);
   padding: 10px 20px;
   font-family: 'Space Mono', monospace;
   font-size: 1.2rem;
@@ -135,15 +109,15 @@ body, html {
 }
 
 .back-btn:hover {
-  background: var(--primary);
+  background: var(--accent);
   color: #000;
-  box-shadow: 0 0 15px var(--primary);
+  box-shadow: 0 0 15px var(--accent);
 }
 
-/* HTML overlays for 3D objects - Character Selection Cards */
+/* HUD Cards */
 .html-panel {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--accent);
   padding: 30px;
   color: var(--text-main);
   width: 320px;
@@ -160,15 +134,14 @@ body, html {
 }
 
 .html-panel:hover {
-  border-color: #fff;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-  background: rgba(10, 10, 10, 0.8);
+  box-shadow: 0 0 30px rgba(160, 32, 240, 0.4);
+  background: rgba(10, 10, 10, 0.9);
 }
 
 .html-panel.active {
   border-color: var(--accent);
-  box-shadow: 0 0 40px rgba(160, 32, 240, 0.5);
-  background: rgba(5, 5, 5, 0.9);
+  box-shadow: 0 0 40px rgba(160, 32, 240, 0.6);
+  background: rgba(0, 0, 0, 0.95);
   cursor: default;
 }
 
@@ -176,7 +149,7 @@ body, html {
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0;
-  color: var(--primary);
+  color: #fff;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-align: center;
@@ -186,7 +159,22 @@ body, html {
   transform: translate(-50%, -50%);
   width: 100%;
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+  text-shadow: 0 0 15px var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.panel-title svg {
+  width: 28px;
+  height: 28px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px var(--accent));
 }
 
 .html-panel.active .panel-title {
@@ -194,10 +182,15 @@ body, html {
   transform: translate(-50%, 0);
   font-size: 1.4rem;
   color: var(--accent);
-  text-shadow: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 0 10px var(--accent);
+  border-bottom: 1px solid rgba(160, 32, 240, 0.4);
   padding-bottom: 10px;
   width: calc(100% - 60px);
+}
+
+.html-panel.active .panel-title svg {
+  stroke: var(--accent);
+  filter: none;
 }
 
 .panel-content-wrapper {
@@ -206,6 +199,7 @@ body, html {
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   margin-top: 60px;
   pointer-events: none;
+  height: calc(100% - 60px);
 }
 
 .html-panel.active .panel-content-wrapper {
@@ -217,18 +211,98 @@ body, html {
 .panel-content {
   font-size: 0.9rem;
   line-height: 1.6;
-  white-space: pre-wrap;
   color: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 100%;
 }
 
-.panel-content a {
-  color: var(--accent);
+/* HUD Rows for data layout */
+.hud-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(160, 32, 240, 0.05);
+  border: 1px solid rgba(160, 32, 240, 0.2);
+  padding: 12px;
+  transition: background 0.2s;
+}
+
+.hud-row:hover {
+  background: rgba(160, 32, 240, 0.15);
+}
+
+.hud-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.hud-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--accent);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hud-data {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+.hud-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.hud-value a {
+  color: #fff;
   text-decoration: none;
   transition: all 0.2s;
-  font-weight: bold;
 }
 
-.panel-content a:hover {
-  text-decoration: underline;
+.hud-value a:hover {
+  color: var(--accent);
   text-shadow: 0 0 8px var(--accent);
+}
+
+.hud-status-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(160, 32, 240, 0.2);
+  margin-top: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-status-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  width: 50%;
+  box-shadow: 0 0 10px var(--accent);
+  animation: hudPulse 2s infinite alternate;
+}
+
+@keyframes hudPulse {
+  0% { width: 40%; opacity: 0.8; }
+  100% { width: 100%; opacity: 1; }
 }

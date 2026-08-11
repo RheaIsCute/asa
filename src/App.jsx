@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, useTexture, Text } from '@react-three/drei';
-import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
 
@@ -64,38 +64,6 @@ const updateAudioData = () => {
   audioState.high = highSum / 70 / 255;
 };
 
-const AudioVisualizer = () => {
-  const bars = 64; 
-  const barRefs = useRef([]);
-  
-  useEffect(() => {
-    let animationFrame;
-    const update = () => {
-      if (audioState.playing && barRefs.current.length > 0) {
-        for (let i = 0; i < bars; i++) {
-          if (barRefs.current[i]) {
-            const index = i * 2;
-            const val = audioState.raw[index] || 0;
-            const height = Math.max(2, (val / 255) * 100);
-            barRefs.current[i].style.height = `${height}%`;
-          }
-        }
-      }
-      animationFrame = requestAnimationFrame(update);
-    };
-    update();
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
-
-  return (
-    <div className="visualizer-container">
-      {Array.from({ length: bars }).map((_, i) => (
-        <div key={i} ref={el => barRefs.current[i] = el} className="vis-bar" />
-      ))}
-    </div>
-  );
-};
-
 const Particles = () => {
   const count = 3000;
   const mesh = useRef();
@@ -113,10 +81,10 @@ const Particles = () => {
   const colors = useMemo(() => {
     const temp = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const isRed = Math.random() > 0.8;
-      temp[i * 3] = isRed ? 0.8 : 1.0;
-      temp[i * 3 + 1] = isRed ? 0.05 : 1.0;
-      temp[i * 3 + 2] = isRed ? 0.05 : 1.0;
+      const isPurple = Math.random() > 0.4;
+      temp[i * 3] = isPurple ? 0.62 : 1.0;
+      temp[i * 3 + 1] = isPurple ? 0.12 : 1.0;
+      temp[i * 3 + 2] = isPurple ? 0.94 : 1.0;
     }
     return temp;
   }, [count]);
@@ -125,7 +93,7 @@ const Particles = () => {
     updateAudioData();
     if (mesh.current) {
       mesh.current.rotation.y -= delta * (0.02 + audioState.bass * 0.1);
-      const scale = 1 + audioState.bass * 0.2;
+      const scale = 1 + audioState.bass * 0.8;
       mesh.current.scale.set(scale, scale, scale);
     }
   });
@@ -169,8 +137,8 @@ const HorizonTrees = () => {
   useFrame((state, delta) => {
     if (matRef.current) {
       matRef.current.map.offset.x += delta * 0.01; 
-      const tint = Math.min(1, audioState.bass * 1.5);
-      matRef.current.color.setRGB(1, 1 - tint * 0.8, 1 - tint * 0.8);
+      const tint = audioState.bass;
+      matRef.current.color.setRGB(1 - tint * 0.4, 1 - tint * 0.9, 1 - tint * 0.1);
     }
   });
 
@@ -190,31 +158,66 @@ const HorizonTrees = () => {
 };
 
 const R = 30; // Radius of the character selection circle
+window.isHoveringCard = false;
+
+const ICONS = {
+  identity: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+  socials: '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>',
+  music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+  archive: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+  status: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'
+};
+
 const SECTIONS_DATA = [
   {
     id: 'identity',
     title: 'IDENTITY',
-    content: `> BIRTHDAY: JUNE 23RD\n> AGE: 19\n\n> LANGUAGES:\n  ENGLISH [80%]\n  SPANISH [80%]\n  JAPANESE [15%]`
+    icon: ICONS.identity,
+    content: `
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUNE 23RD</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">AGE</div><div class="hud-value">19</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">LANGUAGES</div><div class="hud-value">EN [80%] / ES [80%] / JP [15%]</div></div></div>
+    `
   },
   {
     id: 'socials',
     title: 'SOCIALS',
-    content: `[INSTA] <a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a>\n[DISCO] <a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a>`
+    icon: ICONS.socials,
+    content: `
+      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div><div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value"><a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a></div></div></div>
+      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div><div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value"><a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a></div></div></div>
+    `
   },
   {
     id: 'music',
     title: 'MUSIC',
-    content: `FAVORITE ARTIST:\n> Ado\n\nFAVORITE SONG:\n> 2:00 by enveel\n\nNOW PLAYING:\n> THOTTWAT - SHIRT`
+    icon: ICONS.music,
+    content: `
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV SONG</div><div class="hud-value">2:00 by enveel</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">NOW PLAYING</div><div class="hud-value">THOTTWAT - SHIRT</div></div></div>
+      <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
+    `
   },
   {
     id: 'archive',
     title: 'ARCHIVE',
-    content: `HARDWARE / SETUP:\n- RTX 5060 TI\n- AMD RYZEN 9 7900X\n- 32GB DDR5 RAM\n\nPERIPHERALS:\n- RAZER OROCHI V2\n- AULA WIN60 HE\n\nAUDIO:\n- HYPERX QUADCAST S\n- HYPERX CLOUD EARBUDS II\n\nVIDEOGAMES:\n- ARC RAIDERS, DARK SOULS, RESIDENT EVIL, TLOU\n\nSERIES / MOVIES:\n- CHAINSAWMAN, FATE SERIES, DEATH NOTE, BREAKING BAD\n- KILL LA KILL, AOT, ARCANE, SCISSOR SEVEN, YOUR NAME\n- CYBERPUNK 2077`
+    icon: ICONS.archive,
+    content: `
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">HARDWARE</div><div class="hud-value">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">GEAR</div><div class="hud-value">RAZER OROCHI V2 / AULA WIN60 HE / QUADCAST S</div></div></div>
+      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV GAMES</div><div class="hud-value">DARK SOULS / RESIDENT EVIL / CYBERPUNK</div></div></div>
+    `
   },
   {
     id: 'status',
     title: 'STATUS',
-    content: `ONLINE\nCONNECTION: STABLE\nSYSTEM: ACTIVE`
+    icon: ICONS.status,
+    content: `
+      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div><div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE & ACTIVE</div></div></div>
+      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div></div>
+      <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
+    `
   }
 ];
 
@@ -229,28 +232,41 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
   };
 });
 
-const FloatingPanel = ({ data, activeId, onClick }) => {
+const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   const groupRef = useRef();
+  const spawnRef = useRef(0);
   
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 2 + data.index) * 1.0;
+      if (playing && window.introTime && performance.now() - window.introTime > 3000 + data.index * 150) {
+        spawnRef.current = THREE.MathUtils.lerp(spawnRef.current, 1, 4 * delta);
+      }
       
-      const scale = 1 + (activeId === data.id ? audioState.bass * 0.05 : 0);
-      groupRef.current.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.1);
+      const floatY = Math.sin(state.clock.elapsedTime * 2 + data.index) * 1.0;
+      const dropY = (1 - spawnRef.current) * 40;
+      groupRef.current.position.y = floatY + dropY;
+      
+      const bassScale = (activeId === data.id ? audioState.bass * 0.1 : audioState.bass * 0.02);
+      const scale = spawnRef.current * (1 + bassScale);
+      groupRef.current.scale.set(scale, scale, scale);
     }
   });
 
   const isActive = activeId === data.id;
 
   return (
-    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
+    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]} scale={[0,0,0]}>
       <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
         <div 
           className={`html-panel ${isActive ? 'active' : ''}`}
           onClick={() => { if (!isActive) onClick(data.id) }}
+          onMouseEnter={() => { window.isHoveringCard = true; }}
+          onMouseLeave={() => { window.isHoveringCard = false; }}
         >
-          <h2 className="panel-title">{data.title}</h2>
+          <h2 className="panel-title">
+            <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
+            {data.title}
+          </h2>
           <div className="panel-content-wrapper">
             <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
           </div>
@@ -269,6 +285,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   useEffect(() => {
     if (playing && startTime.current === 0) {
       startTime.current = performance.now();
+      window.introTime = performance.now();
     }
   }, [playing]);
 
@@ -276,7 +293,6 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     if (activeSection && carouselRef.current) {
       const targetData = SECTIONS.find(s => s.id === activeSection);
       let current = carouselRef.current.rotation.y;
-      // We want the clicked card (at targetData.angle) to face the camera (which looks down -Z)
       let target = targetData.angle; 
       
       let diff = (-target - current) % (Math.PI * 2);
@@ -287,24 +303,28 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   }, [activeSection, carouselRef]);
 
   useFrame((state, delta) => {
-    if (audioState.bass > 0.7) {
-      const shakeAmt = (audioState.bass - 0.7) * 0.8;
+    if (audioState.bass > 0.6) {
+      const shakeAmt = (audioState.bass - 0.6) * 2.0;
       state.camera.position.x += (Math.random() - 0.5) * shakeAmt;
       state.camera.position.y += (Math.random() - 0.5) * shakeAmt;
     }
 
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
-      if (elapsed < 3) {
-        // Fast aggressive dive
-        const progress = Math.min(elapsed / 3, 1);
+      if (elapsed < 3.5) {
+        const progress = Math.min(elapsed / 3.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
         
-        const startPos = new THREE.Vector3(0, 150, 100);
-        const targetPos = new THREE.Vector3(0, 0, 60);
+        const startPos = new THREE.Vector3(0, 200, 50);
+        const targetPos = new THREE.Vector3(0, 0, 65);
         
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 5 * delta);
+        
+        // Swirling camera dive
+        state.camera.position.x += Math.sin(progress * Math.PI * 4) * 80 * (1 - easeOut);
+        state.camera.position.z += Math.cos(progress * Math.PI * 4) * 80 * (1 - easeOut);
+        
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * delta);
       } else {
         introFinished.current = true;
       }
@@ -314,17 +334,16 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         // ZOOMED IN (CARD SELECTED)
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 6 * delta);
         
-        // Swoop in with a dramatic tilt
         const targetCamPos = new THREE.Vector3(-4, -6, R + 14);
         state.camera.position.lerp(targetCamPos, 5 * delta);
-        
-        // Look slightly up and right at the card (which is at [0,0,R])
         lookAtPos.current.lerp(new THREE.Vector3(2, 4, R), 5 * delta);
         
       } else {
         // OVERVIEW (CHARACTER SELECT PANNING)
-        targetRot.current = -(state.pointer.x * Math.PI * 1.5); 
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
+        if (!window.isHoveringCard) {
+          targetRot.current = -(state.pointer.x * Math.PI * 1.5); 
+        }
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 6 * delta);
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
         state.camera.position.lerp(targetCamPos, 5 * delta);
@@ -406,7 +425,6 @@ function App() {
               [ BACK TO OVERVIEW ]
             </button>
           )}
-          <AudioVisualizer />
         </div>
       )}
 
@@ -438,6 +456,7 @@ function App() {
                 data={s} 
                 activeId={activeSection} 
                 onClick={setActiveSection} 
+                playing={started}
               />
             ))}
           </group>
