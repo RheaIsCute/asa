@@ -323,7 +323,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         
       } else {
         // OVERVIEW (CHARACTER SELECT PANNING)
-        targetRot.current -= (state.pointer.x * 4 * delta); 
+        targetRot.current = -(state.pointer.x * Math.PI * 1.5); 
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
@@ -389,7 +389,7 @@ function App() {
           <h1 style={{
             fontSize: '10rem',
             color: '#fff',
-            textShadow: '0 0 30px #ffffff, 5px 5px 0 #cc1111',
+            textShadow: '0 0 30px #ffffff, 5px 5px 0 #a020f0',
             margin: 0,
             animation: 'safe-glitch 0.1s infinite',
             mixBlendMode: 'screen'
@@ -420,7 +420,7 @@ function App() {
         
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
-        <directionalLight position={[0, -10, -5]} intensity={1} color="#cc1111" />
+        <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
         
         <Suspense fallback={null}>
           <Particles />

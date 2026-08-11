@@ -2,7 +2,7 @@
 
 :root {
   --primary: #ffffff;
-  --accent: #cc1111;
+  --accent: #a020f0;
   --bg-color: #050505;
   --text-main: #ffffff;
   --text-muted: #888888;
@@ -167,7 +167,7 @@ body, html {
 
 .html-panel.active {
   border-color: var(--accent);
-  box-shadow: 0 0 40px rgba(204, 17, 17, 0.4);
+  box-shadow: 0 0 40px rgba(160, 32, 240, 0.5);
   background: rgba(5, 5, 5, 0.9);
   cursor: default;
 }
