@@ -139,6 +139,15 @@ body, html {
   cursor: pointer;
 }
 
+.audio-blur-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(160, 32, 240, calc(0.1 + var(--bass, 0) * 0.4)) 0%, transparent 60%);
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
 .html-panel:hover {
   background: rgba(10, 10, 10, 0.9);
 }

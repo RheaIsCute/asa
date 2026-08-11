@@ -143,6 +143,36 @@ const VoidShapes = () => {
   );
 };
 
+const AmbientParticles = () => {
+  const count = 150;
+  const mesh = useRef();
+  
+  const particles = useMemo(() => {
+    const temp = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      temp[i * 3] = (Math.random() - 0.5) * 250;
+      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20;
+      temp[i * 3 + 2] = (Math.random() - 0.5) * 250;
+    }
+    return temp;
+  }, [count]);
+  
+  useFrame((state, delta) => {
+    if (mesh.current) {
+      mesh.current.rotation.y += delta * 0.05; // Extremely slow drift
+    }
+  });
+
+  return (
+    <points ref={mesh}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.4} color="#a020f0" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+    </points>
+  );
+};
+
 const R = 30; // Radius of the character selection circle
 window.isHoveringCard = false;
 
@@ -416,7 +446,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       }
     }
     
-    // Dynamic ASA Text Animation (Parallax + Bass Scale)
+    // Dynamic ASA Text Animation (Parallax + Bass Scale + Dynamic Glow)
     const textEl = document.getElementById('asa-bg-text');
     if (textEl) {
        const time = state.clock.elapsedTime;
@@ -428,6 +458,11 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
        const mouseY = state.pointer.y * -30;
        
        textEl.style.transform = `translate(calc(${mouseX}px + ${floatX}px), calc(${mouseY}px + ${floatY}px)) scale(${bassScale})`;
+       
+       // Dynamic Glow
+       const glowSize = 10 + audioState.bass * 150;
+       const glowOpacity = 0.1 + audioState.bass * 0.7;
+       textEl.style.textShadow = `0 0 ${glowSize}px rgba(160, 32, 240, ${glowOpacity})`;
     }
 
     if (playing && !introFinished.current) {
@@ -463,9 +498,9 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         // OVERVIEW (EDGE PANNING)
         if (!window.isHoveringCard) {
           const px = state.pointer.x;
-          // Deadzone in the middle 30% of the screen
-          if (Math.abs(px) > 0.3) {
-             const speed = (Math.abs(px) - 0.3) * Math.sign(px) * 2.5;
+          // Deadzone in the middle 15% of the screen
+          if (Math.abs(px) > 0.15) {
+             const speed = (Math.abs(px) - 0.15) * Math.sign(px) * 3.5;
              pointerTracker.current.target += speed * delta;
           }
         }
@@ -537,7 +572,6 @@ function App() {
           <h1 id="asa-bg-text" style={{
             fontSize: '12rem',
             color: 'rgba(255, 255, 255, 0.03)',
-            textShadow: '0 0 40px rgba(160, 32, 240, 0.1)',
             margin: 0,
             animation: 'safe-glitch 0.5s infinite',
             mixBlendMode: 'screen',
@@ -546,6 +580,11 @@ function App() {
             ASA
           </h1>
         </div>
+      )}
+
+      {/* Subtle audio-reactive radial blur overlay */}
+      {started && (
+        <div className="audio-blur-overlay"></div>
       )}
 
       {started && (
@@ -571,6 +610,7 @@ function App() {
         <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
         
         <Suspense fallback={null}>
+          <AmbientParticles />
           <VoidShapes />
           <HorizonTrees />
           
