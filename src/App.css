@@ -128,19 +128,19 @@ body, html {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  transition: border-color 0.3s, background 0.3s;
   overflow: hidden;
   position: relative;
 }
 
 .html-panel:hover {
-  box-shadow: 0 0 30px rgba(160, 32, 240, 0.4);
   background: rgba(10, 10, 10, 0.9);
 }
 
 .html-panel.active {
   border-color: var(--accent);
-  box-shadow: 0 0 40px rgba(160, 32, 240, 0.6);
+  /* The bass variable drives the box shadow size perfectly to the beat! */
+  box-shadow: 0 0 calc(20px + var(--bass, 0) * 80px) rgba(160, 32, 240, 0.8);
   background: rgba(0, 0, 0, 0.95);
   cursor: default;
 }
@@ -218,71 +218,109 @@ body, html {
   height: 100%;
 }
 
-/* HUD Rows for data layout */
-.hud-row {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+/* HUD Grid Layout */
+.hud-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  height: 100%;
+}
+
+.hud-block {
   background: rgba(160, 32, 240, 0.05);
   border: 1px solid rgba(160, 32, 240, 0.2);
-  padding: 12px;
-  transition: background 0.2s;
-}
-
-.hud-row:hover {
-  background: rgba(160, 32, 240, 0.15);
-}
-
-.hud-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-.hud-icon svg {
-  width: 100%;
-  height: 100%;
-  stroke: var(--accent);
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.hud-data {
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  justify-content: center;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-block:hover {
+  background: rgba(160, 32, 240, 0.1);
+  border-color: rgba(160, 32, 240, 0.4);
+}
+
+.hud-block.full {
+  grid-column: 1 / -1;
+}
+
+.hud-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 4px;
+  border-top: 1px solid var(--accent);
+  border-left: 1px solid var(--accent);
+}
+
+.hud-block::after {
+  content: '';
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 4px; height: 4px;
+  border-bottom: 1px solid var(--accent);
+  border-right: 1px solid var(--accent);
 }
 
 .hud-label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  font-size: 0.65rem;
+  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 2px;
+  letter-spacing: 0.15em;
+  margin-bottom: 5px;
+  opacity: 0.8;
 }
 
 .hud-value {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
+  line-height: 1.2;
+}
+
+.hud-value.small {
+  font-size: 0.85rem;
 }
 
 .hud-value a {
   color: #fff;
   text-decoration: none;
+  border-bottom: 1px dashed rgba(255,255,255,0.3);
   transition: all 0.2s;
+  display: inline-block;
+  padding-bottom: 2px;
 }
 
 .hud-value a:hover {
   color: var(--accent);
+  border-bottom-color: var(--accent);
   text-shadow: 0 0 8px var(--accent);
 }
 
+/* Progress Bar */
+.hud-progress-bg {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+  position: relative;
+}
+
+.hud-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+}
+
+/* Status Bar */
 .hud-status-bar {
+  grid-column: 1 / -1;
   width: 100%;
   height: 4px;
   background: rgba(160, 32, 240, 0.2);

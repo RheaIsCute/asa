@@ -62,6 +62,9 @@ const updateAudioData = () => {
   let highSum = 0;
   for (let i = 50; i < 120; i++) highSum += audioState.raw[i];
   audioState.high = highSum / 70 / 255;
+  
+  // Pipe bass data to CSS variables for dynamic glowing effects!
+  document.documentElement.style.setProperty('--bass', audioState.bass.toFixed(3));
 };
 
 const Particles = () => {
@@ -174,9 +177,15 @@ const SECTIONS_DATA = [
     title: 'IDENTITY',
     icon: ICONS.identity,
     content: `
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUNE 23RD</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">AGE</div><div class="hud-value">19</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">LANGUAGES</div><div class="hud-value">EN [80%] / ES [80%] / JP [15%]</div></div></div>
+      <div class="hud-grid">
+        <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
+        <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">19</div></div>
+        <div class="hud-block full"><div class="hud-label">LANGUAGES</div>
+          <div class="hud-value small">ENGLISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
+          <div class="hud-value small" style="margin-top:5px">SPANISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
+          <div class="hud-value small" style="margin-top:5px">JAPANESE [15%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 15%"></div></div>
+        </div>
+      </div>
     `
   },
   {
@@ -184,8 +193,16 @@ const SECTIONS_DATA = [
     title: 'SOCIALS',
     icon: ICONS.socials,
     content: `
-      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div><div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value"><a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a></div></div></div>
-      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div><div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value"><a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a></div></div></div>
+      <div class="hud-grid">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
+          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value"><a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a></div></div>
+        </div>
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value"><a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a></div></div>
+        </div>
+      </div>
     `
   },
   {
@@ -193,10 +210,12 @@ const SECTIONS_DATA = [
     title: 'MUSIC',
     icon: ICONS.music,
     content: `
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV SONG</div><div class="hud-value">2:00 by enveel</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">NOW PLAYING</div><div class="hud-value">THOTTWAT - SHIRT</div></div></div>
-      <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
+      <div class="hud-grid">
+        <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div>
+        <div class="hud-block"><div class="hud-label">FAV SONG</div><div class="hud-value small">2:00 by enveel</div></div>
+        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value" style="color:var(--accent)">THOTTWAT - SHIRT</div></div>
+        <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
+      </div>
     `
   },
   {
@@ -204,9 +223,11 @@ const SECTIONS_DATA = [
     title: 'ARCHIVE',
     icon: ICONS.archive,
     content: `
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">HARDWARE</div><div class="hud-value">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">GEAR</div><div class="hud-value">RAZER OROCHI V2 / AULA WIN60 HE / QUADCAST S</div></div></div>
-      <div class="hud-row"><div class="hud-data"><div class="hud-label">FAV GAMES</div><div class="hud-value">DARK SOULS / RESIDENT EVIL / CYBERPUNK</div></div></div>
+      <div class="hud-grid">
+        <div class="hud-block full"><div class="hud-label">HARDWARE</div><div class="hud-value small">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div>
+        <div class="hud-block full"><div class="hud-label">GEAR</div><div class="hud-value small">RAZER OROCHI V2 / AULA WIN60 / QUADCAST</div></div>
+        <div class="hud-block full"><div class="hud-label">GAMES & MEDIA</div><div class="hud-value small">DARK SOULS / CHAINSAWMAN / CYBERPUNK</div></div>
+      </div>
     `
   },
   {
@@ -214,9 +235,17 @@ const SECTIONS_DATA = [
     title: 'STATUS',
     icon: ICONS.status,
     content: `
-      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div><div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE & ACTIVE</div></div></div>
-      <div class="hud-row"><div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div></div>
-      <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
+      <div class="hud-grid">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+          <div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
+        </div>
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+          <div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div>
+        </div>
+        <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
+      </div>
     `
   }
 ];
