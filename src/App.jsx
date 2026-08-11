@@ -65,6 +65,7 @@ const updateAudioData = () => {
   
   // Pipe bass data to CSS variables for dynamic glowing effects!
   document.documentElement.style.setProperty('--bass', audioState.bass.toFixed(3));
+};
 
 
 const HorizonTrees = () => {
