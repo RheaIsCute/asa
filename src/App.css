@@ -14,6 +14,11 @@ body, html {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: #000;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23a020f0" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto;
+}
+
+body {
   background-color: var(--bg-color);
   font-family: 'Space Mono', monospace;
   color: var(--text-main);
@@ -136,7 +141,7 @@ body, html {
 .html-panel.materialized {
   opacity: 1;
   pointer-events: auto; /* Clickable once materialized! */
-  cursor: pointer;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="transparent" stroke="%23a020f0" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="white" /></svg>') 12 12, pointer;
 }
 
 .audio-blur-overlay {

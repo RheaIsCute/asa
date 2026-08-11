@@ -402,6 +402,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
 const SceneController = ({ activeSection, playing, carouselRef }) => {
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
+  const introSpinFinished = useRef(false);
   const startTime = useRef(0);
   const targetRot = useRef(0);
   
@@ -484,7 +485,30 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       } else {
         introFinished.current = true;
       }
-    } else if (introFinished.current) {
+    } else if (introFinished.current && !introSpinFinished.current && playing) {
+      // Intro dramatic spin effect!
+      const elapsedSinceSpinStart = (performance.now() - window.introTime - 5000) / 1000;
+      if (elapsedSinceSpinStart > 0) {
+          if (elapsedSinceSpinStart < 2.0) {
+             const spinProgress = elapsedSinceSpinStart / 2.0;
+             const spinEase = 1 - Math.pow(1 - spinProgress, 4); // ease out quart
+             // Spin by exactly 2 full rotations to land flawlessly back at the first card (angle 0)
+             pointerTracker.current.target = (Math.PI * 4) * spinEase;
+          } else {
+             introSpinFinished.current = true;
+             pointerTracker.current.target = Math.PI * 4;
+          }
+      }
+      
+      pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
+      targetRot.current = pointerTracker.current.current;
+      carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+      
+      const targetCamPos = new THREE.Vector3(0, 0, 65);
+      state.camera.position.lerp(targetCamPos, 6 * delta);
+      lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * delta);
+
+    } else if (introFinished.current && introSpinFinished.current) {
       
       if (activeSection) {
         // ZOOMED IN (CARD SELECTED)
@@ -498,9 +522,9 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         // OVERVIEW (EDGE PANNING)
         if (!window.isHoveringCard) {
           const px = state.pointer.x;
-          // Deadzone in the middle 15% of the screen
-          if (Math.abs(px) > 0.15) {
-             const speed = (Math.abs(px) - 0.15) * Math.sign(px) * 3.5;
+          // Deadzone in the middle 5% of the screen
+          if (Math.abs(px) > 0.05) {
+             const speed = (Math.abs(px) - 0.05) * Math.sign(px) * 4.0;
              pointerTracker.current.target += speed * delta;
           }
         }
