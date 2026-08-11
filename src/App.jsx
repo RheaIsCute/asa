@@ -264,6 +264,7 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 const CardParticles = ({ materialized, playing, dataIndex }) => {
   const count = 1500;
   const meshRef = useRef();
+  const matRef = useRef();
   
   const targetPositions = useMemo(() => new Float32Array(count * 3), [count]);
   const currentPositions = useMemo(() => new Float32Array(count * 3), [count]);
@@ -293,16 +294,18 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   }, [count, targetPositions, currentPositions, colors]);
 
   useFrame((state, delta) => {
-    if (!meshRef.current || materialized) return;
+    if (!meshRef.current || !matRef.current || materialized) return;
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      const startTime = 1000 + dataIndex * 250; // stagger spawn
+      const startTime = 3500 + dataIndex * 200; // Start ONLY when camera lands (3.5s)
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
-        // Scanner moves down from y=50 to y=-30 over ~1.2 seconds
-        const scanY = 50 - ((timeSinceIntro - startTime) / 1200) * 80;
+        
+        // Scanner moves down over 1.5 seconds
+        const progress = Math.min((timeSinceIntro - startTime) / 1500, 1);
+        const scanY = 50 - progress * 80;
         
         for(let i = 0; i < count; i++) {
            const targetY = targetPositions[i*3+1];
@@ -317,6 +320,11 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
            }
         }
         meshRef.current.geometry.attributes.position.needsUpdate = true;
+        
+        // Smoothly fade out the particles at the very end as HTML fades in
+        if (progress > 0.8) {
+          matRef.current.opacity = (1 - progress) * 5 * 0.9;
+        }
       }
     }
   });
@@ -329,7 +337,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.3} vertexColors transparent opacity={0.8} />
+      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} />
     </points>
   );
 };
@@ -343,9 +351,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       groupRef.current.position.y = floatY;
       
-      // Card appears fully after materialization finishes (~2.2s after introTime)
+      // Card appears fully after materialization finishes
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 2200 + data.index * 250) {
+        if (performance.now() - window.introTime > 5000 + data.index * 200) {
           setMaterialized(true);
         }
       }
@@ -383,43 +391,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   const startTime = useRef(0);
   const targetRot = useRef(0);
   
-  const dragState = useRef({ isDragging: false, lastX: 0, rotVelocity: 0, currentRot: 0 });
-
-  useEffect(() => {
-    const handleDown = (e) => {
-      dragState.current.isDragging = true;
-      dragState.current.lastX = e.clientX;
-      dragState.current.rotVelocity = 0;
-    };
-    const handleMove = (e) => {
-      if (dragState.current.isDragging) {
-        const deltaX = e.clientX - dragState.current.lastX;
-        dragState.current.lastX = e.clientX;
-        const rotDelta = deltaX * 0.003; 
-        dragState.current.currentRot += rotDelta;
-        dragState.current.rotVelocity = rotDelta;
-      }
-    };
-    const handleUp = () => {
-      dragState.current.isDragging = false;
-    };
-    const handleWheel = (e) => {
-      const rotDelta = -e.deltaY * 0.001;
-      dragState.current.currentRot += rotDelta;
-      dragState.current.rotVelocity = rotDelta;
-    };
-    
-    window.addEventListener('pointerdown', handleDown);
-    window.addEventListener('pointermove', handleMove);
-    window.addEventListener('pointerup', handleUp);
-    window.addEventListener('wheel', handleWheel);
-    return () => {
-      window.removeEventListener('pointerdown', handleDown);
-      window.removeEventListener('pointermove', handleMove);
-      window.removeEventListener('pointerup', handleUp);
-      window.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
+  const pointerTracker = useRef({ target: 0, current: 0 });
 
   useEffect(() => {
     if (playing && startTime.current === 0) {
@@ -439,7 +411,8 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       if (diff > Math.PI) diff -= Math.PI * 2;
       
       targetRot.current = current + diff;
-      dragState.current.currentRot = targetRot.current; // Sync drag state to snap
+      pointerTracker.current.target = targetRot.current;
+      pointerTracker.current.current = targetRot.current;
     }
   }, [activeSection, carouselRef]);
 
@@ -489,13 +462,18 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), 6 * delta);
         
       } else {
-        // OVERVIEW (DRAG TO SPIN)
-        if (!dragState.current.isDragging && Math.abs(dragState.current.rotVelocity) > 0.0001) {
-           dragState.current.currentRot += dragState.current.rotVelocity;
-           dragState.current.rotVelocity *= 0.95; // friction
+        // OVERVIEW (EDGE PANNING)
+        if (!window.isHoveringCard) {
+          const px = state.pointer.x;
+          // Deadzone in the middle 30% of the screen
+          if (Math.abs(px) > 0.3) {
+             const speed = (Math.abs(px) - 0.3) * Math.sign(px) * 2.5;
+             pointerTracker.current.target += speed * delta;
+          }
         }
         
-        targetRot.current = dragState.current.currentRot;
+        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
+        targetRot.current = pointerTracker.current.current;
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
         
         const targetCamPos = new THREE.Vector3(0, 0, 65);
