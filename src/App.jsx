@@ -99,6 +99,50 @@ const HorizonTrees = () => {
   );
 };
 
+const VoidShapes = () => {
+  const group = useRef();
+  const count = 40; // 40 floating geometric shapes for the background
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const shapesData = useMemo(() => {
+    const data = [];
+    for(let i=0; i<count; i++) {
+      data.push({
+        // Spread around the void, avoiding the direct center where cards are
+        pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 100 + 30, (Math.random() - 0.5) * 200],
+        rot: [Math.random() * Math.PI, Math.random() * Math.PI, 0],
+        speed: (Math.random() - 0.5) * 0.3,
+        scale: Math.random() * 3 + 1
+      });
+    }
+    return data;
+  }, []);
+
+  useFrame((state, delta) => {
+    if (group.current) {
+      const bassScale = 1 + audioState.bass * 0.8; // They throb heavily to the bass
+      shapesData.forEach((shape, i) => {
+        shape.rot[0] += shape.speed * delta;
+        shape.rot[1] += shape.speed * delta;
+        
+        dummy.position.set(...shape.pos);
+        dummy.rotation.set(...shape.rot);
+        dummy.scale.set(shape.scale * bassScale, shape.scale * bassScale, shape.scale * bassScale);
+        dummy.updateMatrix();
+        group.current.setMatrixAt(i, dummy.matrix);
+      });
+      group.current.instanceMatrix.needsUpdate = true;
+    }
+  });
+
+  return (
+    <instancedMesh ref={group} args={[null, null, count]}>
+      <icosahedronGeometry args={[1, 0]} />
+      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
+    </instancedMesh>
+  );
+};
+
 const R = 30; // Radius of the character selection circle
 window.isHoveringCard = false;
 
@@ -371,6 +415,20 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         state.camera.position.y += (Math.random() - 0.5) * shakeAmt;
       }
     }
+    
+    // Dynamic ASA Text Animation (Parallax + Bass Scale)
+    const textEl = document.getElementById('asa-bg-text');
+    if (textEl) {
+       const time = state.clock.elapsedTime;
+       const floatY = Math.sin(time * 2) * 20; // Float up and down
+       const floatX = Math.cos(time * 1.5) * 10;
+       const bassScale = 1 + (audioState.bass * 0.2); // Thump to the beat
+       // Inverse parallax based on mouse
+       const mouseX = state.pointer.x * -30;
+       const mouseY = state.pointer.y * -30;
+       
+       textEl.style.transform = `translate(calc(${mouseX}px + ${floatX}px), calc(${mouseY}px + ${floatY}px)) scale(${bassScale})`;
+    }
 
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
@@ -476,13 +534,14 @@ function App() {
           zIndex: 50,
           pointerEvents: 'none'
         }}>
-          <h1 style={{
+          <h1 id="asa-bg-text" style={{
             fontSize: '12rem',
             color: 'rgba(255, 255, 255, 0.03)',
             textShadow: '0 0 40px rgba(160, 32, 240, 0.1)',
             margin: 0,
             animation: 'safe-glitch 0.5s infinite',
-            mixBlendMode: 'screen'
+            mixBlendMode: 'screen',
+            transition: 'transform 0.1s ease-out'
           }}>
             ASA
           </h1>
@@ -512,6 +571,7 @@ function App() {
         <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
         
         <Suspense fallback={null}>
+          <VoidShapes />
           <HorizonTrees />
           
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 0]}>
