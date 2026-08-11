@@ -65,69 +65,7 @@ const updateAudioData = () => {
   
   // Pipe bass data to CSS variables for dynamic glowing effects!
   document.documentElement.style.setProperty('--bass', audioState.bass.toFixed(3));
-};
 
-const Particles = () => {
-  const count = 3000;
-  const mesh = useRef();
-  
-  const particles = useMemo(() => {
-    const temp = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      temp[i * 3] = (Math.random() - 0.5) * 200;
-      temp[i * 3 + 1] = (Math.random() - 0.5) * 200;
-      temp[i * 3 + 2] = (Math.random() - 0.5) * 200;
-    }
-    return temp;
-  }, [count]);
-  
-  const colors = useMemo(() => {
-    const temp = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const isPurple = Math.random() > 0.4;
-      temp[i * 3] = isPurple ? 0.62 : 1.0;
-      temp[i * 3 + 1] = isPurple ? 0.12 : 1.0;
-      temp[i * 3 + 2] = isPurple ? 0.94 : 1.0;
-    }
-    return temp;
-  }, [count]);
-
-  useFrame((state, delta) => {
-    updateAudioData();
-    if (mesh.current) {
-      mesh.current.rotation.y -= delta * (0.02 + audioState.bass * 0.1);
-      const scale = 1 + audioState.bass * 0.8;
-      mesh.current.scale.set(scale, scale, scale);
-    }
-  });
-
-  return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particles.length / 3}
-          array={particles}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={colors.length / 3}
-          array={colors}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.15}
-        vertexColors
-        transparent
-        opacity={0.5}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
 
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
@@ -298,7 +236,8 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      const startTime = 3500 + dataIndex * 200; // Start ONLY when camera lands (3.5s)
+      // Start materializing the cards DURING the camera sweep! (Starts at 0.5s)
+      const startTime = 500 + dataIndex * 200; 
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
@@ -351,9 +290,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const floatY = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       groupRef.current.position.y = floatY;
       
-      // Card appears fully after materialization finishes
+      // Card appears fully after materialization finishes (0.5s start + 1.5s build = 2.0s)
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 5000 + data.index * 200) {
+        if (performance.now() - window.introTime > 2000 + data.index * 200) {
           setMaterialized(true);
         }
       }
@@ -572,7 +511,6 @@ function App() {
         <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
         
         <Suspense fallback={null}>
-          <Particles />
           <HorizonTrees />
           
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 0]}>

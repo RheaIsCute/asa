@@ -124,10 +124,9 @@ body, html {
   height: 480px;
   display: flex;
   flex-direction: column;
-  pointer-events: auto;
+  pointer-events: none; /* Can't click while invisible/materializing */
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
-  cursor: pointer;
   transition: border-color 0.3s, background 0.3s, opacity 0.5s ease-out;
   opacity: 0; /* Starts hidden until materialized */
   overflow: hidden;
@@ -136,6 +135,8 @@ body, html {
 
 .html-panel.materialized {
   opacity: 1;
+  pointer-events: auto; /* Clickable once materialized! */
+  cursor: pointer;
 }
 
 .html-panel:hover {
