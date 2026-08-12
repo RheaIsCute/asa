@@ -1,13 +1,13 @@
-﻿import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, useTexture, Text } from '@react-three/drei';
-import { EffectComposer, Bloom, Glitch, Scanline, Vignette } from '@react-three/postprocessing';
+import { Html, useTexture } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// AUDIO ENGINE â€” Beat Detection + Smoothed Frequency Bands
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
+// AUDIO ENGINE — Beat Detection + Smoothed Frequency Bands
+// ═══════════════════════════════════════════════════════════
 
 const audioState = {
   initialized: false,
@@ -38,10 +38,10 @@ const initAudio = () => {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
-  analyser.smoothingTimeConstant = 0.4;
+  analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/music_and_me.mp3');
+  audioRef = new Audio('/nuts.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   
@@ -62,10 +62,6 @@ const playAudio = () => {
   }
 };
 
-const setVolume = (val) => {
-  if (audioRef) audioRef.volume = val;
-};
-
 const toggleMute = () => {
   if (audioRef) {
     audioRef.muted = !audioRef.muted;
@@ -78,24 +74,29 @@ const updateAudioData = () => {
   if (!audioState.playing || !analyser) return;
   
   analyser.getByteFrequencyData(audioState.raw);
-  const bins = analyser.frequencyBinCount;
+  const bins = analyser.frequencyBinCount; // 128
   
+  // Sub bass (deep rumble, bins 0-3)
   let subSum = 0;
   for (let i = 0; i < 4; i++) subSum += audioState.raw[i];
   audioState.sub = subSum / 4 / 255;
   
+  // Bass (kicks + bass, bins 3-12)
   let bassSum = 0;
   for (let i = 3; i < 12; i++) bassSum += audioState.raw[i];
   audioState.bass = bassSum / 9 / 255;
   
+  // Mid (vocals + instruments, bins 12-50)
   let midSum = 0;
   for (let i = 12; i < 50; i++) midSum += audioState.raw[i];
   audioState.mid = midSum / 38 / 255;
   
+  // High (cymbals + air, bins 50-128)
   let highSum = 0;
   for (let i = 50; i < bins; i++) highSum += audioState.raw[i];
   audioState.high = highSum / (bins - 50) / 255;
   
+  // ── Exponential Smoothing (fast attack, slow release) ──
   const attack = 0.35;
   const release = 0.92;
   
@@ -107,6 +108,7 @@ const updateAudioData = () => {
   audioState.smoothMid = smooth(audioState.smoothMid, audioState.mid);
   audioState.smoothHigh = smooth(audioState.smoothHigh, audioState.high);
   
+  // ── Beat Detection via Spectral Flux ──
   const currentEnergy = audioState.bass + audioState.sub * 0.5;
   
   energyHistory[historyIndex % energyHistory.length] = currentEnergy;
@@ -131,6 +133,7 @@ const updateAudioData = () => {
   audioState.energyAccumulator *= 0.995;
   prevEnergy = currentEnergy;
   
+  // ── Pipe to CSS ──
   const root = document.documentElement.style;
   root.setProperty('--bass', audioState.smoothBass.toFixed(3));
   root.setProperty('--sub', audioState.smoothSub.toFixed(3));
@@ -138,115 +141,125 @@ const updateAudioData = () => {
   root.setProperty('--high', audioState.smoothHigh.toFixed(3));
 };
 
+// Drives audio analysis every single frame
 const AudioDriver = () => {
   useFrame(() => { updateAudioData(); });
   return null;
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
 // 3D SCENE COMPONENTS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
+
+const LYRICS = [
+  { start: 0.500, end: 2.400, text: "(Okay, stop fighting, I swear to God)" },
+  { start: 4.900, end: 6.100, text: "(We gon' be okay)" },
+  { start: 9.130, end: 11.750, text: "I'm like, \"Where you at? Can't see ya, I need you now\"" },
+  { start: 11.750, end: 14.230, text: "You do it so right, dare to teach me how" },
+  { start: 14.230, end: 16.820, text: "You talk about a feelin', I" },
+  { start: 16.820, end: 19.340, text: "Don't know what you want from me, I..." },
+  { start: 19.340, end: 21.840, text: "Can't give you what you want from me, no" },
+  { start: 21.840, end: 24.360, text: "Wait, I didn't mean to let you go" },
+  { start: 24.360, end: 26.850, text: "Can't give you what you want from me, no" },
+  { start: 26.850, end: 29.560, text: "Wait, I didn't mean to let you go" },
+  { start: 29.560, end: 31.950, text: "Yeah, this music and me" },
+  { start: 31.950, end: 34.420, text: "We gon' be alright, alright" },
+  { start: 34.420, end: 36.950, text: "Yeah, this music and me" },
+  { start: 36.950, end: 39.460, text: "We gon' be okay, alright" },
+  { start: 39.460, end: 41.970, text: "Yeah, this music and me" },
+  { start: 41.970, end: 44.570, text: "We gon' be alright, alright" },
+  { start: 44.570, end: 47.010, text: "Yeah, this music and me" },
+  { start: 47.010, end: 50.080, text: "We gon' be okay, alright" }
+];
 
 const LyricsBackground = () => {
   const [currentLyric, setCurrentLyric] = useState("");
   const textRef = useRef();
-  
+
   useFrame(() => {
     if (!audioRef || !audioState.playing) return;
     const t = audioRef.currentTime;
     const active = LYRICS.find(l => t >= l.start && t <= l.end);
+    
     if (active) {
       if (currentLyric !== active.text) setCurrentLyric(active.text);
+      if (textRef.current) {
+        textRef.current.position.y += Math.sin(t * 2) * 0.05;
+        textRef.current.scale.setScalar(1 + audioState.smoothBass * 0.1);
+      }
     } else {
       if (currentLyric !== "") setCurrentLyric("");
     }
-    
-    if (textRef.current) {
-      const scale = 1 + audioState.smoothBass * 0.05;
-      textRef.current.scale.setScalar(THREE.MathUtils.lerp(textRef.current.scale.x, scale, 0.1));
-    }
   });
-  
-  if (!currentLyric) return null;
-  
-  return (
-    <Text 
+
+  return currentLyric ? (
+    <Text
       ref={textRef}
-      position={[0, 15, -30]} 
-      fontSize={8} 
-      maxWidth={100}
-      textAlign="center"
-      color="rgba(160, 32, 240, 0.4)"
+      position={[0, -5, -40]}
+      fontSize={8}
+      color="#ffffff"
       font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
-      anchorX="center" 
+      anchorX="center"
       anchorY="middle"
+      fillOpacity={0.15}
+      outlineWidth={0.2}
+      outlineColor="#a020f0"
+      outlineOpacity={0.8}
       depthWrite={false}
     >
       {currentLyric}
     </Text>
-  );
+  ) : null;
 };
 
 const AsaIntroText = ({ playing }) => {
-  const [visible, setVisible] = useState(false);
-  const textGroup = useRef();
+  const groupRef = useRef();
   const particleGroup = useRef();
   
-  const particlesCount = 80;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const particles = useMemo(() => {
+  const particlesCount = 400;
+  const particlesData = useMemo(() => {
     const data = [];
     for (let i = 0; i < particlesCount; i++) {
       data.push({
-        pos: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 20],
+        pos: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 20],
         speed: Math.random() * 2 + 0.5,
-        scale: Math.random() * 0.5 + 0.1
+        targetPos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100]
       });
     }
     return data;
   }, [particlesCount]);
-
-  useEffect(() => {
-    if (playing) setVisible(true);
-  }, [playing]);
-
+  
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
   useFrame((state, delta) => {
-    if (!visible) return;
+    if (!playing || !groupRef.current) return;
     
-    if (playing && window.introTime) {
-      const timeSinceIntro = performance.now() - window.introTime;
-      const spawnLimit = window.INTRO_DELAY_SEC * 1000 + 3300;
-      if (timeSinceIntro > spawnLimit) {
-        setVisible(false);
+    const elapsed = (performance.now() - window.introTime) / 1000;
+    
+    if (elapsed < window.INTRO_DELAY_SEC) {
+      const progress = Math.min(elapsed / window.INTRO_DELAY_SEC, 1);
+      
+      if (particleGroup.current) {
+        particlesData.forEach((p, i) => {
+          dummy.position.set(
+            THREE.MathUtils.lerp(p.pos[0], p.targetPos[0], progress * p.speed),
+            THREE.MathUtils.lerp(p.pos[1], p.targetPos[1], progress * p.speed),
+            THREE.MathUtils.lerp(p.pos[2], p.targetPos[2], progress * p.speed)
+          );
+          dummy.updateMatrix();
+          particleGroup.current.setMatrixAt(i, dummy.matrix);
+        });
+        particleGroup.current.instanceMatrix.needsUpdate = true;
       }
-    }
-    
-    if (textGroup.current) {
-      const cam = state.camera;
-      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
-      const pos = cam.position.clone().add(dir.multiplyScalar(50));
-      textGroup.current.position.copy(pos);
-      textGroup.current.quaternion.copy(cam.quaternion);
-    }
-    
-    if (particleGroup.current) {
-      particles.forEach((p, i) => {
-        p.pos[1] += p.speed * delta * (audioState.smoothBass * 5 + 1);
-        if (p.pos[1] > 20) p.pos[1] = -20;
-        dummy.position.set(...p.pos);
-        dummy.scale.setScalar(p.scale * (audioState.smoothBass * 1.5 + 0.8));
-        dummy.updateMatrix();
-        particleGroup.current.setMatrixAt(i, dummy.matrix);
-      });
-      particleGroup.current.instanceMatrix.needsUpdate = true;
+    } else {
+      groupRef.current.visible = false;
     }
   });
 
-  if (!visible) return null;
-
   return (
-    <group ref={textGroup}>
+    <group ref={groupRef} position={[0, -20, 0]}>
       <Text 
+        position={[0, 0, 0]} 
         fontSize={14} 
         color="#ffffff" 
         font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
@@ -266,7 +279,6 @@ const AsaIntroText = ({ playing }) => {
   );
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const HeartShapes = () => {
   const group = useRef();
   const count = 8;
@@ -448,7 +460,7 @@ const AmbientParticles = () => {
   );
 };
 
-// ΓöÇΓöÇ Bass Shockwave Rings ΓöÇΓöÇ
+// ── Bass Shockwave Rings ──
 const BassShockwaves = () => {
   const MAX_RINGS = 6;
   const ringsRef = useRef([]);
@@ -511,7 +523,7 @@ const BassShockwaves = () => {
   );
 };
 
-// ΓöÇΓöÇ Audio Visualizer Ring ΓöÇΓöÇ
+// ── Audio Visualizer Ring ──
 const AudioVisualizerRing = () => {
   const meshRef = useRef();
   const barCount = 64;
@@ -548,7 +560,7 @@ const AudioVisualizerRing = () => {
   );
 };
 
-// ΓöÇΓöÇ Reactive Floor Grid ΓöÇΓöÇ
+// ── Reactive Floor Grid ──
 const ReactiveFloor = () => {
   const meshRef = useRef();
   
@@ -568,14 +580,19 @@ const ReactiveFloor = () => {
   );
 };
 
-// ΓöÇΓöÇ Reactive Fog ΓöÇΓöÇ
+// ── Reactive Fog ──
 const ReactiveFog = () => {
   useFrame((state) => {
     if (state.scene.fog) {
       state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01;
     }
-// DATA â€” Section Content
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  });
+  return null;
+};
+
+// ═══════════════════════════════════════════════════════════
+// DATA — Section Content
+// ═══════════════════════════════════════════════════════════
 
 const R = 30;
 window.isHoveringCard = false;
@@ -600,6 +617,7 @@ const SECTIONS_DATA = [
         <div class="hud-block full"><div class="hud-label">AFFILIATIONS</div>
           <div class="hud-value small">FREELANCE DEVELOPER</div>
           <div class="hud-value small" style="margin-top:5px">UI/UX DESIGNER</div>
+          <div class="hud-value small" style="margin-top:5px">DIGITAL ARTIST</div>
         </div>
       </div>
     `
@@ -610,8 +628,13 @@ const SECTIONS_DATA = [
     icon: ICONS.socials,
     content: `
       <div class="hud-grid">
-        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link">
-          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value">hataeruu</div></div>
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
+          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value" style="color:var(--text-main)">hataeruu</div></div>
+        </a>
+        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value" style="color:var(--text-main)">asari_atari</div></div>
         </a>
       </div>
     `
@@ -623,7 +646,6 @@ const SECTIONS_DATA = [
     content: `
       <div class="hud-grid">
         <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value">MUSIC AND ME</div></div>
-        <input type="range" min="0" max="1" step="0.01" defaultValue="0.5" onInput="setVolume(this.value)" class="hud-slider" />
       </div>
     `
   },
@@ -633,7 +655,9 @@ const SECTIONS_DATA = [
     icon: ICONS.archive,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">FOCUS</div><div class="hud-value small">DIGITAL EXPERIENCES</div></div>
+        <div class="hud-block full"><div class="hud-label">CURRENT FOCUS</div><div class="hud-value small">BUILDING DIGITAL EXPERIENCES</div></div>
+        <div class="hud-block full"><div class="hud-label">PAST PROJECTS</div><div class="hud-value small">VARIOUS WEB INTERFACES & CREATIVE CODE</div></div>
+        <div class="hud-block full"><div class="hud-label">AESTHETIC</div><div class="hud-value small">Y2K / NEON / CYBER / AMBIENT</div></div>
       </div>
     `
   },
@@ -643,7 +667,15 @@ const SECTIONS_DATA = [
     icon: ICONS.status,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+          <div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
+        </div>
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+          <div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div>
+        </div>
+        <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
       </div>
     `
   }
@@ -665,56 +697,9 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
   };
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// GLOBAL AUDIO STATE & UTILS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-const LYRICS = [
-  { start: 0.500, end: 2.400, text: "(Okay, stop fighting, I swear to God)" },
-  { start: 4.900, end: 6.100, text: "(We gon' be okay)" },
-  { start: 9.130, end: 11.750, text: "I'm like, \"Where you at? Can't see ya, I need you now\"" },
-  { start: 11.750, end: 14.230, text: "You do it so right, dare to teach me how" },
-  { start: 14.230, end: 16.820, text: "You talk about a feelin', I feel it now" },
-  { start: 16.820, end: 19.450, text: "Look back if I could, but I'm not allowed" },
-  { start: 19.450, end: 22.000, text: "I'm like, \"Where you at? Really need you now\"" },
-  { start: 22.000, end: 24.500, text: "You do it so right, dare to teach me how" },
-  { start: 24.500, end: 27.050, text: "You talk about a feelin', I feel it now" },
-  { start: 27.050, end: 29.600, text: "Look back if I could, but I'm not allowed" },
-  { start: 30.900, end: 33.500, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
-  { start: 33.700, end: 36.100, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
-  { start: 36.500, end: 38.600, text: "The look on your face, tears runnin'" },
-  { start: 38.800, end: 41.200, text: "Don't know what to say, but you still say somethin'" },
-  { start: 41.600, end: 43.700, text: "Feel alive when you do what you're not allowed" },
-  { start: 44.200, end: 46.300, text: "But you should know, this isn't what life 'bout" },
-  { start: 46.800, end: 48.800, text: "I'ma die before I ever cry out" },
-  { start: 49.400, end: 51.400, text: "And I'ma get struck down if I'm a liar" },
-  { start: 51.900, end: 53.900, text: "Hot headed, deep burn, playin' with fire" },
-  { start: 54.500, end: 56.500, text: "Would you ever trade your life for desire?" },
-  { start: 57.100, end: 59.000, text: "Would you ever trade your life for desire?" },
-  { start: 59.600, end: 60.600, text: "Would you everâ€”, uh" },
-  { start: 61.000, end: 62.000, text: "Would you everâ€”, uh" },
-  { start: 71.200, end: 73.800, text: "I'm like, \"Where you at? Can't see ya, I need you now\"" },
-  { start: 73.800, end: 76.300, text: "You do it so right, dare to teach me how" },
-  { start: 76.300, end: 78.900, text: "You talk about a feelin', I feel it now" },
-  { start: 78.900, end: 81.500, text: "Look back if I could, but I'm not allowed" },
-  { start: 81.500, end: 84.000, text: "I'm like, \"Where you at? Really need you now\"" },
-  { start: 84.000, end: 86.500, text: "You do it so right, dare to teach me how" },
-  { start: 86.500, end: 89.100, text: "You talk about a feelin', I feel it now" },
-  { start: 89.100, end: 91.700, text: "Look back if I could, but I'm not allowed" },
-  { start: 93.000, end: 95.600, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
-  { start: 95.800, end: 98.200, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
-  { start: 98.600, end: 100.700, text: "The look on your face, tears runnin'" },
-  { start: 100.900, end: 103.300, text: "Don't know what to say, but you still say somethin'" },
-  { start: 103.700, end: 105.800, text: "Feel alive when you do what you're not allowed" },
-  { start: 106.300, end: 108.400, text: "But you should know, this isn't what life 'bout" },
-  { start: 108.900, end: 110.900, text: "I'ma die before I ever cry out" },
-  { start: 111.500, end: 113.500, text: "And I'ma get struck down if I'm a liar" },
-  { start: 114.000, end: 116.000, text: "Hot headed, deep burn, playin' with fire" },
-  { start: 116.600, end: 118.600, text: "Would you ever trade your life for desire?" },
-  { start: 119.200, end: 121.100, text: "Would you ever trade your life for desire?" },
-  { start: 121.700, end: 122.700, text: "Would you everâ€”, uh" },
-  { start: 122.900, end: 124.200, text: "(We gon' be okay)" }
-];
+// ═══════════════════════════════════════════════════════════
+// CARD SYSTEM
+// ═══════════════════════════════════════════════════════════
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
   const count = 100;
@@ -838,9 +823,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   );
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// SCENE CONTROLLER â€” Camera + DOM Effects
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
+// SCENE CONTROLLER — Camera + DOM Effects
+// ═══════════════════════════════════════════════════════════
 
 const SceneController = ({ activeSection, setActiveSection, playing, carouselRef }) => {
   const domRefs = useRef({});
@@ -903,7 +888,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
     
-    // â”€â”€ CAMERA SHAKE (enhanced â€” sine-based + beat impulse) â”€â”€
+    // ── CAMERA SHAKE (enhanced — sine-based + beat impulse) ──
     const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 3.0 : 0;
     const shakeIntensity = shakeBase * (activeSection ? 0.3 : (window.isHoveringCard ? 0.2 : 1.0));
     
@@ -918,7 +903,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
     }
     
-    // â”€â”€ ASA TITLE â€” MULTI-LAYER CHROMATIC GLITCH â”€â”€
+    // ── ASA TITLE — MULTI-LAYER CHROMATIC GLITCH ──
     if (!domRefs.current.textEl) {
       domRefs.current.textEl = document.getElementById('asa-bg-text');
       if (domRefs.current.textEl) {
@@ -974,7 +959,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
     }
     
-    // â”€â”€ SCREEN FLASH ON HEAVY BEATS â”€â”€
+    // ── SCREEN FLASH ON HEAVY BEATS ──
     if (!domRefs.current.flashEl) domRefs.current.flashEl = document.getElementById('screen-flash');
     const flashEl = domRefs.current.flashEl;
     if (flashEl) {
@@ -987,14 +972,14 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
     }
     
-    // â”€â”€ SCANLINE INTENSITY â”€â”€
+    // ── SCANLINE INTENSITY ──
     if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
     const scanEl = domRefs.current.scanEl;
     if (scanEl) {
       scanEl.style.opacity = String(0.1 + smoothBass * 0.3);
     }
 
-    // â”€â”€ EDGE GLOW INTENSITY â”€â”€
+    // ── EDGE GLOW INTENSITY ──
     if (!domRefs.current.edgeEl) domRefs.current.edgeEl = document.querySelector('.screen-edge-glow');
     const edgeEl = domRefs.current.edgeEl;
     if (edgeEl) {
@@ -1003,9 +988,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
     }
     
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ══════════════════════════════════════
     // CAMERA NAVIGATION (preserved logic)
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ══════════════════════════════════════
     
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
@@ -1053,7 +1038,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
 
     } else if (introFinished.current && introSpinFinished.current) {
       
-      // Lerp speed â€” slow on massive impacts for "freeze frame" feel
+      // Lerp speed — slow on massive impacts for "freeze frame" feel
       let lerpSpeed = 6;
       if (beat && audioState.beatEnergy > 0.8 && !activeSection) {
         lerpSpeed = 2;
@@ -1077,7 +1062,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * delta);
         
       } else {
-        // OVERVIEW â€” micro-orbit
+        // OVERVIEW — micro-orbit
         
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
         targetRot.current = pointerTracker.current.current;
@@ -1098,9 +1083,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     
     state.camera.lookAt(lookAtPos.current);
     
-    // â”€â”€ POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) â”€â”€
+    // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
-      // FOV breathing â€” expands on bass, contracts between
+      // FOV breathing — expands on bass, contracts between
       bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * delta);
       state.camera.fov = 60 + bassFovPunch.current * 14;
       
@@ -1111,7 +1096,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       
       state.camera.updateProjectionMatrix();
       
-      // Camera roll sway â€” subtle drunken float
+      // Camera roll sway — subtle drunken float
       state.camera.rotation.z += Math.sin(time * 0.6) * smoothBass * 0.035;
     }
   });
@@ -1119,9 +1104,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   return null;
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// POST-PROCESSING â€” Dynamic Audio-Reactive Effects
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
+// POST-PROCESSING — Dynamic Audio-Reactive Effects
+// ═══════════════════════════════════════════════════════════
 
 const Effects = () => {
   return (
@@ -1132,9 +1117,9 @@ const Effects = () => {
   );
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
 // APP
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
 
 window.INTRO_DELAY_SEC = 3.2; // Wait 3.2 seconds for the intro drop
 
@@ -1182,7 +1167,7 @@ function App() {
         </p>
       </div>
 
-      {/* â”€â”€ ASA TITLE: Multi-Layer Chromatic Glitch â”€â”€ */}
+      {/* ── ASA TITLE: Multi-Layer Chromatic Glitch ── */}
       {started && introTextVisible && (
         <div className="asa-title-wrapper">
           <div id="asa-bg-text" className="asa-title-container">
@@ -1193,16 +1178,16 @@ function App() {
         </div>
       )}
 
-      {/* â”€â”€ Screen Flash Overlay â”€â”€ */}
+      {/* ── Screen Flash Overlay ── */}
       {started && <div id="screen-flash" className="screen-flash"></div>}
       
-      {/* â”€â”€ Scanline Overlay â”€â”€ */}
+      {/* ── Scanline Overlay ── */}
       {started && <div className="screen-scanlines"></div>}
       
-      {/* â”€â”€ Edge Glow â”€â”€ */}
+      {/* ── Edge Glow ── */}
       {started && <div className="screen-edge-glow"></div>}
 
-      {/* â”€â”€ Audio-reactive radial blur overlay â”€â”€ */}
+      {/* ── Audio-reactive radial blur overlay ── */}
       {started && <div className="audio-blur-overlay"></div>}
 
       {started && (
@@ -1282,4 +1267,3 @@ function App() {
 }
 
 export default App;
-
