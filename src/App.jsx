@@ -226,10 +226,11 @@ const LyricsOverlay = ({ started }) => {
               cyanLayer.style.clipPath = 'none';
             }
             
-            const coreGlow = `0 0 ${20 + bass * 150}px rgba(160, 32, 240, ${0.4 + bass * 0.6})`;
-            const outerGlow = `0 0 ${60 + bass * 300}px rgba(160, 32, 240, ${0.2 + bass * 0.4})`;
-            mainLayer.style.textShadow = `${coreGlow}, ${outerGlow}`;
-            mainLayer.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.4})`;
+            // Use constant blur radii to avoid expensive GPU shadow recalculations every frame
+            const coreAlpha = 0.4 + bass * 0.5;
+            const outerAlpha = 0.1 + bass * 0.3;
+            mainLayer.style.textShadow = `0 0 30px rgba(160, 32, 240, ${coreAlpha}), 0 0 80px rgba(160, 32, 240, ${outerAlpha})`;
+            mainLayer.style.color = `rgba(255, 255, 255, ${0.05 + bass * 0.2})`;
           }
         }
       }
@@ -256,7 +257,7 @@ const LyricsOverlay = ({ started }) => {
 const IntroParticles = ({ playing }) => {
   const groupRef = useRef();
   const meshRef = useRef();
-  const particlesCount = 300;
+  const particlesCount = 100;
 
   const particlesData = useMemo(() => {
     const data = [];
@@ -394,7 +395,7 @@ const HorizonTrees = () => {
 
 const VoidShapes = () => {
   const group = useRef();
-  const count = 30;
+  const count = 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   
   const shapesData = useMemo(() => {
@@ -446,7 +447,7 @@ const VoidShapes = () => {
 };
 
 const AmbientParticles = () => {
-  const count = 600;
+  const count = 150;
   const mesh = useRef();
   const matRef = useRef();
   
@@ -978,11 +979,11 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           cyanLayer.style.clipPath = 'none';
         }
         
-        // Main layer: massive neon glow + strobe flash
-        const coreGlow = `0 0 ${20 + bass * 200}px rgba(160, 32, 240, ${0.4 + bass * 0.6})`;
-        const outerGlow = `0 0 ${60 + bass * 500}px rgba(160, 32, 240, ${0.15 + bass * 0.4})`;
-        const megaGlow = `0 0 ${120 + bass * 800}px rgba(120, 0, 220, ${bass * 0.25})`;
-        mainLayer.style.textShadow = `${coreGlow}, ${outerGlow}, ${megaGlow}`;
+        // Main layer: massive neon glow + strobe flash (static radii for performance)
+        const coreAlpha = 0.4 + bass * 0.6;
+        const outerAlpha = 0.15 + bass * 0.4;
+        const megaAlpha = bass * 0.3;
+        mainLayer.style.textShadow = `0 0 30px rgba(160, 32, 240, ${coreAlpha}), 0 0 100px rgba(160, 32, 240, ${outerAlpha}), 0 0 250px rgba(120, 0, 220, ${megaAlpha})`;
         mainLayer.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.3})`;
       }
     }
