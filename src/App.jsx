@@ -765,7 +765,7 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 // ═══════════════════════════════════════════════════════════
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
-  const count = 100;
+  const count = 600;
   const meshRef = useRef();
   const matRef = useRef();
   
@@ -838,7 +838,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} />
+      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 };
