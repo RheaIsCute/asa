@@ -643,7 +643,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   const pointerTracker = useRef({ current: 0, target: 0, velocity: 0 });
   const targetRot = useRef(0);
   const startTime = useRef(0);
-  const randomIntroSpin = useRef(Math.PI * 2 * 2 + (Math.PI * 2 / SECTIONS_DATA.length) * Math.floor(Math.random() * SECTIONS_DATA.length));
+  const randomIntroSpin = useRef(Math.PI * 2 * 1 + (Math.PI * 2 / SECTIONS_DATA.length) * Math.floor(Math.random() * SECTIONS_DATA.length));
   
   const bassFovPunch = useRef(0);
   
