@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, useTexture } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { Html, useTexture, Text } from '@react-three/drei';
+import { EffectComposer, Bloom, Glitch, Scanline, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
 
@@ -38,7 +38,7 @@ const initAudio = () => {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
-  analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
+  analyser.smoothingTimeConstant = 0.4;
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
   audioRef = new Audio('/music_and_me.mp3');
@@ -62,6 +62,10 @@ const playAudio = () => {
   }
 };
 
+const setVolume = (val) => {
+  if (audioRef) audioRef.volume = val;
+};
+
 const toggleMute = () => {
   if (audioRef) {
     audioRef.muted = !audioRef.muted;
@@ -74,29 +78,24 @@ const updateAudioData = () => {
   if (!audioState.playing || !analyser) return;
   
   analyser.getByteFrequencyData(audioState.raw);
-  const bins = analyser.frequencyBinCount; // 128
+  const bins = analyser.frequencyBinCount;
   
-  // Sub bass (deep rumble, bins 0-3)
   let subSum = 0;
   for (let i = 0; i < 4; i++) subSum += audioState.raw[i];
   audioState.sub = subSum / 4 / 255;
   
-  // Bass (kicks + bass, bins 3-12)
   let bassSum = 0;
   for (let i = 3; i < 12; i++) bassSum += audioState.raw[i];
   audioState.bass = bassSum / 9 / 255;
   
-  // Mid (vocals + instruments, bins 12-50)
   let midSum = 0;
   for (let i = 12; i < 50; i++) midSum += audioState.raw[i];
   audioState.mid = midSum / 38 / 255;
   
-  // High (cymbals + air, bins 50-128)
   let highSum = 0;
   for (let i = 50; i < bins; i++) highSum += audioState.raw[i];
   audioState.high = highSum / (bins - 50) / 255;
   
-  // ── Exponential Smoothing (fast attack, slow release) ──
   const attack = 0.35;
   const release = 0.92;
   
@@ -108,7 +107,6 @@ const updateAudioData = () => {
   audioState.smoothMid = smooth(audioState.smoothMid, audioState.mid);
   audioState.smoothHigh = smooth(audioState.smoothHigh, audioState.high);
   
-  // ── Beat Detection via Spectral Flux ──
   const currentEnergy = audioState.bass + audioState.sub * 0.5;
   
   energyHistory[historyIndex % energyHistory.length] = currentEnergy;
@@ -133,7 +131,6 @@ const updateAudioData = () => {
   audioState.energyAccumulator *= 0.995;
   prevEnergy = currentEnergy;
   
-  // ── Pipe to CSS ──
   const root = document.documentElement.style;
   root.setProperty('--bass', audioState.smoothBass.toFixed(3));
   root.setProperty('--sub', audioState.smoothSub.toFixed(3));
@@ -141,7 +138,6 @@ const updateAudioData = () => {
   root.setProperty('--high', audioState.smoothHigh.toFixed(3));
 };
 
-// Drives audio analysis every single frame
 const AudioDriver = () => {
   useFrame(() => { updateAudioData(); });
   return null;
@@ -151,315 +147,123 @@ const AudioDriver = () => {
 // 3D SCENE COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
-const HeartShapes = () => {
-  const group = useRef();
-  const count = 8;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+const LyricsBackground = () => {
+  const [currentLyric, setCurrentLyric] = useState("");
+  const textRef = useRef();
   
-  const heartShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const x = -2.5, y = -5;
-    shape.moveTo(x + 2.5, y + 2.5);
-    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
-    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
-    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
-    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
-    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
-    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-    return shape;
-  }, []);
-
-  const shapesData = useMemo(() => {
-    const data = [];
-    for (let i = 0; i < count; i++) {
-      data.push({
-        pos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100 + 40, (Math.random() - 0.5) * 150],
-        rot: [Math.PI, Math.random() * Math.PI * 2, 0],
-        speed: (Math.random() - 0.5) * 0.5,
-        scale: Math.random() * 0.2 + 0.1,
-      });
-    }
-    return data;
-  }, [count]);
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      shapesData.forEach((shape, i) => {
-        shape.pos[1] += Math.sin(state.clock.elapsedTime + i) * 0.05;
-        shape.rot[1] += shape.speed * delta;
-        dummy.position.set(...shape.pos);
-        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
-        const s = shape.scale * (1 + audioState.smoothBass * 0.5);
-        dummy.scale.set(s, s, s);
-        dummy.updateMatrix();
-        group.current.setMatrixAt(i, dummy.matrix);
-      });
-      group.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  return (
-    <instancedMesh ref={group} args={[null, null, count]}>
-      <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
-    </instancedMesh>
-  );
-};
-
-const HorizonTrees = () => {
-  const texture = useTexture('/trees.png');
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.repeat.set(12, 1);
-  
-  const matRef = useRef();
-  
-  useFrame((state, delta) => {
-    if (matRef.current) {
-      matRef.current.map.offset.x += delta * 0.01;
-      const b = audioState.smoothBass;
-      matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
-      matRef.current.opacity = 0.5 + b * 0.3;
-    }
-  });
-
-  return (
-    <mesh position={[0, -25, 0]} rotation={[0, 0, 0]}>
-      <cylinderGeometry args={[90, 90, 50, 32, 1, true]} />
-      <meshBasicMaterial 
-        ref={matRef}
-        map={texture} 
-        transparent 
-        opacity={0.6}
-        color="white"
-        side={THREE.BackSide}
-      />
-    </mesh>
-  );
-};
-
-const VoidShapes = () => {
-  const group = useRef();
-  const count = 30;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  
-  const shapesData = useMemo(() => {
-    const data = [];
-    for (let i = 0; i < count; i++) {
-      data.push({
-        pos: [(Math.random() - 0.5) * 200, (Math.random() - 0.5) * 100 + 30, (Math.random() - 0.5) * 200],
-        rot: [Math.random() * Math.PI, Math.random() * Math.PI, 0],
-        speed: (Math.random() - 0.5) * 0.3,
-        scale: Math.random() * 3 + 1,
-        phaseOffset: Math.random() * Math.PI * 2
-      });
-    }
-    return data;
-  }, []);
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      const bassScale = 1 + audioState.smoothBass * 1.2;
-      const beat = audioState.beatDetected;
-      
-      shapesData.forEach((shape, i) => {
-        shape.rot[0] += (shape.speed + audioState.smoothMid * 0.5) * delta;
-        shape.rot[1] += (shape.speed + audioState.smoothHigh * 0.3) * delta;
-        
-        // Pulse position outward on beat
-        const beatPush = beat ? audioState.beatEnergy * 3 : 0;
-        const dist = Math.sqrt(shape.pos[0] ** 2 + shape.pos[2] ** 2);
-        const pushX = dist > 0 ? (shape.pos[0] / dist) * beatPush : 0;
-        const pushZ = dist > 0 ? (shape.pos[2] / dist) * beatPush : 0;
-        
-        dummy.position.set(shape.pos[0] + pushX, shape.pos[1], shape.pos[2] + pushZ);
-        dummy.rotation.set(...shape.rot);
-        const s = shape.scale * bassScale;
-        dummy.scale.set(s, s, s);
-        dummy.updateMatrix();
-        group.current.setMatrixAt(i, dummy.matrix);
-      });
-      group.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  return (
-    <instancedMesh ref={group} args={[null, null, count]}>
-      <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
-    </instancedMesh>
-  );
-};
-
-const AmbientParticles = () => {
-  const count = 600;
-  const mesh = useRef();
-  const matRef = useRef();
-  
-  const particles = useMemo(() => {
-    const temp = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      temp[i * 3] = (Math.random() - 0.5) * 250;
-      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20;
-      temp[i * 3 + 2] = (Math.random() - 0.5) * 250;
-    }
-    return temp;
-  }, [count]);
-  
-  useFrame((state, delta) => {
-    if (mesh.current && matRef.current) {
-      mesh.current.rotation.y += delta * 0.05;
-      
-      if (audioState.smoothBass > 0) {
-        mesh.current.rotation.y += delta * audioState.smoothBass * 1.2;
-        matRef.current.size = 0.4 + audioState.smoothBass * 2.0;
-        matRef.current.opacity = 0.3 + audioState.smoothBass * 0.7;
-        
-        // Color shift on heavy bass
-        const b = audioState.smoothBass;
-        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
-      }
-    }
-  });
-
-  return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.4} color="#a020f0" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
-    </points>
-  );
-};
-
-// ── Bass Shockwave Rings ──
-const BassShockwaves = () => {
-  const MAX_RINGS = 6;
-  const ringsRef = useRef([]);
-  const ringState = useRef(Array.from({ length: MAX_RINGS }, () => ({
-    active: false,
-    startTime: 0
-  })));
-  const nextRing = useRef(0);
-  
-  useFrame((state) => {
-    // Spawn ring on beat
-    if (audioState.beatDetected) {
-      const idx = nextRing.current % MAX_RINGS;
-      ringState.current[idx].active = true;
-      ringState.current[idx].startTime = state.clock.elapsedTime;
-      nextRing.current++;
+  useFrame(() => {
+    if (!audioRef || !audioState.playing) return;
+    const t = audioRef.currentTime;
+    const active = LYRICS.find(l => t >= l.start && t <= l.end);
+    if (active) {
+      if (currentLyric !== active.text) setCurrentLyric(active.text);
+    } else {
+      if (currentLyric !== "") setCurrentLyric("");
     }
     
-    // Update active rings
-    ringState.current.forEach((ring, i) => {
-      const mesh = ringsRef.current[i];
-      if (!mesh) return;
-      
-      if (ring.active) {
-        const elapsed = state.clock.elapsedTime - ring.startTime;
-        const life = 2.0;
-        const progress = elapsed / life;
-        
-        if (progress >= 1) {
-          ring.active = false;
-          mesh.visible = false;
-        } else {
-          mesh.visible = true;
-          const scale = 1 + progress * 80;
-          mesh.scale.set(scale, scale, 1);
-          mesh.material.opacity = (1 - progress * progress) * 0.35;
-          
-          // White flash on spawn, fade to purple
-          if (progress < 0.08) {
-            mesh.material.color.setRGB(1, 1, 1);
-          } else {
-            mesh.material.color.setHex(0xa020f0);
-          }
-        }
-      } else {
-        mesh.visible = false;
-      }
-    });
+    if (textRef.current) {
+      const scale = 1 + audioState.smoothBass * 0.05;
+      textRef.current.scale.setScalar(THREE.MathUtils.lerp(textRef.current.scale.x, scale, 0.1));
+    }
   });
   
+  if (!currentLyric) return null;
+  
   return (
-    <group position={[0, -19, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      {Array.from({ length: MAX_RINGS }, (_, i) => (
-        <mesh key={i} ref={el => ringsRef.current[i] = el} visible={false}>
-          <ringGeometry args={[0.85, 1, 64]} />
-          <meshBasicMaterial color="#a020f0" transparent opacity={0} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
-        </mesh>
-      ))}
+    <Text 
+      ref={textRef}
+      position={[0, 15, -30]} 
+      fontSize={8} 
+      maxWidth={100}
+      textAlign="center"
+      color="rgba(160, 32, 240, 0.4)"
+      font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
+      anchorX="center" 
+      anchorY="middle"
+      depthWrite={false}
+    >
+      {currentLyric}
+    </Text>
+  );
+};
+
+const AsaIntroText = ({ playing }) => {
+  const [visible, setVisible] = useState(false);
+  const textGroup = useRef();
+  const particleGroup = useRef();
+  
+  const particlesCount = 80;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const particles = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < particlesCount; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 20],
+        speed: Math.random() * 2 + 0.5,
+        scale: Math.random() * 0.5 + 0.1
+      });
+    }
+    return data;
+  }, [particlesCount]);
+
+  useEffect(() => {
+    if (playing) setVisible(true);
+  }, [playing]);
+
+  useFrame((state, delta) => {
+    if (!visible) return;
+    
+    if (playing && window.introTime) {
+      const timeSinceIntro = performance.now() - window.introTime;
+      const spawnLimit = window.INTRO_DELAY_SEC * 1000 + 3300;
+      if (timeSinceIntro > spawnLimit) {
+        setVisible(false);
+      }
+    }
+    
+    if (textGroup.current) {
+      const cam = state.camera;
+      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+      const pos = cam.position.clone().add(dir.multiplyScalar(50));
+      textGroup.current.position.copy(pos);
+      textGroup.current.quaternion.copy(cam.quaternion);
+    }
+    
+    if (particleGroup.current) {
+      particles.forEach((p, i) => {
+        p.pos[1] += p.speed * delta * (audioState.smoothBass * 5 + 1);
+        if (p.pos[1] > 20) p.pos[1] = -20;
+        dummy.position.set(...p.pos);
+        dummy.scale.setScalar(p.scale * (audioState.smoothBass * 1.5 + 0.8));
+        dummy.updateMatrix();
+        particleGroup.current.setMatrixAt(i, dummy.matrix);
+      });
+      particleGroup.current.instanceMatrix.needsUpdate = true;
+    }
+  });
+
+  if (!visible) return null;
+
+  return (
+    <group ref={textGroup}>
+      <Text 
+        fontSize={14} 
+        color="#ffffff" 
+        font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
+        anchorX="center" 
+        anchorY="middle"
+        characters="asa"
+        depthWrite={false}
+      >
+        asa
+        <meshBasicMaterial attach="material" color="#ffffff" />
+      </Text>
+      <instancedMesh ref={particleGroup} args={[null, null, particlesCount]}>
+        <sphereGeometry args={[0.3, 8, 8]} />
+        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} />
+      </instancedMesh>
     </group>
   );
-};
-
-// ── Audio Visualizer Ring ──
-const AudioVisualizerRing = () => {
-  const meshRef = useRef();
-  const barCount = 64;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const radius = 38;
-  
-  useFrame(() => {
-    if (!meshRef.current || !audioState.playing) return;
-    
-    for (let i = 0; i < barCount; i++) {
-      const angle = (i / barCount) * Math.PI * 2;
-      const freqIndex = Math.floor((i / barCount) * 128);
-      const value = audioState.raw[freqIndex] / 255;
-      
-      const barHeight = 0.3 + value * 14;
-      
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      
-      dummy.position.set(x, -19 + barHeight * 0.5, z);
-      dummy.scale.set(0.35, barHeight, 0.35);
-      dummy.rotation.set(0, 0, 0);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(i, dummy.matrix);
-    }
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-  
-  return (
-    <instancedMesh ref={meshRef} args={[null, null, barCount]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color="#a020f0" transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
-    </instancedMesh>
-  );
-};
-
-// ── Reactive Floor Grid ──
-const ReactiveFloor = () => {
-  const meshRef = useRef();
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      const b = audioState.smoothBass;
-      meshRef.current.material.opacity = 0.1 + b * 0.35;
-      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
-    }
-  });
-  
-  return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 0]}>
-      <planeGeometry args={[300, 300, 32, 32]} />
-      <meshBasicMaterial color="#050000" wireframe transparent opacity={0.15} />
-    </mesh>
-  );
-};
-
-// ── Reactive Fog ──
-const ReactiveFog = () => {
-  useFrame((state) => {
-    if (state.scene.fog) {
-      state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01;
-    }
-  });
-  return null;
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -489,7 +293,6 @@ const SECTIONS_DATA = [
         <div class="hud-block full"><div class="hud-label">AFFILIATIONS</div>
           <div class="hud-value small">FREELANCE DEVELOPER</div>
           <div class="hud-value small" style="margin-top:5px">UI/UX DESIGNER</div>
-          <div class="hud-value small" style="margin-top:5px">DIGITAL ARTIST</div>
         </div>
       </div>
     `
@@ -500,13 +303,8 @@ const SECTIONS_DATA = [
     icon: ICONS.socials,
     content: `
       <div class="hud-grid">
-        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
-          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value" style="color:var(--text-main)">hataeruu</div></div>
-        </a>
-        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value" style="color:var(--text-main)">asari_atari</div></div>
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link">
+          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value">hataeruu</div></div>
         </a>
       </div>
     `
@@ -517,10 +315,8 @@ const SECTIONS_DATA = [
     icon: ICONS.music,
     content: `
       <div class="hud-grid">
-        <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">fakemink</div></div>
-        <div class="hud-block"><div class="hud-label">FAV SONG</div><div class="hud-value small">music and me</div></div>
-        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value" style="color:var(--accent)">FAKEMINK - MUSIC AND ME</div></div>
-        <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
+        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value">MUSIC AND ME</div></div>
+        <input type="range" min="0" max="1" step="0.01" defaultValue="0.5" onInput="setVolume(this.value)" class="hud-slider" />
       </div>
     `
   },
@@ -530,9 +326,7 @@ const SECTIONS_DATA = [
     icon: ICONS.archive,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">CURRENT FOCUS</div><div class="hud-value small">BUILDING DIGITAL EXPERIENCES</div></div>
-        <div class="hud-block full"><div class="hud-label">PAST PROJECTS</div><div class="hud-value small">VARIOUS WEB INTERFACES & CREATIVE CODE</div></div>
-        <div class="hud-block full"><div class="hud-label">AESTHETIC</div><div class="hud-value small">Y2K / NEON / CYBER / AMBIENT</div></div>
+        <div class="hud-block full"><div class="hud-label">FOCUS</div><div class="hud-value small">DIGITAL EXPERIENCES</div></div>
       </div>
     `
   },
@@ -542,15 +336,7 @@ const SECTIONS_DATA = [
     icon: ICONS.status,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-          <div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
-        </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-          <div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div>
-        </div>
-        <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
+        <div class="hud-block full"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
       </div>
     `
   }
@@ -573,8 +359,55 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// CARD SYSTEM
+// GLOBAL AUDIO STATE & UTILS
 // ═══════════════════════════════════════════════════════════
+
+const LYRICS = [
+  { start: 0.500, end: 2.400, text: "(Okay, stop fighting, I swear to God)" },
+  { start: 4.900, end: 6.100, text: "(We gon' be okay)" },
+  { start: 9.130, end: 11.750, text: "I'm like, \"Where you at? Can't see ya, I need you now\"" },
+  { start: 11.750, end: 14.230, text: "You do it so right, dare to teach me how" },
+  { start: 14.230, end: 16.820, text: "You talk about a feelin', I feel it now" },
+  { start: 16.820, end: 19.450, text: "Look back if I could, but I'm not allowed" },
+  { start: 19.450, end: 22.000, text: "I'm like, \"Where you at? Really need you now\"" },
+  { start: 22.000, end: 24.500, text: "You do it so right, dare to teach me how" },
+  { start: 24.500, end: 27.050, text: "You talk about a feelin', I feel it now" },
+  { start: 27.050, end: 29.600, text: "Look back if I could, but I'm not allowed" },
+  { start: 30.900, end: 33.500, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
+  { start: 33.700, end: 36.100, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
+  { start: 36.500, end: 38.600, text: "The look on your face, tears runnin'" },
+  { start: 38.800, end: 41.200, text: "Don't know what to say, but you still say somethin'" },
+  { start: 41.600, end: 43.700, text: "Feel alive when you do what you're not allowed" },
+  { start: 44.200, end: 46.300, text: "But you should know, this isn't what life 'bout" },
+  { start: 46.800, end: 48.800, text: "I'ma die before I ever cry out" },
+  { start: 49.400, end: 51.400, text: "And I'ma get struck down if I'm a liar" },
+  { start: 51.900, end: 53.900, text: "Hot headed, deep burn, playin' with fire" },
+  { start: 54.500, end: 56.500, text: "Would you ever trade your life for desire?" },
+  { start: 57.100, end: 59.000, text: "Would you ever trade your life for desire?" },
+  { start: 59.600, end: 60.600, text: "Would you ever—, uh" },
+  { start: 61.000, end: 62.000, text: "Would you ever—, uh" },
+  { start: 71.200, end: 73.800, text: "I'm like, \"Where you at? Can't see ya, I need you now\"" },
+  { start: 73.800, end: 76.300, text: "You do it so right, dare to teach me how" },
+  { start: 76.300, end: 78.900, text: "You talk about a feelin', I feel it now" },
+  { start: 78.900, end: 81.500, text: "Look back if I could, but I'm not allowed" },
+  { start: 81.500, end: 84.000, text: "I'm like, \"Where you at? Really need you now\"" },
+  { start: 84.000, end: 86.500, text: "You do it so right, dare to teach me how" },
+  { start: 86.500, end: 89.100, text: "You talk about a feelin', I feel it now" },
+  { start: 89.100, end: 91.700, text: "Look back if I could, but I'm not allowed" },
+  { start: 93.000, end: 95.600, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
+  { start: 95.800, end: 98.200, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
+  { start: 98.600, end: 100.700, text: "The look on your face, tears runnin'" },
+  { start: 100.900, end: 103.300, text: "Don't know what to say, but you still say somethin'" },
+  { start: 103.700, end: 105.800, text: "Feel alive when you do what you're not allowed" },
+  { start: 106.300, end: 108.400, text: "But you should know, this isn't what life 'bout" },
+  { start: 108.900, end: 110.900, text: "I'ma die before I ever cry out" },
+  { start: 111.500, end: 113.500, text: "And I'ma get struck down if I'm a liar" },
+  { start: 114.000, end: 116.000, text: "Hot headed, deep burn, playin' with fire" },
+  { start: 116.600, end: 118.600, text: "Would you ever trade your life for desire?" },
+  { start: 119.200, end: 121.100, text: "Would you ever trade your life for desire?" },
+  { start: 121.700, end: 122.700, text: "Would you ever—, uh" },
+  { start: 122.900, end: 124.200, text: "(We gon' be okay)" }
+];
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
   const count = 100;
@@ -1003,6 +836,7 @@ function App() {
   const [activeSection, setActiveSection] = useState(null);
   const [introTextVisible, setIntroTextVisible] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1.0);
   
   const carouselRef = useRef();
 
@@ -1019,6 +853,15 @@ function App() {
   const handleMute = (e) => {
     e.stopPropagation();
     setIsMuted(toggleMute());
+  };
+
+  const handleVolumeChange = (e) => {
+    e.stopPropagation();
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+    if (audioRef) {
+      audioRef.volume = newVol;
+    }
   };
 
   return (
@@ -1065,6 +908,15 @@ function App() {
           <button className="mute-btn" onClick={handleMute}>
             {isMuted ? '[ UNMUTE ]' : '[ MUTE ]'}
           </button>
+          <input 
+            type="range" 
+            className="volume-slider"
+            min="0" max="1" step="0.01" 
+            value={volume} 
+            onChange={handleVolumeChange} 
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
           <div className="space-notifier">
             [ PRESS SPACE TO ROTATE / CYCLE ]
           </div>
@@ -1087,6 +939,8 @@ function App() {
         <ReactiveFog />
         
         <Suspense fallback={null}>
+          <AsaIntroText playing={started} />
+          <LyricsBackground />
           <AmbientParticles />
           <VoidShapes />
           <HeartShapes />
