@@ -665,19 +665,22 @@ const SECTIONS_DATA = [
     id: 'identity',
     title: 'ABOUT ME',
     icon: ICONS.identity,
+    width: '580px',
     content: `
-      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-        <img src="/profile.png" style="width: 90px; height: 90px; border-radius: 8px; border: 1px solid var(--accent); object-fit: cover; box-shadow: 0 0 10px rgba(160, 32, 240, 0.3);" />
-        <div class="hud-grid" style="flex: 1; margin: 0; gap: 10px;">
-          <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
-          <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
+      <div style="display: flex; gap: 25px; height: 100%;">
+        <div style="flex: 0 0 220px; display: flex;">
+          <img src="/profile.png" style="width: 100%; height: 100%; min-height: 250px; object-fit: cover; border-radius: 8px; border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(160, 32, 240, 0.3);" />
         </div>
-      </div>
-      <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">STATUS</div>
-          <div class="hud-value small">STUDENT</div>
-          <div class="hud-value small" style="margin-top:5px">ASPIRING AI ENGINEER</div>
-          <div class="hud-value small" style="margin-top:5px">TECHNOLOGY / PROGRAMMING</div>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <div class="hud-grid" style="margin: 0;">
+            <div class="hud-block full"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
+            <div class="hud-block full"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
+            <div class="hud-block full"><div class="hud-label">STATUS</div>
+              <div class="hud-value small">STUDENT</div>
+              <div class="hud-value small" style="margin-top:5px">ASPIRING AI ENGINEER</div>
+              <div class="hud-value small" style="margin-top:5px">TECHNOLOGY / PROGRAMMING</div>
+            </div>
+          </div>
         </div>
       </div>
     `
@@ -865,6 +868,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
         <div 
           className={`html-panel ${isActive ? 'active' : ''} ${materialized ? 'materialized' : ''}`}
+          style={data.width ? { width: data.width } : {}}
           onClick={() => { if (!isActive) onClick(data.id) }}
           onMouseEnter={() => { window.isHoveringCard = true; }}
           onMouseLeave={() => { window.isHoveringCard = false; }}
