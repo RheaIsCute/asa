@@ -44,6 +44,7 @@ const initAudio = () => {
   audioRef = new Audio('/music_and_me.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
+  audioRef.volume = 0.45;
   
   source = audioCtx.createMediaElementSource(audioRef);
   source.connect(analyser);
@@ -1194,7 +1195,7 @@ function App() {
   const [introTextVisible, setIntroTextVisible] = useState(false);
   const [introFading, setIntroFading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(1.0);
+  const [volume, setVolume] = useState(0.45);
   
   const carouselRef = useRef();
 
@@ -1239,9 +1240,9 @@ function App() {
       
       <div className={`splash-screen ${started ? 'hidden' : ''}`} onClick={handleStart}>
         <img src="/icon.png" alt="ASA" className="splash-avatar" />
-        <div className="enter-text">ENTER THE VOID</div>
-        <p style={{ color: '#666', marginTop: '20px', fontFamily: 'Inter, sans-serif' }}>
-          (Click anywhere. Warning: flashing lights &amp; loud audio)
+        <div className="enter-text">INITIALIZE EXPERIENCE</div>
+        <p style={{ color: '#888', marginTop: '20px', fontFamily: 'Inter, sans-serif', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          (Click anywhere. Warning: Loud audio and screen shake)
         </p>
       </div>
 
