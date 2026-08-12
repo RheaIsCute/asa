@@ -663,6 +663,20 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
   }, [activeSection, carouselRef]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!activeSection && introSpinFinished.current) {
+          const cardSpacing = (Math.PI * 2) / 5;
+          pointerTracker.current.target -= cardSpacing;
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeSection]);
+
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
     const bass = audioState.bass;
@@ -690,12 +704,10 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       // Container: float + parallax + bass scale + beat skew
       const floatY = Math.sin(time * 2) * 15;
       const floatX = Math.cos(time * 1.5) * 8;
-      const mouseX = state.pointer.x * -40;
-      const mouseY = state.pointer.y * -40;
       const bassScale = 1 + smoothBass * 0.35;
       const skewX = beat ? (Math.random() - 0.5) * bass * 30 : 0;
       
-      textEl.style.transform = `translate(${mouseX + floatX}px, ${mouseY + floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
+      textEl.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
       
       // Multi-layer chromatic split
       const redLayer = textEl.querySelector('.asa-layer-r');
@@ -820,18 +832,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), lerpSpeed * delta);
         
       } else {
-        // OVERVIEW — edge panning + micro-orbit
-        if (!window.isHoveringCard) {
-          const px = state.pointer.x;
-          if (Math.abs(px) > 0.05) {
-             const speed = (Math.abs(px) - 0.05) * Math.sign(px) * 4.0;
-             pointerTracker.current.target += speed * delta;
-          } else {
-             const cardSpacing = Math.PI / 2;
-             const closestAngle = Math.round(pointerTracker.current.target / cardSpacing) * cardSpacing;
-             pointerTracker.current.target = THREE.MathUtils.lerp(pointerTracker.current.target, closestAngle, 3.0 * delta);
-          }
-        }
+        // OVERVIEW — micro-orbit
         
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
         targetRot.current = pointerTracker.current.current;

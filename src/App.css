@@ -108,7 +108,7 @@ body {
   position: relative;
   font-family: 'Inter', 'Space Mono', monospace;
   font-weight: 900;
-  font-size: 22vw;
+  font-size: 14vw;
   line-height: 1;
   letter-spacing: 0.08em;
   transition: transform 0.06s ease-out;
@@ -295,8 +295,8 @@ body {
    ═══════════════════════════════════════════════════ */
 
 .html-panel {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid var(--accent);
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.35), rgba(5, 5, 5, 0.05));
+  border: 1px solid rgba(160, 32, 240, 0.4);
   padding: 30px;
   color: var(--text-main);
   width: 320px;
@@ -304,12 +304,14 @@ body {
   display: flex;
   flex-direction: column;
   pointer-events: none;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  transition: border-color 0.3s, background 0.3s, opacity 0.5s ease-out;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.3s, background 0.3s, opacity 0.5s ease-out, box-shadow 0.3s;
   opacity: 0;
   overflow: hidden;
   position: relative;
+  border-radius: 8px;
 }
 
 .html-panel.materialized {
@@ -326,15 +328,16 @@ body {
 }
 
 .html-panel:hover {
-  background: rgba(10, 10, 10, 0.9);
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.45), rgba(10, 10, 10, 0.15));
+  border-color: rgba(160, 32, 240, 0.7);
 }
 
 .html-panel.active {
   border-color: var(--accent);
   box-shadow: 
-    0 0 calc(20px + var(--bass, 0) * 100px) rgba(160, 32, 240, 0.8),
-    inset 0 0 calc(var(--bass, 0) * 30px) rgba(160, 32, 240, 0.15);
-  background: rgba(0, 0, 0, 0.95);
+    0 0 calc(20px + var(--bass, 0) * 100px) rgba(160, 32, 240, 0.6),
+    inset 0 0 calc(var(--bass, 0) * 30px) rgba(160, 32, 240, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
   cursor: default;
 }
 
