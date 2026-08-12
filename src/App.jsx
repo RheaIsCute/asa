@@ -633,7 +633,11 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         
         if (progress > 0.8) {
           matRef.current.opacity = (1 - progress) * 5 * 0.9;
+        } else {
+          matRef.current.opacity = 0.9;
         }
+      } else {
+        matRef.current.opacity = 0;
       }
     }
   });
@@ -992,7 +996,7 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
-window.INTRO_DELAY_SEC = 10.0; // Wait 10 seconds for the intro drop
+window.INTRO_DELAY_SEC = 7.6; // Wait 7.6 seconds for the intro drop
 
 function App() {
   const [started, setStarted] = useState(false);
