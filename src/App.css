@@ -239,8 +239,8 @@ body {
   inset: 0;
   background: radial-gradient(
     circle at center,
-    rgba(160, 32, 240, calc(0.08 + var(--bass, 0) * 0.5)) 0%,
-    rgba(80, 0, 180, calc(var(--bass, 0) * 0.2)) 30%,
+    rgba(160, 32, 240, 0.2) 0%,
+    rgba(80, 0, 180, 0.1) 30%,
     transparent 65%
   );
   z-index: 5;
@@ -318,8 +318,8 @@ body {
 /* Audio-reactive card border glow */
 .html-panel.materialized:not(.active) {
   box-shadow: 
-    0 0 calc(10px + var(--bass, 0) * 30px) rgba(160, 32, 240, calc(0.2 + var(--bass, 0) * 0.3)),
-    inset 0 0 calc(var(--bass, 0) * 15px) rgba(160, 32, 240, calc(var(--bass, 0) * 0.1));
+    0 0 20px rgba(160, 32, 240, 0.3),
+    inset 0 0 10px rgba(160, 32, 240, 0.1);
 }
 
 .html-panel:hover {
@@ -330,8 +330,8 @@ body {
 .html-panel.active {
   border-color: var(--accent);
   box-shadow: 
-    0 0 calc(20px + var(--bass, 0) * 100px) rgba(160, 32, 240, 0.6),
-    inset 0 0 calc(var(--bass, 0) * 30px) rgba(160, 32, 240, 0.2);
+    0 0 40px rgba(160, 32, 240, 0.5),
+    inset 0 0 20px rgba(160, 32, 240, 0.15);
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
   cursor: default;
 }

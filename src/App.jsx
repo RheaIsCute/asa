@@ -509,7 +509,7 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 // ═══════════════════════════════════════════════════════════
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
-  const count = 350;
+  const count = 100;
   const meshRef = useRef();
   const matRef = useRef();
   
@@ -967,7 +967,7 @@ function App() {
       <Canvas
         camera={{ position: [0, 150, 100], fov: 60 }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        dpr={[1, 1.5]}
+        dpr={1}
       >
         <color attach="background" args={['#020202']} />
         <fogExp2 attach="fog" args={['#020202', 0.015]} />
