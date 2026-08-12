@@ -829,7 +829,7 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
-window.INTRO_DELAY_SEC = 7.6; // Wait 7.6 seconds for the intro drop
+window.INTRO_DELAY_SEC = 3.2; // Wait 3.2 seconds for the intro drop
 
 function App() {
   const [started, setStarted] = useState(false);
