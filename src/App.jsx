@@ -493,6 +493,7 @@ const AmbientParticles = () => {
   useFrame((state, delta) => {
     if (mesh.current && matRef.current) {
       mesh.current.rotation.y += delta * 0.05;
+      mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.2) * 5;
       
       if (audioState.smoothBass > 0) {
         mesh.current.rotation.y += delta * audioState.smoothBass * 1.2;
@@ -640,7 +641,8 @@ const ReactiveFloor = () => {
 const ReactiveFog = () => {
   useFrame((state) => {
     if (state.scene.fog) {
-      state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01;
+      const breathing = Math.sin(state.clock.elapsedTime * 0.3) * 0.003;
+      state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01 + breathing;
     }
   });
   return null;
@@ -844,14 +846,23 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
 };
 
 const FloatingPanel = ({ data, activeId, onClick, playing }) => {
-  const groupRef = useRef();
+  const outerGroupRef = useRef();
+  const innerGroupRef = useRef();
   const [materialized, setMaterialized] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
   
   useFrame((state, delta) => {
-    if (groupRef.current) {
+    if (outerGroupRef.current && innerGroupRef.current) {
       const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-      groupRef.current.position.y = baseFloat + bassFloat;
+      outerGroupRef.current.position.y = baseFloat + bassFloat;
+      
+      const targetScale = isHovered && !activeId ? 1.03 : 1.0;
+      const targetZ = isHovered && !activeId ? 2.0 : 0;
+      
+      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 10);
+      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, delta * 10);
       
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
@@ -862,18 +873,28 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   });
 
   const isActive = activeId === data.id;
+  const isDimmed = activeId && !isActive;
+
+  const handleClick = () => {
+    if (!isActive) {
+      setIsGlitching(true);
+      setTimeout(() => setIsGlitching(false), 300);
+      onClick(data.id);
+    }
+  };
 
   return (
-    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
+    <group ref={outerGroupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
       <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} />
-      <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
-        <div 
-          className={`html-panel ${isActive ? 'active' : ''} ${materialized ? 'materialized' : ''}`}
-          style={data.width ? { width: data.width } : {}}
-          onClick={() => { if (!isActive) onClick(data.id) }}
-          onMouseEnter={() => { window.isHoveringCard = true; }}
-          onMouseLeave={() => { window.isHoveringCard = false; }}
-        >
+      <group ref={innerGroupRef}>
+        <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
+          <div 
+            className={`html-panel ${isActive ? 'active' : ''} ${isDimmed ? 'dimmed' : ''} ${materialized ? 'materialized' : ''} ${isGlitching ? 'glitch-effect' : ''}`}
+            style={data.width ? { width: data.width } : {}}
+            onClick={handleClick}
+            onMouseEnter={() => { window.isHoveringCard = true; setIsHovered(true); }}
+            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); }}
+          >
           <h2 className="panel-title">
             <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
             {data.title}
@@ -882,7 +903,8 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
             <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
           </div>
         </div>
-      </Html>
+        </Html>
+      </group>
     </group>
   );
 };
@@ -900,6 +922,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   const targetRot = useRef(0);
   const startTime = useRef(0);
   const randomIntroSpin = useRef(Math.PI * 2);
+  const mousePos = useRef({ x: 0, y: 0 });
+  const currentMousePos = useRef({ x: 0, y: 0 });
   
   const bassFovPunch = useRef(0);
   
@@ -942,8 +966,26 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         }
       }
     };
+    
+    const handleMouseMove = (e) => {
+      mousePos.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mousePos.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    
+    const handleWheel = (e) => {
+      if (introSpinFinished.current && !activeSection) {
+        pointerTracker.current.target += e.deltaY * 0.0015;
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, [activeSection, setActiveSection]);
 
   useFrame((state, delta) => {
@@ -951,6 +993,13 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     const bass = audioState.bass;
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
+    
+    // Smoothly track mouse
+    currentMousePos.current.x = THREE.MathUtils.lerp(currentMousePos.current.x, mousePos.current.x, delta * 3);
+    currentMousePos.current.y = THREE.MathUtils.lerp(currentMousePos.current.y, mousePos.current.y, delta * 3);
+    
+    const parallaxX = currentMousePos.current.x * 3.5;
+    const parallaxY = currentMousePos.current.y * 2.5;
     
     // ── CAMERA SHAKE (only after intro finishes) ──
     if (introSpinFinished.current) {
@@ -1134,16 +1183,16 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         targetRot.current = pointerTracker.current.current;
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
         
-        // Micro-orbit: slow XY movement + bass modulation
+        // Micro-orbit: slow XY movement + bass modulation + mouse parallax
         const orbitAngle = time * 0.15;
         const orbitRadius = 2 + smoothBass * 4;
         const targetCamPos = new THREE.Vector3(
-          Math.sin(orbitAngle) * orbitRadius,
-          Math.cos(orbitAngle * 0.7) * (1 + smoothBass * 2),
+          Math.sin(orbitAngle) * orbitRadius + parallaxX,
+          Math.cos(orbitAngle * 0.7) * (1 + smoothBass * 2) + parallaxY,
           65
         );
         state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), lerpSpeed * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(parallaxX * 0.5, parallaxY * 0.5, 0), lerpSpeed * delta);
       }
     }
     
