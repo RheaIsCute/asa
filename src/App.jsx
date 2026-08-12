@@ -198,7 +198,6 @@ const LyricsBackground = () => {
       position={[0, -5, -40]}
       fontSize={8}
       color="#ffffff"
-      font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
       anchorX="center"
       anchorY="middle"
       fillOpacity={0.15}
@@ -262,7 +261,6 @@ const AsaIntroText = ({ playing }) => {
         position={[0, 0, 0]} 
         fontSize={14} 
         color="#ffffff" 
-        font="https://fonts.gstatic.com/s/spacemono/v12/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff"
         anchorX="center" 
         anchorY="middle"
         characters="asa"
