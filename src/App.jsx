@@ -41,7 +41,7 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/nuts.mp3');
+  audioRef = new Audio('/music_and_me.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   
@@ -172,106 +172,100 @@ const LYRICS = [
   { start: 47.010, end: 50.080, text: "We gon' be okay, alright" }
 ];
 
-const LyricsBackground = () => {
+// ── Lyrics Background (HTML overlay — no 3D text, no font loading) ──
+const LyricsOverlay = ({ started }) => {
   const [currentLyric, setCurrentLyric] = useState("");
-  const textRef = useRef();
+  const [opacity, setOpacity] = useState(0);
+  const frameRef = useRef();
 
-  useFrame(() => {
-    if (!audioRef || !audioState.playing) return;
-    const t = audioRef.currentTime;
-    const active = LYRICS.find(l => t >= l.start && t <= l.end);
-    
-    if (active) {
-      if (currentLyric !== active.text) setCurrentLyric(active.text);
-      if (textRef.current) {
-        textRef.current.position.y += Math.sin(t * 2) * 0.05;
-        textRef.current.scale.setScalar(1 + audioState.smoothBass * 0.1);
+  useEffect(() => {
+    if (!started) return;
+    let raf;
+    const tick = () => {
+      if (audioRef && audioState.playing) {
+        const t = audioRef.currentTime;
+        const active = LYRICS.find(l => t >= l.start && t <= l.end);
+        if (active) {
+          setCurrentLyric(active.text);
+          setOpacity(0.12 + audioState.smoothBass * 0.08);
+        } else {
+          setCurrentLyric("");
+          setOpacity(0);
+        }
       }
-    } else {
-      if (currentLyric !== "") setCurrentLyric("");
-    }
-  });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [started]);
 
-  return currentLyric ? (
-    <Text
-      ref={textRef}
-      position={[0, -5, -40]}
-      fontSize={8}
-      color="#ffffff"
-      anchorX="center"
-      anchorY="middle"
-      fillOpacity={0.15}
-      outlineWidth={0.2}
-      outlineColor="#a020f0"
-      outlineOpacity={0.8}
-      depthWrite={false}
-    >
+  if (!currentLyric) return null;
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 3,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      pointerEvents: 'none',
+      fontFamily: "'Space Mono', monospace",
+      fontSize: 'clamp(1.5rem, 4vw, 4rem)',
+      color: `rgba(255, 255, 255, ${opacity})`,
+      textShadow: `0 0 30px rgba(160, 32, 240, 0.6), 0 0 60px rgba(160, 32, 240, 0.3)`,
+      textAlign: 'center', padding: '0 10%',
+      transition: 'color 0.3s ease, opacity 0.3s ease',
+      letterSpacing: '0.05em'
+    }}>
       {currentLyric}
-    </Text>
-  ) : null;
+    </div>
+  );
 };
 
-const AsaIntroText = ({ playing }) => {
+// ── Intro Particles (3D — no Text component, just particles) ──
+const IntroParticles = ({ playing }) => {
   const groupRef = useRef();
-  const particleGroup = useRef();
-  
-  const particlesCount = 400;
+  const meshRef = useRef();
+  const particlesCount = 300;
+
   const particlesData = useMemo(() => {
     const data = [];
     for (let i = 0; i < particlesCount; i++) {
       data.push({
-        pos: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 20],
-        speed: Math.random() * 2 + 0.5,
-        targetPos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100]
+        pos: [(Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 15],
+        speed: Math.random() * 1.5 + 0.3,
+        targetPos: [(Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 80]
       });
     }
     return data;
   }, [particlesCount]);
-  
+
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  
-  useFrame((state, delta) => {
-    if (!playing || !groupRef.current) return;
-    
-    const elapsed = (performance.now() - window.introTime) / 1000;
-    
+
+  useFrame(() => {
+    if (!playing || !groupRef.current || !meshRef.current) return;
+    const elapsed = (performance.now() - (window.introTime || performance.now())) / 1000;
+
     if (elapsed < window.INTRO_DELAY_SEC) {
       const progress = Math.min(elapsed / window.INTRO_DELAY_SEC, 1);
-      
-      if (particleGroup.current) {
-        particlesData.forEach((p, i) => {
-          dummy.position.set(
-            THREE.MathUtils.lerp(p.pos[0], p.targetPos[0], progress * p.speed),
-            THREE.MathUtils.lerp(p.pos[1], p.targetPos[1], progress * p.speed),
-            THREE.MathUtils.lerp(p.pos[2], p.targetPos[2], progress * p.speed)
-          );
-          dummy.updateMatrix();
-          particleGroup.current.setMatrixAt(i, dummy.matrix);
-        });
-        particleGroup.current.instanceMatrix.needsUpdate = true;
-      }
+      particlesData.forEach((p, i) => {
+        dummy.position.set(
+          THREE.MathUtils.lerp(p.pos[0], p.targetPos[0], progress * p.speed),
+          THREE.MathUtils.lerp(p.pos[1], p.targetPos[1], progress * p.speed),
+          THREE.MathUtils.lerp(p.pos[2], p.targetPos[2], progress * p.speed)
+        );
+        const s = 1 - progress * 0.5;
+        dummy.scale.setScalar(s);
+        dummy.updateMatrix();
+        meshRef.current.setMatrixAt(i, dummy.matrix);
+      });
+      meshRef.current.instanceMatrix.needsUpdate = true;
     } else {
       groupRef.current.visible = false;
     }
   });
 
   return (
-    <group ref={groupRef} position={[0, -20, 0]}>
-      <Text 
-        position={[0, 0, 0]} 
-        fontSize={14} 
-        color="#ffffff" 
-        anchorX="center" 
-        anchorY="middle"
-        characters="asa"
-        depthWrite={false}
-      >
-        asa
-        <meshBasicMaterial attach="material" color="#ffffff" />
-      </Text>
-      <instancedMesh ref={particleGroup} args={[null, null, particlesCount]}>
-        <sphereGeometry args={[0.3, 8, 8]} />
-        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} />
+    <group ref={groupRef} position={[0, 0, 0]}>
+      <instancedMesh ref={meshRef} args={[null, null, particlesCount]}>
+        <sphereGeometry args={[0.25, 6, 6]} />
+        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
   );
@@ -1188,6 +1182,9 @@ function App() {
       {/* ── Audio-reactive radial blur overlay ── */}
       {started && <div className="audio-blur-overlay"></div>}
 
+      {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
+      <LyricsOverlay started={started} />
+
       {started && (
         <div className="ui-layer">
           {activeSection && (
@@ -1228,9 +1225,9 @@ function App() {
         <AudioDriver />
         <ReactiveFog />
         
+        <IntroParticles playing={started} />
+        
         <Suspense fallback={null}>
-          <AsaIntroText playing={started} />
-          <LyricsBackground />
           <AmbientParticles />
           <VoidShapes />
           <HeartShapes />
