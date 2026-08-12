@@ -943,18 +943,20 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
     
-    // ── CAMERA SHAKE (enhanced — sine-based + beat impulse) ──
-    const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 3.0 : 0;
-    const shakeIntensity = shakeBase * (activeSection ? 0.3 : (window.isHoveringCard ? 0.2 : 1.0));
-    
-    if (shakeIntensity > 0) {
-      const st = time * 35;
-      state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.6;
-      state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.5;
+    // ── CAMERA SHAKE (only after intro finishes) ──
+    if (introSpinFinished.current) {
+      const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 2.0 : 0;
+      const shakeIntensity = shakeBase * (activeSection ? 0.2 : (window.isHoveringCard ? 0.15 : 0.7));
       
-      if (beat) {
-        state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 3.5;
-        state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 2.5;
+      if (shakeIntensity > 0) {
+        const st = time * 35;
+        state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.4;
+        state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.3;
+        
+        if (beat) {
+          state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 1.5;
+          state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 1.0;
+        }
       }
     }
     
@@ -1063,8 +1065,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
         
-        state.camera.position.x += Math.sin(progress * Math.PI * 4) * 80 * (1 - easeOut);
-        state.camera.position.z += Math.cos(progress * Math.PI * 4) * 80 * (1 - easeOut);
+        state.camera.position.x += Math.sin(progress * Math.PI * 2) * 25 * (1 - easeOut);
+        state.camera.position.z += Math.cos(progress * Math.PI * 2) * 25 * (1 - easeOut);
         
         lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * delta);
       } else {
