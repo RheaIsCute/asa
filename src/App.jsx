@@ -419,8 +419,6 @@ const SECTIONS_DATA = [
     id: 'identity',
     title: 'IDENTITY',
     icon: ICONS.identity,
-    camOffset: [12, 5, 20],
-    lookOffset: [3, -2, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
@@ -437,8 +435,6 @@ const SECTIONS_DATA = [
     id: 'socials',
     title: 'SOCIALS',
     icon: ICONS.socials,
-    camOffset: [-14, -8, 22],
-    lookOffset: [-4, 2, 0],
     content: `
       <div class="hud-grid">
         <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
@@ -456,8 +452,6 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
-    camOffset: [0, -12, 16],
-    lookOffset: [0, 4, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div>
@@ -471,8 +465,6 @@ const SECTIONS_DATA = [
     id: 'archive',
     title: 'ARCHIVE',
     icon: ICONS.archive,
-    camOffset: [8, 10, 24],
-    lookOffset: [-2, -3, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block full"><div class="hud-label">HARDWARE</div><div class="hud-value small">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div>
@@ -503,12 +495,17 @@ const SECTIONS_DATA = [
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
+  const randOffX = (Math.random() - 0.5) * 12;
+  const randOffY = (Math.random() - 0.5) * 8;
+
   return {
     ...s,
     index: i,
     angle: angle,
     x: Math.sin(angle) * R,
     z: Math.cos(angle) * R,
+    camOffset: [randOffX, -2 + randOffY, 25],
+    lookOffset: [randOffX * 0.15, randOffY * 0.15, 0]
   };
 });
 
@@ -638,7 +635,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
 // SCENE CONTROLLER — Camera + DOM Effects
 // ═══════════════════════════════════════════════════════════
 
-const SceneController = ({ activeSection, playing, carouselRef }) => {
+const SceneController = ({ activeSection, setActiveSection, playing, carouselRef }) => {
   const domRefs = useRef({});
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
@@ -646,7 +643,7 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   const pointerTracker = useRef({ current: 0, target: 0, velocity: 0 });
   const targetRot = useRef(0);
   const startTime = useRef(0);
-  const randomIntroSpin = useRef(Math.PI * 2 + (Math.PI * 2 / SECTIONS_DATA.length) * Math.floor(Math.random() * SECTIONS_DATA.length));
+  const randomIntroSpin = useRef(Math.PI * 2 * 3 + (Math.PI * 2 / SECTIONS_DATA.length) * Math.floor(Math.random() * SECTIONS_DATA.length));
   
   const bassFovPunch = useRef(0);
   
@@ -677,15 +674,21 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (!activeSection && introSpinFinished.current) {
-          const cardSpacing = (Math.PI * 2) / 5;
-          pointerTracker.current.target -= cardSpacing;
+        if (introSpinFinished.current) {
+          if (activeSection && setActiveSection) {
+            const currentIndex = SECTIONS.findIndex(s => s.id === activeSection);
+            const nextIndex = (currentIndex + 1) % SECTIONS.length;
+            setActiveSection(SECTIONS[nextIndex].id);
+          } else {
+            const cardSpacing = (Math.PI * 2) / SECTIONS.length;
+            pointerTracker.current.target -= cardSpacing;
+          }
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeSection]);
+  }, [activeSection, setActiveSection]);
 
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
@@ -974,15 +977,14 @@ function App() {
 
       {started && (
         <div className="ui-layer">
-          {activeSection ? (
+          {activeSection && (
             <button className="back-btn" onClick={() => setActiveSection(null)}>
               [ BACK TO OVERVIEW ]
             </button>
-          ) : (
-            <div className="space-notifier">
-              [ PRESS SPACE TO ROTATE ]
-            </div>
           )}
+          <div className="space-notifier">
+            [ PRESS SPACE TO ROTATE / CYCLE ]
+          </div>
         </div>
       )}
 
@@ -1023,6 +1025,7 @@ function App() {
 
           <SceneController 
             activeSection={activeSection} 
+            setActiveSection={setActiveSection}
             playing={started} 
             carouselRef={carouselRef} 
           />
