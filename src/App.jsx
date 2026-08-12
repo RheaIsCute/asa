@@ -812,10 +812,10 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
              const spinEase = 1 - Math.pow(1 - spinProgress, 4);
-             pointerTracker.current.target = (Math.PI * 4) * spinEase;
+             pointerTracker.current.target = (Math.PI * 2) * spinEase;
           } else {
              introSpinFinished.current = true;
-             pointerTracker.current.target = Math.PI * 4;
+             pointerTracker.current.target = Math.PI * 2;
           }
       }
       
@@ -956,10 +956,14 @@ function App() {
 
       {started && (
         <div className="ui-layer">
-          {activeSection && (
+          {activeSection ? (
             <button className="back-btn" onClick={() => setActiveSection(null)}>
               [ BACK TO OVERVIEW ]
             </button>
+          ) : (
+            <div className="space-notifier">
+              [ PRESS SPACE TO ROTATE ]
+            </div>
           )}
         </div>
       )}
