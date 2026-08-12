@@ -419,14 +419,16 @@ const SECTIONS_DATA = [
     id: 'identity',
     title: 'IDENTITY',
     icon: ICONS.identity,
+    camOffset: [12, 5, 20],
+    lookOffset: [3, -2, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
         <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">19</div></div>
-        <div class="hud-block full"><div class="hud-label">LANGUAGES</div>
-          <div class="hud-value small">ENGLISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
-          <div class="hud-value small" style="margin-top:5px">SPANISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
-          <div class="hud-value small" style="margin-top:5px">JAPANESE [15%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 15%"></div></div>
+        <div class="hud-block full"><div class="hud-label">AFFILIATIONS</div>
+          <div class="hud-value small">FREELANCE DEVELOPER</div>
+          <div class="hud-value small" style="margin-top:5px">UI/UX DESIGNER</div>
+          <div class="hud-value small" style="margin-top:5px">DIGITAL ARTIST</div>
         </div>
       </div>
     `
@@ -435,16 +437,18 @@ const SECTIONS_DATA = [
     id: 'socials',
     title: 'SOCIALS',
     icon: ICONS.socials,
+    camOffset: [-14, -8, 22],
+    lookOffset: [-4, 2, 0],
     content: `
       <div class="hud-grid">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
-          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value"><a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a></div></div>
-        </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value" style="color:var(--text-main)">hataeruu</div></div>
+        </a>
+        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value"><a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a></div></div>
-        </div>
+          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value" style="color:var(--text-main)">asari_atari</div></div>
+        </a>
       </div>
     `
   },
@@ -452,6 +456,8 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
+    camOffset: [0, -12, 16],
+    lookOffset: [0, 4, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div>
@@ -465,6 +471,8 @@ const SECTIONS_DATA = [
     id: 'archive',
     title: 'ARCHIVE',
     icon: ICONS.archive,
+    camOffset: [8, 10, 24],
+    lookOffset: [-2, -3, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block full"><div class="hud-label">HARDWARE</div><div class="hud-value small">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div>
@@ -635,12 +643,13 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
   const introSpinFinished = useRef(false);
-  const startTime = useRef(0);
+  const pointerTracker = useRef({ current: 0, target: 0, velocity: 0 });
   const targetRot = useRef(0);
+  const startTime = useRef(0);
+  const randomIntroSpin = useRef(Math.PI * 2 + (Math.PI * 2 / SECTIONS_DATA.length) * Math.floor(Math.random() * SECTIONS_DATA.length));
+  
   const bassFovPunch = useRef(0);
   
-  const pointerTracker = useRef({ target: 0, current: 0 });
-
   useEffect(() => {
     if (playing && startTime.current === 0) {
       startTime.current = performance.now();
@@ -812,10 +821,10 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
              const spinEase = 1 - Math.pow(1 - spinProgress, 4);
-             pointerTracker.current.target = (Math.PI * 2) * spinEase;
+             pointerTracker.current.target = randomIntroSpin.current * spinEase;
           } else {
              introSpinFinished.current = true;
-             pointerTracker.current.target = Math.PI * 2;
+             pointerTracker.current.target = randomIntroSpin.current;
           }
       }
       
@@ -839,9 +848,18 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
         // ZOOMED IN
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
         
-        const targetCamPos = new THREE.Vector3(0, -2, R + 25);
+        const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
+        const cx = activeData?.camOffset?.[0] || 0;
+        const cy = activeData?.camOffset?.[1] || -2;
+        const cz = activeData?.camOffset?.[2] || 25;
+        
+        const lx = activeData?.lookOffset?.[0] || 0;
+        const ly = activeData?.lookOffset?.[1] || 0;
+        const lz = activeData?.lookOffset?.[2] || 0;
+        
+        const targetCamPos = new THREE.Vector3(cx, cy, R + cz);
         state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), lerpSpeed * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * delta);
         
       } else {
         // OVERVIEW — micro-orbit
