@@ -102,6 +102,11 @@ body {
   z-index: 50;
   pointer-events: none;
   overflow: hidden;
+  transition: opacity 0.8s ease-out;
+}
+
+.asa-title-wrapper.fading {
+  opacity: 0;
 }
 
 .asa-title-container {
