@@ -631,6 +631,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
 // ═══════════════════════════════════════════════════════════
 
 const SceneController = ({ activeSection, playing, carouselRef }) => {
+  const domRefs = useRef({});
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
   const introSpinFinished = useRef(false);
@@ -699,7 +700,15 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
     
     // ── ASA TITLE — MULTI-LAYER CHROMATIC GLITCH ──
-    const textEl = document.getElementById('asa-bg-text');
+    if (!domRefs.current.textEl) {
+      domRefs.current.textEl = document.getElementById('asa-bg-text');
+      if (domRefs.current.textEl) {
+        domRefs.current.redLayer = domRefs.current.textEl.querySelector('.asa-layer-r');
+        domRefs.current.cyanLayer = domRefs.current.textEl.querySelector('.asa-layer-c');
+        domRefs.current.mainLayer = domRefs.current.textEl.querySelector('.asa-layer-main');
+      }
+    }
+    const textEl = domRefs.current.textEl;
     if (textEl) {
       // Container: float + parallax + bass scale + beat skew
       const floatY = Math.sin(time * 2) * 15;
@@ -710,9 +719,9 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       textEl.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
       
       // Multi-layer chromatic split
-      const redLayer = textEl.querySelector('.asa-layer-r');
-      const cyanLayer = textEl.querySelector('.asa-layer-c');
-      const mainLayer = textEl.querySelector('.asa-layer-main');
+      const redLayer = domRefs.current.redLayer;
+      const cyanLayer = domRefs.current.cyanLayer;
+      const mainLayer = domRefs.current.mainLayer;
       
       if (redLayer && cyanLayer && mainLayer) {
         if (beat) {
@@ -747,7 +756,8 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
     
     // ── SCREEN FLASH ON HEAVY BEATS ──
-    const flashEl = document.getElementById('screen-flash');
+    if (!domRefs.current.flashEl) domRefs.current.flashEl = document.getElementById('screen-flash');
+    const flashEl = domRefs.current.flashEl;
     if (flashEl) {
       if (beat && bass > 0.4) {
         flashEl.style.transition = 'none';
@@ -759,13 +769,15 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
     
     // ── SCANLINE INTENSITY ──
-    const scanEl = document.querySelector('.screen-scanlines');
+    if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
+    const scanEl = domRefs.current.scanEl;
     if (scanEl) {
       scanEl.style.opacity = String(0.1 + smoothBass * 0.3);
     }
 
     // ── EDGE GLOW INTENSITY ──
-    const edgeEl = document.querySelector('.screen-edge-glow');
+    if (!domRefs.current.edgeEl) domRefs.current.edgeEl = document.querySelector('.screen-edge-glow');
+    const edgeEl = domRefs.current.edgeEl;
     if (edgeEl) {
       const glowSize = 40 + smoothBass * 200;
       const glowAlpha = 0.08 + smoothBass * 0.5;
@@ -955,7 +967,7 @@ function App() {
       <Canvas
         camera={{ position: [0, 150, 100], fov: 60 }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
       >
         <color attach="background" args={['#020202']} />
         <fogExp2 attach="fog" args={['#020202', 0.015]} />
