@@ -41,7 +41,7 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/nuts.mp3');
+  audioRef = new Audio('/music_and_me.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   
@@ -517,9 +517,9 @@ const SECTIONS_DATA = [
     icon: ICONS.music,
     content: `
       <div class="hud-grid">
-        <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div>
-        <div class="hud-block"><div class="hud-label">FAV SONG</div><div class="hud-value small">2:00 by enveel</div></div>
-        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value" style="color:var(--accent)">THOTTWAT - SHIRT</div></div>
+        <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">fakemink</div></div>
+        <div class="hud-block"><div class="hud-label">FAV SONG</div><div class="hud-value small">music and me</div></div>
+        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value" style="color:var(--accent)">FAKEMINK - MUSIC AND ME</div></div>
         <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
       </div>
     `
