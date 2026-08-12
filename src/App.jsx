@@ -41,7 +41,7 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/ambient.mp3');
+  audioRef = new Audio('/nuts.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   
@@ -153,7 +153,7 @@ const AudioDriver = () => {
 
 const HeartShapes = () => {
   const group = useRef();
-  const count = 30;
+  const count = 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   
   const heartShape = useMemo(() => {
@@ -201,7 +201,7 @@ const HeartShapes = () => {
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial color="#ff20a0" transparent opacity={0.3} wireframe />
+      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
     </instancedMesh>
   );
 };
