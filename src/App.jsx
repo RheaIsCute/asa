@@ -170,7 +170,35 @@ const LYRICS = [
   { start: 38.36, end: 41.10, text: "Don't know what to say, but you still say somethin'" },
   { start: 41.28, end: 43.80, text: "Feel alive when you do what you're not allowed" },
   { start: 43.92, end: 46.80, text: "But you should know, this isn't what life 'bout" },
-  { start: 46.92, end: 50.00, text: "I'ma die before I ever cry out" }
+  { start: 46.92, end: 49.00, text: "I'ma die before I ever cry out" },
+  { start: 49.18, end: 51.50, text: "And I'ma get struck down if I'm a liar" },
+  { start: 51.62, end: 54.00, text: "Hot headed, leaf burnt, playin' with fire" },
+  { start: 54.20, end: 56.20, text: "Would you ever trade your life for desire?" },
+  { start: 56.36, end: 58.80, text: "Would you ever trade your life for desire?" },
+  { start: 58.96, end: 59.50, text: "Would you ever—, uh" },
+  { start: 59.66, end: 62.00, text: "Would you ever—, uh" },
+  // [Verse 2]
+  { start: 71.88, end: 75.00, text: "I'm like, \"Where you at? Can't see you, I need you now\"" },
+  { start: 75.24, end: 77.70, text: "You do it so right, dare to teach me how" },
+  { start: 77.84, end: 80.30, text: "You talk about a feelin', I feel it now" },
+  { start: 80.46, end: 82.70, text: "Look back if I could, but I'm not allowed" },
+  { start: 82.80, end: 85.40, text: "I'm like, \"Where you at? Really need you now\"" },
+  { start: 85.58, end: 87.90, text: "You do it so right, dare to teach me how" },
+  { start: 88.08, end: 90.40, text: "You talk about a feelin', I feel it now" },
+  { start: 90.58, end: 93.10, text: "Look back if I could, but I'm not allowed" },
+  { start: 93.28, end: 95.70, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
+  { start: 95.88, end: 98.30, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
+  { start: 98.48, end: 100.00, text: "The look on her face, tears runnin'" },
+  { start: 100.20, end: 103.00, text: "Don't know what to say, but you still say somethin'" },
+  { start: 103.14, end: 105.60, text: "Feel alive when you do what you're not allowed" },
+  { start: 105.74, end: 108.50, text: "But you should know, this isn't what life 'bout" },
+  { start: 108.60, end: 111.00, text: "I'ma die before I ever cry out" },
+  { start: 111.18, end: 113.30, text: "And I'ma get struck down if I'm a liar" },
+  { start: 113.48, end: 116.20, text: "Hot headed, leaf burnt, playin' with fire" },
+  { start: 116.32, end: 118.80, text: "Would you ever trade your life for desire?" },
+  { start: 118.92, end: 122.50, text: "Would you ever trade your life for desire?" },
+  { start: 122.60, end: 123.50, text: "Would you ever—, uh" },
+  { start: 123.60, end: 127.00, text: "Would you ever—, uh" }
 ];
 
 // ── Lyrics Overlay (HTML — EXACT chromatic glitch effect matching ASA title) ──
@@ -244,7 +272,7 @@ const LyricsOverlay = ({ started }) => {
 
   return (
     <div className="asa-title-wrapper" style={{ padding: '0 5%' }}>
-      <div ref={textRef} className="asa-title-container" style={{ fontSize: 'clamp(1.5rem, 4vw, 4rem)', textTransform: 'uppercase' }}>
+      <div ref={textRef} className="asa-title-container" style={{ fontSize: 'clamp(1rem, 3.5vw, 3rem)', textTransform: 'uppercase' }}>
         <span className="asa-layer asa-layer-r">{currentLyric}</span>
         <span className="asa-layer asa-layer-c">{currentLyric}</span>
         <span className="asa-layer asa-layer-main" data-text={currentLyric}>{currentLyric}</span>
@@ -917,17 +945,17 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     
     // ── CAMERA SHAKE (only after intro finishes) ──
     if (introSpinFinished.current) {
-      const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 2.0 : 0;
-      const shakeIntensity = shakeBase * (activeSection ? 0.2 : (window.isHoveringCard ? 0.15 : 0.7));
+      const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 1.0 : 0;
+      const shakeIntensity = shakeBase * (activeSection ? 0.1 : (window.isHoveringCard ? 0.05 : 0.3));
       
       if (shakeIntensity > 0) {
         const st = time * 35;
-        state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.4;
-        state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.3;
+        state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.2;
+        state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.15;
         
         if (beat) {
-          state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 1.5;
-          state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 1.0;
+          state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 0.5;
+          state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 0.3;
         }
       }
     }
