@@ -41,7 +41,7 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/shirt.mp3');
+  audioRef = new Audio('/ambient.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   
@@ -60,6 +60,14 @@ const playAudio = () => {
     audioRef.play().catch(console.error);
     audioState.playing = true;
   }
+};
+
+const toggleMute = () => {
+  if (audioRef) {
+    audioRef.muted = !audioRef.muted;
+    return audioRef.muted;
+  }
+  return false;
 };
 
 const updateAudioData = () => {
@@ -142,6 +150,61 @@ const AudioDriver = () => {
 // ═══════════════════════════════════════════════════════════
 // 3D SCENE COMPONENTS
 // ═══════════════════════════════════════════════════════════
+
+const HeartShapes = () => {
+  const group = useRef();
+  const count = 30;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const heartShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const x = -2.5, y = -5;
+    shape.moveTo(x + 2.5, y + 2.5);
+    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+    return shape;
+  }, []);
+
+  const shapesData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < count; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100 + 40, (Math.random() - 0.5) * 150],
+        rot: [Math.PI, Math.random() * Math.PI * 2, 0],
+        speed: (Math.random() - 0.5) * 0.5,
+        scale: Math.random() * 0.2 + 0.1,
+      });
+    }
+    return data;
+  }, [count]);
+
+  useFrame((state, delta) => {
+    if (group.current) {
+      shapesData.forEach((shape, i) => {
+        shape.pos[1] += Math.sin(state.clock.elapsedTime + i) * 0.05;
+        shape.rot[1] += shape.speed * delta;
+        dummy.position.set(...shape.pos);
+        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
+        const s = shape.scale * (1 + audioState.smoothBass * 0.5);
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
+        group.current.setMatrixAt(i, dummy.matrix);
+      });
+      group.current.instanceMatrix.needsUpdate = true;
+    }
+  });
+
+  return (
+    <instancedMesh ref={group} args={[null, null, count]}>
+      <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
+      <meshBasicMaterial color="#ff20a0" transparent opacity={0.3} wireframe />
+    </instancedMesh>
+  );
+};
 
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
@@ -467,9 +530,9 @@ const SECTIONS_DATA = [
     icon: ICONS.archive,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">HARDWARE</div><div class="hud-value small">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div>
-        <div class="hud-block full"><div class="hud-label">GEAR</div><div class="hud-value small">RAZER OROCHI V2 / AULA WIN60 / QUADCAST</div></div>
-        <div class="hud-block full"><div class="hud-label">GAMES & MEDIA</div><div class="hud-value small">DARK SOULS / CHAINSAWMAN / CYBERPUNK</div></div>
+        <div class="hud-block full"><div class="hud-label">CURRENT FOCUS</div><div class="hud-value small">BUILDING DIGITAL EXPERIENCES</div></div>
+        <div class="hud-block full"><div class="hud-label">PAST PROJECTS</div><div class="hud-value small">VARIOUS WEB INTERFACES & CREATIVE CODE</div></div>
+        <div class="hud-block full"><div class="hud-label">AESTHETIC</div><div class="hud-value small">Y2K / NEON / CYBER / AMBIENT</div></div>
       </div>
     `
   },
@@ -549,7 +612,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      const startTime = 2500 + dataIndex * 150; 
+      const startTime = window.INTRO_DELAY_SEC * 1000 + 2500 + dataIndex * 150; 
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
@@ -599,7 +662,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       groupRef.current.position.y = baseFloat + bassFloat;
       
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 3300 + data.index * 150) {
+        if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
           setMaterialized(true);
         }
       }
@@ -802,11 +865,16 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
-      if (elapsed < 2.5) {
-        const progress = Math.min(elapsed / 2.5, 1);
+      
+      if (elapsed < window.INTRO_DELAY_SEC) {
+        const hoverY = 150 + Math.sin(time * 0.5) * 10;
+        state.camera.position.lerp(new THREE.Vector3(0, hoverY, 100), 2 * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20, 0), 2 * delta);
+      } else if (elapsed < window.INTRO_DELAY_SEC + 2.5) {
+        const progress = Math.min((elapsed - window.INTRO_DELAY_SEC) / 2.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
         
-        const startPos = new THREE.Vector3(0, 200, 50);
+        const startPos = new THREE.Vector3(0, 150, 100);
         const targetPos = new THREE.Vector3(0, 0, 65);
         
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
@@ -819,7 +887,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         introFinished.current = true;
       }
     } else if (introFinished.current && !introSpinFinished.current && playing) {
-      const elapsedSinceSpinStart = (performance.now() - window.introTime - 4000) / 1000;
+      const elapsedSinceSpinStart = (performance.now() - window.introTime - (window.INTRO_DELAY_SEC * 1000 + 4000)) / 1000;
       if (elapsedSinceSpinStart > 0) {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
@@ -924,10 +992,13 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
+window.INTRO_DELAY_SEC = 10.0; // Wait 10 seconds for the intro drop
+
 function App() {
   const [started, setStarted] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [introTextVisible, setIntroTextVisible] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   
   const carouselRef = useRef();
 
@@ -939,6 +1010,11 @@ function App() {
     setTimeout(() => {
       setIntroTextVisible(true);
     }, 500);
+  };
+
+  const handleMute = (e) => {
+    e.stopPropagation();
+    setIsMuted(toggleMute());
   };
 
   return (
@@ -982,6 +1058,9 @@ function App() {
               [ BACK TO OVERVIEW ]
             </button>
           )}
+          <button className="mute-btn" onClick={handleMute}>
+            {isMuted ? '[ UNMUTE ]' : '[ MUTE ]'}
+          </button>
           <div className="space-notifier">
             [ PRESS SPACE TO ROTATE / CYCLE ]
           </div>
@@ -1006,6 +1085,7 @@ function App() {
         <Suspense fallback={null}>
           <AmbientParticles />
           <VoidShapes />
+          <HeartShapes />
           <HorizonTrees />
           <BassShockwaves />
           <AudioVisualizerRing />
