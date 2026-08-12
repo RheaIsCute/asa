@@ -924,6 +924,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   const randomIntroSpin = useRef(Math.PI * 2);
   const mousePos = useRef({ x: 0, y: 0 });
   const currentMousePos = useRef({ x: 0, y: 0 });
+  const swapGlitch = useRef(0);
+  const prevSection = useRef(activeSection);
   
   const bassFovPunch = useRef(0);
   
@@ -933,6 +935,15 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       window.introTime = performance.now();
     }
   }, [playing]);
+
+  useEffect(() => {
+    if (activeSection !== prevSection.current) {
+      if (activeSection !== null || prevSection.current !== null) {
+        swapGlitch.current = 1.0;
+      }
+      prevSection.current = activeSection;
+    }
+  }, [activeSection]);
 
   useEffect(() => {
     if (activeSection && carouselRef.current) {
@@ -1204,8 +1215,18 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * delta);
       state.camera.fov = 60 + bassFovPunch.current * 14;
       
+      // Swap glitch warp
+      if (swapGlitch.current > 0) {
+        swapGlitch.current = Math.max(0, swapGlitch.current - delta * 4.0);
+        const intensity = swapGlitch.current;
+        state.camera.fov += intensity * 35; // Dramatic FOV pull
+        state.camera.rotateZ((Math.random() - 0.5) * intensity * 0.15); // Slight camera shake/roll
+      }
+      
+      state.camera.updateProjectionMatrix();
+      
       // Bass punch: push camera forward on beat
-      if (beat && !activeSection) {
+      if (beat && !activeSection && swapGlitch.current === 0) {
         state.camera.position.z -= audioState.beatEnergy * 3;
       }
       
