@@ -663,16 +663,16 @@ const ICONS = {
 const SECTIONS_DATA = [
   {
     id: 'identity',
-    title: 'IDENTITY',
+    title: 'PROFILE',
     icon: ICONS.identity,
     content: `
       <div class="hud-grid">
         <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
-        <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">19</div></div>
-        <div class="hud-block full"><div class="hud-label">AFFILIATIONS</div>
-          <div class="hud-value small">FREELANCE DEVELOPER</div>
-          <div class="hud-value small" style="margin-top:5px">UI/UX DESIGNER</div>
-          <div class="hud-value small" style="margin-top:5px">DIGITAL ARTIST</div>
+        <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
+        <div class="hud-block full"><div class="hud-label">STATUS</div>
+          <div class="hud-value small">STUDENT</div>
+          <div class="hud-value small" style="margin-top:5px">ASPIRING AI ENGINEER</div>
+          <div class="hud-value small" style="margin-top:5px">TECHNOLOGY / PROGRAMMING</div>
         </div>
       </div>
     `
@@ -706,31 +706,30 @@ const SECTIONS_DATA = [
   },
   {
     id: 'archive',
-    title: 'ARCHIVE',
+    title: 'INTERESTS',
     icon: ICONS.archive,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">CURRENT FOCUS</div><div class="hud-value small">BUILDING DIGITAL EXPERIENCES</div></div>
-        <div class="hud-block full"><div class="hud-label">PAST PROJECTS</div><div class="hud-value small">VARIOUS WEB INTERFACES & CREATIVE CODE</div></div>
-        <div class="hud-block full"><div class="hud-label">AESTHETIC</div><div class="hud-value small">Y2K / NEON / CYBER / AMBIENT</div></div>
+        <div class="hud-block full"><div class="hud-label">INTERESTS</div><div class="hud-value small">PROGRAMMING / AI / TECHNOLOGY</div></div>
+        <div class="hud-block full"><div class="hud-label">HOBBIES</div><div class="hud-value small">GAMING / ANIME / MUSIC / JAPANESE</div></div>
+        <div class="hud-block full"><div class="hud-label">VIBE</div><div class="hud-value small">CYBER Y2K AMBIENT</div></div>
       </div>
     `
   },
   {
     id: 'status',
-    title: 'STATUS',
+    title: 'CURRENTLY',
     icon: ICONS.status,
     content: `
       <div class="hud-grid">
         <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-          <div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
+          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">LEARNING / BUILDING</div></div>
         </div>
         <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-          <div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div>
+          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / PROGRAMMING</div></div>
         </div>
-        <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
       </div>
     `
   }
