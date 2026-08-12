@@ -179,7 +179,7 @@ body {
 
 /* Pulsing outline stroke effect */
 .asa-layer-main::before {
-  content: 'ASA';
+  content: attr(data-text);
   position: absolute;
   top: 0;
   left: 0;

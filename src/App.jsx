@@ -153,33 +153,30 @@ const AudioDriver = () => {
 
 const LYRICS = [
   // [Intro]
-  { start: 0.500, end: 2.400, text: "(Ok is the hardest, I swear to God)" },
-  { start: 4.900, end: 6.100, text: "(We gon' be okay)" },
+  { start: 0.50, end: 4.80, text: "(Ok is the hardest, I swear to God)" },
+  { start: 4.90, end: 7.40, text: "(We gon' be okay)" },
   // [Chorus]
-  { start: 9.130, end: 11.750, text: "I'm like, \"Where you at? Can't see you, I need you now\"" },
-  { start: 11.750, end: 14.230, text: "You do it so right, dare to teach me how" },
-  { start: 14.230, end: 16.820, text: "You talk about a feelin', I feel it now" },
-  { start: 16.820, end: 19.340, text: "Look back if I could, but I'm not allowed" },
-  { start: 19.340, end: 21.840, text: "I'm like, \"Where you at? Really need you now\"" },
-  { start: 21.840, end: 24.360, text: "You do it so right, dare to teach me how" },
-  { start: 24.360, end: 26.850, text: "You talk about a feelin', I feel it now" },
-  { start: 26.850, end: 29.560, text: "Look back if I could, but I'm not allowed" },
-  { start: 29.560, end: 32.000, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
-  { start: 32.000, end: 34.420, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
-  { start: 34.420, end: 36.950, text: "The look on her face, tears runnin'" },
-  { start: 36.950, end: 39.460, text: "Don't know what to say, but you still say somethin'" },
-  { start: 39.460, end: 41.970, text: "Feel alive when you do what you're not allowed" },
-  { start: 41.970, end: 44.570, text: "But you should know, this isn't what life 'bout" },
-  { start: 44.570, end: 47.500, text: "I'ma die before I ever cry out" }
+  { start: 7.50, end: 10.70, text: "I'm like, \"Where you at? Can't see you, I need you now\"" }, // Adjusted from LRC 1.62
+  { start: 10.80, end: 15.00, text: "You do it so right, dare to teach me how" },
+  { start: 15.10, end: 18.30, text: "You talk about a feelin', I feel it now" },
+  { start: 18.42, end: 20.80, text: "Look back if I could, but I'm not allowed" },
+  { start: 20.98, end: 23.60, text: "I'm like, \"Where you at? Really need you now\"" },
+  { start: 23.72, end: 26.20, text: "You do it so right, dare to teach me how" },
+  { start: 26.34, end: 28.60, text: "You talk about a feelin', I feel it now" },
+  { start: 28.74, end: 30.80, text: "Look back if I could, but I'm not allowed" },
+  { start: 30.92, end: 33.70, text: "I'm crazy and I'm nervous and I'm sweatin' and I'm blushin'" },
+  { start: 33.88, end: 36.50, text: "Think I'm doin' it for somethin', but I'm doin' it for nothin'" },
+  { start: 36.62, end: 38.20, text: "The look on her face, tears runnin'" },
+  { start: 38.36, end: 41.10, text: "Don't know what to say, but you still say somethin'" },
+  { start: 41.28, end: 43.80, text: "Feel alive when you do what you're not allowed" },
+  { start: 43.92, end: 46.80, text: "But you should know, this isn't what life 'bout" },
+  { start: 46.92, end: 50.00, text: "I'ma die before I ever cry out" }
 ];
 
-// ── Lyrics Overlay (HTML — chromatic glitch effect matching ASA title) ──
+// ── Lyrics Overlay (HTML — EXACT chromatic glitch effect matching ASA title) ──
 const LyricsOverlay = ({ started }) => {
   const [currentLyric, setCurrentLyric] = useState("");
-  const wrapperRef = useRef();
-  const redRef = useRef();
-  const cyanRef = useRef();
-  const mainRef = useRef();
+  const textRef = useRef();
 
   useEffect(() => {
     if (!started) return;
@@ -190,46 +187,50 @@ const LyricsOverlay = ({ started }) => {
         const active = LYRICS.find(l => t >= l.start && t <= l.end);
         setCurrentLyric(active ? active.text : "");
 
-        // Drive glitch effect on lyrics just like SceneController does for ASA title
-        if (wrapperRef.current && redRef.current && cyanRef.current && mainRef.current) {
+        // Drive exact same effect as SceneController
+        if (textRef.current) {
           const bass = audioState.bass;
           const smoothBass = audioState.smoothBass;
           const beat = audioState.beatDetected;
-
-          // Float
-          const time = performance.now() / 1000;
-          const floatY = Math.sin(time * 2) * 8;
-          const floatX = Math.cos(time * 1.5) * 4;
-          const bassScale = 1 + smoothBass * 0.15;
-          const skewX = beat ? (Math.random() - 0.5) * bass * 15 : 0;
-          wrapperRef.current.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
-
-          // Chromatic split layers
-          if (beat) {
-            const split = bass * 20;
-            redRef.current.style.transform = `translate(${split}px, ${-split * 0.4}px)`;
-            redRef.current.style.opacity = String(0.4 + bass * 0.5);
-            cyanRef.current.style.transform = `translate(${-split}px, ${split * 0.4}px)`;
-            cyanRef.current.style.opacity = String(0.4 + bass * 0.5);
-            const y1 = Math.random() * 70;
-            const h = 8 + Math.random() * 30;
-            redRef.current.style.clipPath = `inset(${y1}% 0 ${Math.max(0, 100 - y1 - h)}% 0)`;
-            cyanRef.current.style.clipPath = `inset(${100 - y1 - h}% 0 ${y1}% 0)`;
-          } else {
-            const drift = smoothBass * 4;
-            redRef.current.style.transform = `translate(${drift}px, 0)`;
-            redRef.current.style.opacity = String(0.06 + smoothBass * 0.2);
-            cyanRef.current.style.transform = `translate(${-drift}px, 0)`;
-            cyanRef.current.style.opacity = String(0.06 + smoothBass * 0.2);
-            redRef.current.style.clipPath = 'none';
-            cyanRef.current.style.clipPath = 'none';
+          
+          const floatY = Math.sin(performance.now() / 1000 * 2) * 15;
+          const floatX = Math.cos(performance.now() / 1000 * 1.5) * 8;
+          const bassScale = 1 + smoothBass * 0.35;
+          const skewX = beat ? (Math.random() - 0.5) * bass * 30 : 0;
+          
+          textRef.current.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
+          
+          const redLayer = textRef.current.querySelector('.asa-layer-r');
+          const cyanLayer = textRef.current.querySelector('.asa-layer-c');
+          const mainLayer = textRef.current.querySelector('.asa-layer-main');
+          
+          if (redLayer && cyanLayer && mainLayer) {
+            if (beat) {
+              const split = bass * 40;
+              redLayer.style.transform = `translate(${split}px, ${-split * 0.5}px)`;
+              redLayer.style.opacity = String(0.4 + bass * 0.6);
+              cyanLayer.style.transform = `translate(${-split}px, ${split * 0.5}px)`;
+              cyanLayer.style.opacity = String(0.4 + bass * 0.6);
+              
+              const y1 = Math.random() * 80;
+              const h = 5 + Math.random() * 40;
+              redLayer.style.clipPath = `inset(${y1}% 0 ${Math.max(0, 100 - y1 - h)}% 0)`;
+              cyanLayer.style.clipPath = `inset(${100 - y1 - h}% 0 ${y1}% 0)`;
+            } else {
+              const drift = smoothBass * 8;
+              redLayer.style.transform = `translate(${drift}px, 0)`;
+              redLayer.style.opacity = String(0.1 + smoothBass * 0.3);
+              cyanLayer.style.transform = `translate(${-drift}px, 0)`;
+              cyanLayer.style.opacity = String(0.1 + smoothBass * 0.3);
+              redLayer.style.clipPath = 'none';
+              cyanLayer.style.clipPath = 'none';
+            }
+            
+            const coreGlow = `0 0 ${20 + bass * 150}px rgba(160, 32, 240, ${0.4 + bass * 0.6})`;
+            const outerGlow = `0 0 ${60 + bass * 300}px rgba(160, 32, 240, ${0.2 + bass * 0.4})`;
+            mainLayer.style.textShadow = `${coreGlow}, ${outerGlow}`;
+            mainLayer.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.4})`;
           }
-
-          // Main layer glow
-          const coreGlow = `0 0 ${15 + bass * 100}px rgba(160, 32, 240, ${0.3 + bass * 0.5})`;
-          const outerGlow = `0 0 ${40 + bass * 250}px rgba(160, 32, 240, ${0.1 + bass * 0.3})`;
-          mainRef.current.style.textShadow = `${coreGlow}, ${outerGlow}`;
-          mainRef.current.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.25})`;
         }
       }
       raf = requestAnimationFrame(tick);
@@ -240,42 +241,12 @@ const LyricsOverlay = ({ started }) => {
 
   if (!currentLyric) return null;
 
-  const layerStyle = {
-    position: 'relative',
-    fontFamily: "'Inter', 'Space Mono', monospace",
-    fontWeight: 900,
-    fontSize: 'clamp(1.8rem, 4vw, 4.5rem)',
-    lineHeight: 1.2,
-    letterSpacing: '0.06em',
-    textAlign: 'center',
-    textTransform: 'uppercase'
-  };
-
   return (
-    <div style={{
-      position: 'absolute', inset: 0, zIndex: 50,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      pointerEvents: 'none', overflow: 'hidden', padding: '0 8%'
-    }}>
-      <div ref={wrapperRef} style={layerStyle}>
-        {/* Red chromatic layer */}
-        <span ref={redRef} style={{
-          position: 'absolute', top: 0, left: 0, width: '100%',
-          color: 'rgba(255, 30, 30, 0.4)', mixBlendMode: 'screen',
-          zIndex: 1, opacity: 0.1, willChange: 'transform, opacity, clip-path'
-        }}>{currentLyric}</span>
-        {/* Cyan chromatic layer */}
-        <span ref={cyanRef} style={{
-          position: 'absolute', top: 0, left: 0, width: '100%',
-          color: 'rgba(30, 255, 255, 0.4)', mixBlendMode: 'screen',
-          zIndex: 2, opacity: 0.1, willChange: 'transform, opacity, clip-path'
-        }}>{currentLyric}</span>
-        {/* Main layer */}
-        <span ref={mainRef} style={{
-          position: 'relative', zIndex: 3,
-          color: 'rgba(255, 255, 255, 0.03)',
-          textShadow: '0 0 40px rgba(160, 32, 240, 0.3), 0 0 120px rgba(160, 32, 240, 0.15)'
-        }}>{currentLyric}</span>
+    <div className="asa-title-wrapper" style={{ padding: '0 5%' }}>
+      <div ref={textRef} className="asa-title-container" style={{ fontSize: 'clamp(1.5rem, 4vw, 4rem)', textTransform: 'uppercase' }}>
+        <span className="asa-layer asa-layer-r">{currentLyric}</span>
+        <span className="asa-layer asa-layer-c">{currentLyric}</span>
+        <span className="asa-layer asa-layer-main" data-text={currentLyric}>{currentLyric}</span>
       </div>
     </div>
   );
@@ -1243,7 +1214,7 @@ function App() {
           <div id="asa-bg-text" className="asa-title-container">
             <span className="asa-layer asa-layer-r">ASA</span>
             <span className="asa-layer asa-layer-c">ASA</span>
-            <span className="asa-layer asa-layer-main">ASA</span>
+            <span className="asa-layer asa-layer-main" data-text="ASA">ASA</span>
           </div>
         </div>
       )}
