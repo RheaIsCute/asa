@@ -663,12 +663,17 @@ const ICONS = {
 const SECTIONS_DATA = [
   {
     id: 'identity',
-    title: 'PROFILE',
+    title: 'ABOUT ME',
     icon: ICONS.identity,
     content: `
+      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <img src="/profile.png" style="width: 90px; height: 90px; border-radius: 8px; border: 1px solid var(--accent); object-fit: cover; box-shadow: 0 0 10px rgba(160, 32, 240, 0.3);" />
+        <div class="hud-grid" style="flex: 1; margin: 0; gap: 10px;">
+          <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
+          <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
+        </div>
+      </div>
       <div class="hud-grid">
-        <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
-        <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
         <div class="hud-block full"><div class="hud-label">STATUS</div>
           <div class="hud-value small">STUDENT</div>
           <div class="hud-value small" style="margin-top:5px">ASPIRING AI ENGINEER</div>
