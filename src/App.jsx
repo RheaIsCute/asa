@@ -1144,11 +1144,10 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
     }
     
-    // ── MUSIC DURATION PROGRESS BAR ──
+    // ── REACTIVE MUSIC BAR ──
     if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
-    if (domRefs.current.musicBar && typeof audioRef !== 'undefined' && audioRef && audioRef.duration) {
-      const progress = (audioRef.currentTime / audioRef.duration) * 100;
-      domRefs.current.musicBar.style.width = `${progress}%`;
+    if (domRefs.current.musicBar) {
+      domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
     }
     
     // ══════════════════════════════════════
