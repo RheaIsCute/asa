@@ -473,6 +473,8 @@ const VoidShapes = () => {
       <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
+};
+
 const AmbientParticles = () => {
   const count = 150;
   const mesh = useRef();
