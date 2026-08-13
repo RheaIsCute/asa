@@ -669,6 +669,8 @@ const SECTIONS_DATA = [
     title: 'ABOUT ME',
     icon: ICONS.identity,
     width: '580px',
+    camOffset: [-6, 3, 22],
+    lookOffset: [0, 0, 0],
     content: `
       <div style="display: flex; gap: 25px; height: 100%;">
         <div style="flex: 0 0 220px; display: flex;">
@@ -692,6 +694,8 @@ const SECTIONS_DATA = [
     id: 'socials',
     title: 'SOCIALS',
     icon: ICONS.socials,
+    camOffset: [6, -2, 24],
+    lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
         <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
@@ -709,6 +713,8 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
+    camOffset: [0, -5, 20],
+    lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block full">
@@ -723,6 +729,8 @@ const SECTIONS_DATA = [
     id: 'archive',
     title: 'INTERESTS',
     icon: ICONS.archive,
+    camOffset: [-5, -4, 25],
+    lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block full"><div class="hud-label">INTERESTS</div><div class="hud-value small">PROGRAMMING / AI / TECHNOLOGY</div></div>
@@ -735,6 +743,8 @@ const SECTIONS_DATA = [
     id: 'status',
     title: 'CURRENTLY',
     icon: ICONS.status,
+    camOffset: [4, 5, 23],
+    lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
         <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
@@ -752,17 +762,13 @@ const SECTIONS_DATA = [
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
-  const randOffX = (Math.random() - 0.5) * 12;
-  const randOffY = (Math.random() - 0.5) * 8;
 
   return {
     ...s,
     index: i,
     angle: angle,
     x: Math.sin(angle) * R,
-    z: Math.cos(angle) * R,
-    camOffset: [randOffX, -2 + randOffY, 25],
-    lookOffset: [randOffX * 0.15, randOffY * 0.15, 0]
+    z: Math.cos(angle) * R
   };
 });
 
@@ -1214,10 +1220,6 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         
       } else {
         // OVERVIEW — micro-orbit
-        
-        if (!window.isHoveringCard && !activeSection) {
-          pointerTracker.current.target += d * 0.15;
-        }
         
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
         targetRot.current = pointerTracker.current.current;
