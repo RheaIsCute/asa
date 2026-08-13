@@ -711,7 +711,11 @@ const SECTIONS_DATA = [
     icon: ICONS.music,
     content: `
       <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value">MUSIC AND ME</div></div>
+        <div class="hud-block full">
+          <div class="hud-label">NOW PLAYING</div>
+          <div class="hud-value">Music and me</div>
+          <div class="hud-value small" style="margin-top:5px; color:var(--text-muted)">by Fakemink</div>
+        </div>
       </div>
     `
   },
