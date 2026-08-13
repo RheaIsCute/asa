@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
 
@@ -475,17 +475,68 @@ const VoidShapes = () => {
   );
 };
 
+const HyperspeedStars = () => {
+  const count = 200;
+  const mesh = useRef();
+  
+  const particles = useMemo(() => {
+    const temp = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      temp[i * 3] = (Math.random() - 0.5) * 150; 
+      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 10; 
+      temp[i * 3 + 2] = -100 - Math.random() * 300; 
+    }
+    return temp;
+  }, [count]);
+  
+  useFrame((state, delta) => {
+    if (mesh.current && audioState.playing) {
+      const positions = mesh.current.geometry.attributes.position.array;
+      const b = audioState.smoothBass;
+      const beat = audioState.beatDetected;
+      // High speed base that rockets forward on beats
+      const speed = delta * (25 + (beat ? 250 : 0) + b * 100); 
+      
+      for (let i = 0; i < count; i++) {
+        let z = positions[i * 3 + 2];
+        z += speed; 
+        
+        if (z > 150) {
+          z = -100 - Math.random() * 300;
+          positions[i * 3] = (Math.random() - 0.5) * 200;
+          positions[i * 3 + 1] = (Math.random() - 0.5) * 120 + 10;
+        }
+        positions[i * 3 + 2] = z;
+      }
+      mesh.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={mesh}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.6} color="#ffffff" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
+    </points>
+  );
+};
+
 const AmbientParticles = () => {
-  const count = 150;
+  const count = 300;
   const mesh = useRef();
   const matRef = useRef();
   
   const particles = useMemo(() => {
     const temp = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      temp[i * 3] = (Math.random() - 0.5) * 250;
-      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20;
-      temp[i * 3 + 2] = (Math.random() - 0.5) * 250;
+      const radius = 20 + Math.random() * 150;
+      const angle = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 150;
+      
+      temp[i * 3] = Math.cos(angle) * radius;
+      temp[i * 3 + 1] = y;
+      temp[i * 3 + 2] = Math.sin(angle) * radius;
     }
     return temp;
   }, [count]);
@@ -495,14 +546,40 @@ const AmbientParticles = () => {
       mesh.current.rotation.y += delta * 0.05;
       mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.2) * 5;
       
-      if (audioState.smoothBass > 0) {
-        mesh.current.rotation.y += delta * audioState.smoothBass * 1.2;
-        matRef.current.size = 0.4 + audioState.smoothBass * 2.0;
-        matRef.current.opacity = 0.3 + audioState.smoothBass * 0.7;
+      const positions = mesh.current.geometry.attributes.position.array;
+      const b = audioState.smoothBass;
+      const speedBase = delta * (0.5 + b * 4); // Wind speeds up with bass
+      
+      for (let i = 0; i < count; i++) {
+        let x = positions[i * 3];
+        let y = positions[i * 3 + 1];
+        let z = positions[i * 3 + 2];
         
-        // Color shift on heavy bass
-        const b = audioState.smoothBass;
+        // Swirl mathematics
+        const dist = Math.sqrt(x*x + z*z);
+        const swirlFactor = speedBase * (150 / Math.max(dist, 10)) * 0.02;
+        
+        const newX = x * Math.cos(swirlFactor) - z * Math.sin(swirlFactor);
+        const newZ = x * Math.sin(swirlFactor) + z * Math.cos(swirlFactor);
+        
+        y += speedBase * 8; // Flow upwards
+        if (y > 75) y = -75; // Wrap around
+        
+        positions[i * 3] = newX;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = newZ;
+      }
+      mesh.current.geometry.attributes.position.needsUpdate = true;
+      
+      if (b > 0) {
+        mesh.current.rotation.y += delta * b * 0.5;
+        matRef.current.size = 0.4 + b * 2.0;
+        matRef.current.opacity = 0.3 + b * 0.7;
         matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+      } else {
+        matRef.current.size = 0.4;
+        matRef.current.opacity = 0.3;
+        matRef.current.color.setRGB(0.63, 0.12, 0.94);
       }
     }
   });
@@ -855,6 +932,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   const [materialized, setMaterialized] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   
   useFrame((state, delta) => {
     if (outerGroupRef.current && innerGroupRef.current) {
@@ -864,9 +942,13 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       
       const targetScale = isHovered && !activeId ? 1.03 : 1.0;
       const targetZ = isHovered && !activeId ? 2.0 : 0;
+      const targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
+      const targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
       
       innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 10);
       innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, delta * 10);
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, delta * 10);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, delta * 10);
       
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
@@ -887,6 +969,15 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
     }
   };
 
+  const handleMouseMove = (e) => {
+    if (!isActive) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      setHoverPos({ x, y });
+    }
+  };
+
   return (
     <group ref={outerGroupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
       <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} />
@@ -897,7 +988,8 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
             style={data.width ? { width: data.width } : {}}
             onClick={handleClick}
             onMouseEnter={() => { window.isHoveringCard = true; setIsHovered(true); }}
-            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); }}
+            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); setHoverPos({x: 0, y: 0}); }}
+            onMouseMove={handleMouseMove}
           >
           <h2 className="panel-title">
             <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
@@ -1194,6 +1286,10 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       } else {
         // OVERVIEW — micro-orbit
         
+        if (!window.isHoveringCard && !activeSection) {
+          pointerTracker.current.target += delta * 0.15;
+        }
+        
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
         targetRot.current = pointerTracker.current.current;
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
@@ -1249,10 +1345,23 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
 // ═══════════════════════════════════════════════════════════
 
 const Effects = () => {
+  const chromRef = useRef();
+
+  useFrame(() => {
+    if (chromRef.current && audioState.playing) {
+      const b = audioState.smoothBass;
+      const beat = audioState.beatDetected ? audioState.beatEnergy : 0;
+      const intensity = 0.002 + (b * 0.015) + (beat * 0.03);
+      chromRef.current.offset.x = intensity;
+      chromRef.current.offset.y = intensity * 0.5;
+    }
+  });
+
   return (
     <EffectComposer>
       <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.5} />
       <Vignette eskil={false} offset={0.1} darkness={1.2} />
+      <ChromaticAberration ref={chromRef} offset={[0.002, 0.001]} />
     </EffectComposer>
   );
 };
@@ -1389,6 +1498,7 @@ function App() {
         <IntroParticles playing={started} />
         
         <Suspense fallback={null}>
+          <HyperspeedStars />
           <AmbientParticles />
           <VoidShapes />
           <HeartShapes />
