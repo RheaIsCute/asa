@@ -1,9 +1,39 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, useTexture } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { Html, useTexture, Text } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
+
+const TRACKS = {
+  initial: {
+    audio: '/music_and_me.mp3',
+    lyrics: '/11004.lrc'
+  },
+  favorite: {
+    audio: '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3',
+    lyrics: '/11165.lrc'
+  }
+};
+
+let currentTrackId = 'initial';
+let currentLyrics = [];
+
+const parseLrc = (lrc) => {
+  const lines = lrc.split('\n');
+  const parsed = [];
+  lines.forEach(line => {
+    const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
+    if (match) {
+      const min = parseInt(match[1]);
+      const sec = parseInt(match[2]);
+      const millis = parseInt(match[3]) * 10;
+      const time = min * 60 + sec + millis / 1000;
+      parsed.push({ time, text: match[4].trim() });
+    }
+  });
+  return parsed;
+};
 
 // ═══════════════════════════════════════════════════════════
 // AUDIO ENGINE — Beat Detection + Smoothed Frequency Bands
@@ -41,9 +71,17 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/shirt.mp3');
+  const track = TRACKS[currentTrackId];
+  audioRef = new Audio(track.audio);
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
+  audioRef.volume = 0.45;
+  
+  // Load initial lyrics
+  fetch(track.lyrics).then(res => res.text()).then(text => {
+    currentLyrics = parseLrc(text);
+    window.dispatchEvent(new Event('lyrics-loaded'));
+  }).catch(console.error);
   
   source = audioCtx.createMediaElementSource(audioRef);
   source.connect(analyser);
@@ -60,6 +98,61 @@ const playAudio = () => {
     audioRef.play().catch(console.error);
     audioState.playing = true;
   }
+};
+
+const switchTrack = async (trackId) => {
+  const track = TRACKS[trackId];
+  if (!track) return;
+  
+  currentTrackId = trackId;
+  window.toxicMode = trackId === 'favorite';
+  document.body.classList.toggle('toxic-theme', window.toxicMode);
+  window.dispatchEvent(new CustomEvent('track-switched', { detail: trackId }));
+  
+  if (audioRef) {
+    const wasPlaying = !audioRef.paused;
+    audioRef.pause();
+    audioRef.currentTime = 0;
+    audioRef.src = track.audio;
+    audioRef.load();
+    if (wasPlaying) audioRef.play().catch(console.error);
+  }
+  
+  // Reset audio visualizer state
+  audioState.smoothSub = 0;
+  audioState.smoothBass = 0;
+  audioState.smoothMid = 0;
+  audioState.smoothHigh = 0;
+  audioState.sub = 0;
+  audioState.bass = 0;
+  audioState.mid = 0;
+  audioState.high = 0;
+  audioState.beatDetected = false;
+  audioState.beatEnergy = 0;
+  audioState.energyAccumulator = 0;
+  prevEnergy = 0;
+  historyIndex = 0;
+  energyHistory.fill(0);
+  
+  currentLyrics = [];
+  window.dispatchEvent(new Event('lyrics-cleared'));
+  
+  try {
+    const response = await fetch(track.lyrics);
+    const lrcText = await response.text();
+    currentLyrics = parseLrc(lrcText);
+    window.dispatchEvent(new Event('lyrics-loaded'));
+  } catch (err) {
+    console.error("Failed to load lyrics:", err);
+  }
+};
+
+const toggleMute = () => {
+  if (audioRef) {
+    audioRef.muted = !audioRef.muted;
+    return audioRef.muted;
+  }
+  return false;
 };
 
 const updateAudioData = () => {
@@ -124,13 +217,6 @@ const updateAudioData = () => {
   
   audioState.energyAccumulator *= 0.995;
   prevEnergy = currentEnergy;
-  
-  // ── Pipe to CSS ──
-  const root = document.documentElement.style;
-  root.setProperty('--bass', audioState.smoothBass.toFixed(3));
-  root.setProperty('--sub', audioState.smoothSub.toFixed(3));
-  root.setProperty('--mid', audioState.smoothMid.toFixed(3));
-  root.setProperty('--high', audioState.smoothHigh.toFixed(3));
 };
 
 // Drives audio analysis every single frame
@@ -142,6 +228,121 @@ const AudioDriver = () => {
 // ═══════════════════════════════════════════════════════════
 // 3D SCENE COMPONENTS
 // ═══════════════════════════════════════════════════════════
+
+
+
+// ── Intro Particles (3D — no Text component, just particles) ──
+const IntroParticles = ({ playing }) => {
+  const groupRef = useRef();
+  const meshRef = useRef();
+  const particlesCount = 100;
+
+  const particlesData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < particlesCount; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 15],
+        speed: Math.random() * 1.5 + 0.3,
+        targetPos: [(Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 80]
+      });
+    }
+    return data;
+  }, [particlesCount]);
+
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useFrame(() => {
+    if (!playing || !groupRef.current || !meshRef.current) return;
+    const elapsed = (performance.now() - (window.introTime || performance.now())) / 1000;
+
+    if (elapsed < window.INTRO_DELAY_SEC) {
+      const progress = Math.min(elapsed / window.INTRO_DELAY_SEC, 1);
+      particlesData.forEach((p, i) => {
+        dummy.position.set(
+          THREE.MathUtils.lerp(p.pos[0], p.targetPos[0], progress * p.speed),
+          THREE.MathUtils.lerp(p.pos[1], p.targetPos[1], progress * p.speed),
+          THREE.MathUtils.lerp(p.pos[2], p.targetPos[2], progress * p.speed)
+        );
+        const s = 1 - progress * 0.5;
+        dummy.scale.setScalar(s);
+        dummy.updateMatrix();
+        meshRef.current.setMatrixAt(i, dummy.matrix);
+      });
+      meshRef.current.instanceMatrix.needsUpdate = true;
+    } else {
+      groupRef.current.visible = false;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, 0]}>
+      <instancedMesh ref={meshRef} args={[null, null, particlesCount]}>
+        <sphereGeometry args={[0.25, 6, 6]} />
+        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </instancedMesh>
+    </group>
+  );
+};
+
+const HeartShapes = () => {
+  const group = useRef();
+  const count = 8;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const heartShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const x = -2.5, y = -5;
+    shape.moveTo(x + 2.5, y + 2.5);
+    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+    return shape;
+  }, []);
+
+  const shapesData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < count; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100 + 40, (Math.random() - 0.5) * 150],
+        rot: [Math.PI, Math.random() * Math.PI * 2, 0],
+        speed: (Math.random() - 0.5) * 0.5,
+        scale: Math.random() * 0.2 + 0.1,
+      });
+    }
+    return data;
+  }, [count]);
+
+  const matRef = useRef();
+
+  useFrame((state, delta) => {
+    if (group.current) {
+      shapesData.forEach((shape, i) => {
+        shape.pos[1] += Math.sin(state.clock.elapsedTime + i) * 0.05;
+        shape.rot[1] += shape.speed * delta;
+        dummy.position.set(...shape.pos);
+        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
+        const s = shape.scale * (1 + audioState.smoothBass * 0.5);
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
+        group.current.setMatrixAt(i, dummy.matrix);
+      });
+      group.current.instanceMatrix.needsUpdate = true;
+    }
+    if (matRef.current) {
+      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
+  });
+
+  return (
+    <instancedMesh ref={group} args={[null, null, count]}>
+      <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
+      <meshBasicMaterial ref={matRef} color="#a020f0" transparent opacity={0.3} wireframe />
+    </instancedMesh>
+  );
+};
 
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
@@ -155,7 +356,11 @@ const HorizonTrees = () => {
     if (matRef.current) {
       matRef.current.map.offset.x += delta * 0.01;
       const b = audioState.smoothBass;
-      matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
+      if (window.toxicMode) {
+        matRef.current.color.setRGB(1 - b * 0.1, 1 - b * 0.9, 1 - b * 0.4);
+      } else {
+        matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
+      }
       matRef.current.opacity = 0.5 + b * 0.3;
     }
   });
@@ -177,7 +382,7 @@ const HorizonTrees = () => {
 
 const VoidShapes = () => {
   const group = useRef();
-  const count = 30;
+  const count = 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   
   const shapesData = useMemo(() => {
@@ -194,6 +399,8 @@ const VoidShapes = () => {
     return data;
   }, []);
 
+  const matRef = useRef();
+
   useFrame((state, delta) => {
     if (group.current) {
       const bassScale = 1 + audioState.smoothBass * 1.2;
@@ -203,7 +410,6 @@ const VoidShapes = () => {
         shape.rot[0] += (shape.speed + audioState.smoothMid * 0.5) * delta;
         shape.rot[1] += (shape.speed + audioState.smoothHigh * 0.3) * delta;
         
-        // Pulse position outward on beat
         const beatPush = beat ? audioState.beatEnergy * 3 : 0;
         const dist = Math.sqrt(shape.pos[0] ** 2 + shape.pos[2] ** 2);
         const pushX = dist > 0 ? (shape.pos[0] / dist) * beatPush : 0;
@@ -218,18 +424,21 @@ const VoidShapes = () => {
       });
       group.current.instanceMatrix.needsUpdate = true;
     }
+    if (matRef.current) {
+      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
   });
 
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
+      <meshBasicMaterial ref={matRef} color="#a020f0" wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
 };
 
 const AmbientParticles = () => {
-  const count = 600;
+  const count = 150;
   const mesh = useRef();
   const matRef = useRef();
   
@@ -246,6 +455,7 @@ const AmbientParticles = () => {
   useFrame((state, delta) => {
     if (mesh.current && matRef.current) {
       mesh.current.rotation.y += delta * 0.05;
+      mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.2) * 5;
       
       if (audioState.smoothBass > 0) {
         mesh.current.rotation.y += delta * audioState.smoothBass * 1.2;
@@ -254,7 +464,11 @@ const AmbientParticles = () => {
         
         // Color shift on heavy bass
         const b = audioState.smoothBass;
-        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        if (window.toxicMode) {
+          matRef.current.color.setRGB(1.0, b * 0.2, 0.3 + b * 0.4);
+        } else {
+          matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        }
       }
     }
   });
@@ -307,11 +521,11 @@ const BassShockwaves = () => {
           mesh.scale.set(scale, scale, 1);
           mesh.material.opacity = (1 - progress * progress) * 0.35;
           
-          // White flash on spawn, fade to purple
+          // White flash on spawn, fade to purple/pink
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
           } else {
-            mesh.material.color.setHex(0xa020f0);
+            mesh.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
           }
         }
       } else {
@@ -359,6 +573,11 @@ const AudioVisualizerRing = () => {
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
+    
+    // Dynamically update material color
+    if (meshRef.current.material) {
+      meshRef.current.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
   });
   
   return (
@@ -377,7 +596,11 @@ const ReactiveFloor = () => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
       meshRef.current.material.opacity = 0.1 + b * 0.35;
-      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      if (window.toxicMode) {
+        meshRef.current.material.color.setRGB(b * 0.6, 0, 0.02 + b * 0.2);
+      } else {
+        meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      }
     }
   });
   
@@ -393,7 +616,8 @@ const ReactiveFloor = () => {
 const ReactiveFog = () => {
   useFrame((state) => {
     if (state.scene.fog) {
-      state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01;
+      const breathing = Math.sin(state.clock.elapsedTime * 0.3) * 0.003;
+      state.scene.fog.density = 0.012 + audioState.smoothBass * 0.01 + breathing;
     }
   });
   return null;
@@ -408,25 +632,35 @@ window.isHoveringCard = false;
 
 const ICONS = {
   identity: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-  socials: '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>',
+  socials: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
   archive: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-  status: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'
+  status: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'
 };
 
 const SECTIONS_DATA = [
   {
     id: 'identity',
-    title: 'IDENTITY',
+    title: 'ABOUT ME',
     icon: ICONS.identity,
+    width: '580px',
+    camOffset: [-6, 3, 22],
+    lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
-        <div class="hud-block"><div class="hud-label">AGE</div><div class="hud-value">19</div></div>
-        <div class="hud-block full"><div class="hud-label">LANGUAGES</div>
-          <div class="hud-value small">ENGLISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
-          <div class="hud-value small" style="margin-top:5px">SPANISH [80%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 80%"></div></div>
-          <div class="hud-value small" style="margin-top:5px">JAPANESE [15%]</div><div class="hud-progress-bg"><div class="hud-progress-fill" style="width: 15%"></div></div>
+      <div style="display: flex; gap: 25px; height: 100%;">
+        <div style="flex: 0 0 220px; display: flex;">
+          <img src="/profile.png" style="width: 100%; height: 100%; min-height: 250px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);" />
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <div class="hud-grid" style="margin: 0; gap: 15px;">
+            <div class="hud-block full"><div class="hud-label">BIRTHDAY</div><div class="hud-value mono">JUN 23</div></div>
+            <div class="hud-block full"><div class="hud-label">AGE</div><div class="hud-value mono">18</div></div>
+            <div class="hud-block full"><div class="hud-label">STATUS</div>
+              <div class="hud-value small">Student</div>
+              <div class="hud-value small" style="margin-top:6px; color:rgba(255,255,255,0.7)">Aspiring AI Engineer</div>
+              <div class="hud-value small" style="margin-top:6px; color:rgba(255,255,255,0.7)">Technology & Programming</div>
+            </div>
+          </div>
         </div>
       </div>
     `
@@ -435,16 +669,22 @@ const SECTIONS_DATA = [
     id: 'socials',
     title: 'SOCIALS',
     icon: ICONS.socials,
+    camOffset: [6, -2, 24],
+    lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
-          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value"><a href="https://www.instagram.com/hataeruu/" target="_blank">hataeruu</a></div></div>
-        </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value"><a href="https://discord.com/users/1408523273548988456" target="_blank">asari_atari</a></div></div>
-        </div>
+      <div style="display: flex; flex-direction: column; height: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(160, 32, 240, 0.15);">
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block social-link" style="flex: 1; border: none; border-radius: 0; border-bottom: 1px solid rgba(160, 32, 240, 0.15); flex-direction:column; justify-content:center; align-items:center; gap: 8px; text-decoration: none;">
+           <div style="width: 64px; height: 64px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; pointer-events: none;">
+             <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+           </div>
+           <div class="hud-label" style="pointer-events: none;">Click to redirect</div>
+        </a>
+        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block social-link" style="flex: 1; border: none; border-radius: 0; flex-direction:column; justify-content:center; align-items:center; gap: 8px; text-decoration: none;">
+           <div style="width: 64px; height: 64px; fill: var(--accent); pointer-events: none;">
+              <svg viewBox="0 0 24 24" style="stroke: none;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+           </div>
+           <div class="hud-label" style="pointer-events: none;">Click to redirect</div>
+        </a>
       </div>
     `
   },
@@ -452,42 +692,52 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
+    camOffset: [0, -5, 20],
+    lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
-        <div class="hud-block"><div class="hud-label">FAV ARTIST</div><div class="hud-value">Ado</div></div>
-        <div class="hud-block"><div class="hud-label">FAV SONG</div><div class="hud-value small">2:00 by enveel</div></div>
-        <div class="hud-block full"><div class="hud-label">NOW PLAYING</div><div class="hud-value" style="color:var(--accent)">THOTTWAT - SHIRT</div></div>
-        <div class="hud-status-bar"><div class="hud-status-fill"></div></div>
+        <div class="hud-block full" style="padding: 24px;">
+          <div class="hud-label">NOW PLAYING</div>
+          <div id="music-title" class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
+          <div id="music-artist" class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
+            <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
+          </div>
+        </div>
+        <button id="btn-fav-song" class="hud-block social-link" style="width: 100%; margin-top: 4px; padding: 12px; border: 1px solid var(--accent); background: transparent; color: #fff; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;">Fav Song</button>
       </div>
     `
   },
   {
     id: 'archive',
-    title: 'ARCHIVE',
+    title: 'INTERESTS',
     icon: ICONS.archive,
+    camOffset: [-5, -4, 25],
+    lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">HARDWARE</div><div class="hud-value small">RTX 5060 TI / R9 7900X / 32GB DDR5</div></div>
-        <div class="hud-block full"><div class="hud-label">GEAR</div><div class="hud-value small">RAZER OROCHI V2 / AULA WIN60 / QUADCAST</div></div>
-        <div class="hud-block full"><div class="hud-label">GAMES & MEDIA</div><div class="hud-value small">DARK SOULS / CHAINSAWMAN / CYBERPUNK</div></div>
+      <div class="hud-grid" style="gap: 12px;">
+        <div class="hud-block full"><div class="hud-label">INTERESTS</div><div class="hud-value small">Programming / AI / Technology</div></div>
+        <div class="hud-block full"><div class="hud-label">HOBBIES</div><div class="hud-value small">Gaming / Anime / Music / Japanese</div></div>
+        <div class="hud-block full"><div class="hud-label">VIBE</div><div class="hud-value small">Cyber Y2K Ambient</div></div>
       </div>
     `
   },
   {
     id: 'status',
-    title: 'STATUS',
+    title: 'CURRENTLY',
     icon: ICONS.status,
+    camOffset: [4, 5, 23],
+    lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+      <div class="hud-grid" style="gap: 15px;">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-          <div class="hud-data"><div class="hud-label">SYSTEM</div><div class="hud-value">ONLINE</div></div>
+          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">Learning & Building</div></div>
         </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-          <div class="hud-data"><div class="hud-label">CONNECTION</div><div class="hud-value">STABLE</div></div>
+          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / Programming</div></div>
         </div>
-        <div class="hud-status-bar"><div class="hud-status-fill" style="width: 100%; animation: none;"></div></div>
       </div>
     `
   }
@@ -495,12 +745,25 @@ const SECTIONS_DATA = [
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
+  
+  // Heart parameters mapping
+  const tVals = [Math.PI, Math.PI/4, 0, 7*Math.PI/4, 3*Math.PI/2]; 
+  const t = tVals[i] || 0;
+  
+  const scl = 1.3;
+  const hx = 16 * Math.pow(Math.sin(t), 3) * scl;
+  const hy = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * scl;
+
   return {
     ...s,
     index: i,
     angle: angle,
     x: Math.sin(angle) * R,
     z: Math.cos(angle) * R,
+    toxicX: hx,
+    toxicY: hy + 5, // shift up slightly
+    toxicZ: -15,
+    toxicAngle: 0
   };
 });
 
@@ -509,7 +772,7 @@ const SECTIONS = SECTIONS_DATA.map((s, i) => {
 // ═══════════════════════════════════════════════════════════
 
 const CardParticles = ({ materialized, playing, dataIndex }) => {
-  const count = 350;
+  const count = 600;
   const meshRef = useRef();
   const matRef = useRef();
   
@@ -544,7 +807,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      const startTime = 2500 + dataIndex * 150; 
+      const startTime = window.INTRO_DELAY_SEC * 1000 + 2500 + dataIndex * 150; 
       
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
@@ -565,12 +828,14 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         
         if (progress > 0.8) {
           matRef.current.opacity = (1 - progress) * 5 * 0.9;
+        } else {
+          matRef.current.opacity = 0.9;
         }
+      } else {
+        matRef.current.opacity = 0;
       }
     }
   });
-
-  if (materialized) return null;
 
   return (
     <points ref={meshRef}>
@@ -578,23 +843,62 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
         <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} />
+      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 };
 
-const FloatingPanel = ({ data, activeId, onClick, playing }) => {
-  const groupRef = useRef();
-  const [materialized, setMaterialized] = useState(false);
+const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
+  const outerGroupRef = useRef();
+  const innerGroupRef = useRef();
   
+  const [isHovered, setIsHovered] = useState(false);
+  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+  
+  const [materialized, setMaterialized] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
+
   useFrame((state, delta) => {
-    if (groupRef.current) {
-      const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
-      const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-      groupRef.current.position.y = baseFloat + bassFloat;
+    const time = state.clock.elapsedTime;
+    
+    // Dynamic Layout Lerping
+    if (outerGroupRef.current) {
+      if (window.toxicMode) {
+        outerGroupRef.current.position.lerp(new THREE.Vector3(data.toxicX, data.toxicY, data.toxicZ), delta * 3);
+        
+        // Counteract carousel rotation to face front
+        const currentCarouselRot = carouselRef.current ? carouselRef.current.rotation.y : 0;
+        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.toxicAngle - currentCarouselRot, delta * 3);
+      } else {
+        outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, 0, data.z), delta * 3);
+        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.angle, delta * 3);
+      }
+    }
+
+    if (innerGroupRef.current && materialized) {
+      const isFocused = activeId === data.id;
       
+      const floatY = Math.sin(time * 2 + data.index) * 0.5;
+      const floatX = Math.cos(time * 1.5 + data.index) * 0.3;
+      
+      let targetRotX = 0;
+      let targetRotY = 0;
+      
+      if (!isFocused && isHovered) {
+         targetRotX = hoverPos.y * 0.04;
+         targetRotY = hoverPos.x * 0.04;
+      }
+      
+      innerGroupRef.current.position.y = THREE.MathUtils.lerp(innerGroupRef.current.position.y, floatY, delta * 5);
+      innerGroupRef.current.position.x = THREE.MathUtils.lerp(innerGroupRef.current.position.x, floatX, delta * 5);
+      
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, delta * 5);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, delta * 5);
+    }
+    
+    if (!materialized) {
       if (playing && !materialized && window.introTime) {
-        if (performance.now() - window.introTime > 3300 + data.index * 150) {
+        if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
           setMaterialized(true);
         }
       }
@@ -602,27 +906,249 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   });
 
   const isActive = activeId === data.id;
+  const isDimmed = activeId && !isActive;
+
+  const handleClick = () => {
+    if (!isActive) {
+      setIsGlitching(true);
+      setTimeout(() => setIsGlitching(false), 300);
+      onClick(data.id);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isActive) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      setHoverPos({ x, y });
+    }
+  };
 
   return (
-    <group ref={groupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
+    <group ref={outerGroupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
       <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} />
-      <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
-        <div 
-          className={`html-panel ${isActive ? 'active' : ''} ${materialized ? 'materialized' : ''}`}
-          onClick={() => { if (!isActive) onClick(data.id) }}
-          onMouseEnter={() => { window.isHoveringCard = true; }}
-          onMouseLeave={() => { window.isHoveringCard = false; }}
-        >
+      <group ref={innerGroupRef}>
+        <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
+          <div 
+            className={`html-panel ${isActive ? 'active' : ''} ${isDimmed ? 'dimmed' : ''} ${materialized ? 'materialized' : ''} ${isGlitching ? 'glitch-effect' : ''}`}
+            style={data.width ? { width: data.width } : {}}
+            onClick={handleClick}
+            onMouseEnter={() => { window.isHoveringCard = true; setIsHovered(true); }}
+            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); setHoverPos({x: 0, y: 0}); }}
+            onMouseMove={handleMouseMove}
+          >
           <h2 className="panel-title">
             <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
             {data.title}
           </h2>
           <div className="panel-content-wrapper">
-            <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+            <div 
+              className="panel-content" 
+              dangerouslySetInnerHTML={{ __html: data.content }} 
+              onClick={(e) => {
+                if (e.target.closest('a, button')) {
+                  e.stopPropagation();
+                }
+              }}
+            />
           </div>
         </div>
-      </Html>
+        </Html>
+      </group>
     </group>
+  );
+};
+
+const Lyrics3D = ({ playing }) => {
+  const meshRef = useRef();
+  const materialRef = useRef();
+  const currentTextRef = useRef('');
+  const lastIndexRef = useRef(0);
+  const scaleRef = useRef(1);
+  const rotRef = useRef(0);
+
+  const canvas = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = 2048;
+    c.height = 512;
+    return c;
+  }, []);
+
+  const texture = useMemo(() => {
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    return tex;
+  }, [canvas]);
+
+  const drawLyricsToCanvas = (text) => {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (text) {
+      const isToxic = window.toxicMode;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      let fontSize = 68;
+      ctx.font = `900 ${fontSize}px "Inter", "Arial Black", system-ui, sans-serif`;
+      const textWidth = ctx.measureText(text).width;
+      const maxW = canvas.width - 240;
+      if (textWidth > maxW) {
+        fontSize = Math.max(36, Math.floor(fontSize * (maxW / textWidth)));
+        ctx.font = `900 ${fontSize}px "Inter", "Arial Black", system-ui, sans-serif`;
+      }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // ── 1. Cyberpunk Corner Brackets / HUD Frame ──
+      const frameW = Math.min(textWidth + 80, maxW + 60);
+      const frameH = fontSize * 1.5;
+      const leftX = centerX - frameW / 2;
+      const rightX = centerX + frameW / 2;
+      const topY = centerY - frameH / 2;
+      const bottomY = centerY + frameH / 2;
+      const bracketLen = 24;
+
+      ctx.strokeStyle = isToxic ? 'rgba(255, 0, 85, 0.6)' : 'rgba(160, 32, 240, 0.6)';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = isToxic ? '#ff0055' : '#a020f0';
+      ctx.shadowBlur = 15;
+
+      // Top-Left Bracket
+      ctx.beginPath();
+      ctx.moveTo(leftX, topY + bracketLen);
+      ctx.lineTo(leftX, topY);
+      ctx.lineTo(leftX + bracketLen, topY);
+      ctx.stroke();
+
+      // Top-Right Bracket
+      ctx.beginPath();
+      ctx.moveTo(rightX, topY + bracketLen);
+      ctx.lineTo(rightX, topY);
+      ctx.lineTo(rightX - bracketLen, topY);
+      ctx.stroke();
+
+      // Bottom-Left Bracket
+      ctx.beginPath();
+      ctx.moveTo(leftX, bottomY - bracketLen);
+      ctx.lineTo(leftX, bottomY);
+      ctx.lineTo(leftX + bracketLen, bottomY);
+      ctx.stroke();
+
+      // Bottom-Right Bracket
+      ctx.beginPath();
+      ctx.moveTo(rightX, bottomY - bracketLen);
+      ctx.lineTo(rightX, bottomY);
+      ctx.lineTo(rightX - bracketLen, bottomY);
+      ctx.stroke();
+
+      // ── 2. Chromatic Aberration Layers (Cyan & Red/Magenta Split) ──
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = isToxic ? 'rgba(0, 255, 200, 0.75)' : 'rgba(0, 240, 255, 0.75)';
+      ctx.fillText(text, centerX - 4, centerY + 2);
+
+      ctx.fillStyle = isToxic ? 'rgba(255, 0, 100, 0.85)' : 'rgba(255, 30, 120, 0.75)';
+      ctx.fillText(text, centerX + 4, centerY - 2);
+
+      // ── 3. Cyberpunk Ambient Glow Layer ──
+      ctx.shadowColor = isToxic ? 'rgba(255, 0, 85, 0.95)' : 'rgba(160, 32, 240, 0.95)';
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = isToxic ? '#ff0055' : '#a020f0';
+      ctx.fillText(text, centerX, centerY);
+
+      // ── 4. Core Crisp White Foreground Text ──
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(text, centerX, centerY);
+    }
+
+    texture.needsUpdate = true;
+  };
+
+  useEffect(() => {
+    const handleLoaded = () => {
+      currentTextRef.current = '';
+      lastIndexRef.current = 0;
+      drawLyricsToCanvas('');
+    };
+    const handleCleared = () => {
+      currentTextRef.current = '';
+      lastIndexRef.current = 0;
+      drawLyricsToCanvas('');
+    };
+
+    window.addEventListener('lyrics-loaded', handleLoaded);
+    window.addEventListener('lyrics-cleared', handleCleared);
+    return () => {
+      window.removeEventListener('lyrics-loaded', handleLoaded);
+      window.removeEventListener('lyrics-cleared', handleCleared);
+    };
+  }, [canvas, texture]);
+
+  useFrame((state, delta) => {
+    if (!playing || !meshRef.current) return;
+
+    const time = audioRef ? audioRef.currentTime : 0;
+    const len = currentLyrics.length;
+    let activeLine = '';
+
+    if (len > 0) {
+      let idx = lastIndexRef.current;
+      if (idx >= len || time < currentLyrics[idx].time) {
+        idx = 0;
+      }
+      while (idx < len && time >= currentLyrics[idx].time) {
+        idx++;
+      }
+      idx = Math.max(0, idx - 1);
+      if (time >= currentLyrics[idx].time) {
+        activeLine = currentLyrics[idx].text;
+        lastIndexRef.current = idx;
+      }
+    }
+
+    // Trigger pop & glitch rotation on line transition
+    if (currentTextRef.current !== activeLine) {
+      currentTextRef.current = activeLine;
+      drawLyricsToCanvas(activeLine);
+      scaleRef.current = 1.15;
+      rotRef.current = (Math.random() - 0.5) * 0.08;
+    }
+
+    // Beat detection response
+    if (audioState.beatDetected) {
+      scaleRef.current = Math.max(scaleRef.current, 1.06 + audioState.beatEnergy * 0.1);
+      if (Math.random() < 0.3) {
+        rotRef.current = (Math.random() - 0.5) * 0.04;
+      }
+    }
+
+    // Smooth lerp scale & rotation back to rest position
+    const d = Math.min(delta, 0.1);
+    scaleRef.current = THREE.MathUtils.lerp(scaleRef.current, 1.0, d * 8);
+    rotRef.current = THREE.MathUtils.lerp(rotRef.current, 0, d * 10);
+
+    // Apply transformations (zero garbage collection)
+    const baseScale = scaleRef.current + audioState.smoothBass * 0.06;
+    meshRef.current.scale.set(baseScale, baseScale, 1);
+    meshRef.current.rotation.z = rotRef.current;
+    meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.25;
+    meshRef.current.position.z = -12 + audioState.smoothBass * 1.2;
+
+    if (materialRef.current) {
+      materialRef.current.opacity = 0.85 + audioState.smoothBass * 0.15;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={[0, 0, -12]}>
+      <planeGeometry args={[24, 6]} />
+      <meshBasicMaterial ref={materialRef} map={texture} transparent opacity={0.95} depthWrite={false} />
+    </mesh>
   );
 };
 
@@ -630,22 +1156,37 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
 // SCENE CONTROLLER — Camera + DOM Effects
 // ═══════════════════════════════════════════════════════════
 
-const SceneController = ({ activeSection, playing, carouselRef }) => {
+const SceneController = ({ activeSection, setActiveSection, playing, carouselRef }) => {
+  const domRefs = useRef({});
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
   const introSpinFinished = useRef(false);
-  const startTime = useRef(0);
+  const pointerTracker = useRef({ current: 0, target: 0, velocity: 0 });
   const targetRot = useRef(0);
+  const startTime = useRef(0);
+  const randomIntroSpin = useRef(Math.PI * 2);
+  const mousePos = useRef({ x: 0, y: 0 });
+  const currentMousePos = useRef({ x: 0, y: 0 });
+  const swapGlitch = useRef(0);
+  const prevSection = useRef(activeSection);
+  
   const bassFovPunch = useRef(0);
   
-  const pointerTracker = useRef({ target: 0, current: 0 });
-
   useEffect(() => {
     if (playing && startTime.current === 0) {
       startTime.current = performance.now();
       window.introTime = performance.now();
     }
   }, [playing]);
+
+  useEffect(() => {
+    if (activeSection !== prevSection.current) {
+      if (activeSection !== null || prevSection.current !== null) {
+        swapGlitch.current = 1.0;
+      }
+      prevSection.current = activeSection;
+    }
+  }, [activeSection]);
 
   useEffect(() => {
     if (activeSection && carouselRef.current) {
@@ -663,44 +1204,98 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
   }, [activeSection, carouselRef]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (introSpinFinished.current) {
+          if (activeSection && setActiveSection) {
+            const currentIndex = SECTIONS.findIndex(s => s.id === activeSection);
+            const nextIndex = (currentIndex + 1) % SECTIONS.length;
+            setActiveSection(SECTIONS[nextIndex].id);
+          } else {
+            const cardSpacing = (Math.PI * 2) / SECTIONS.length;
+            pointerTracker.current.target -= cardSpacing;
+          }
+        }
+      }
+    };
+    
+    const handleMouseMove = (e) => {
+      mousePos.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mousePos.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    
+    const handleWheel = (e) => {
+      if (introSpinFinished.current && !activeSection) {
+        pointerTracker.current.target += e.deltaY * 0.0015;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [activeSection, setActiveSection]);
+
   useFrame((state, delta) => {
+    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
     const time = state.clock.elapsedTime;
     const bass = audioState.bass;
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
     
-    // ── CAMERA SHAKE (enhanced — sine-based + beat impulse) ──
-    const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 3.0 : 0;
-    const shakeIntensity = shakeBase * (activeSection ? 0.3 : (window.isHoveringCard ? 0.2 : 1.0));
+    // Smoothly track mouse
+    currentMousePos.current.x = THREE.MathUtils.lerp(currentMousePos.current.x, mousePos.current.x, d * 3);
+    currentMousePos.current.y = THREE.MathUtils.lerp(currentMousePos.current.y, mousePos.current.y, d * 3);
     
-    if (shakeIntensity > 0) {
-      const st = time * 35;
-      state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.6;
-      state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.5;
+    const parallaxX = currentMousePos.current.x * 3.5;
+    const parallaxY = currentMousePos.current.y * 2.5;
+    
+    // ── CAMERA SHAKE (only after intro finishes) ──
+    if (introSpinFinished.current) {
+      const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 1.0 : 0;
+      const shakeIntensity = shakeBase * (activeSection ? 0.1 : (window.isHoveringCard ? 0.05 : 0.3));
       
-      if (beat) {
-        state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 3.5;
-        state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 2.5;
+      if (shakeIntensity > 0) {
+        const st = time * 35;
+        state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.2;
+        state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.15;
+        
+        if (beat) {
+          state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 0.5;
+          state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 0.3;
+        }
       }
     }
     
     // ── ASA TITLE — MULTI-LAYER CHROMATIC GLITCH ──
-    const textEl = document.getElementById('asa-bg-text');
+    if (!domRefs.current.textEl) {
+      domRefs.current.textEl = document.getElementById('asa-bg-text');
+      if (domRefs.current.textEl) {
+        domRefs.current.redLayer = domRefs.current.textEl.querySelector('.asa-layer-r');
+        domRefs.current.cyanLayer = domRefs.current.textEl.querySelector('.asa-layer-c');
+        domRefs.current.mainLayer = domRefs.current.textEl.querySelector('.asa-layer-main');
+      }
+    }
+    const textEl = domRefs.current.textEl;
     if (textEl) {
       // Container: float + parallax + bass scale + beat skew
       const floatY = Math.sin(time * 2) * 15;
       const floatX = Math.cos(time * 1.5) * 8;
-      const mouseX = state.pointer.x * -40;
-      const mouseY = state.pointer.y * -40;
       const bassScale = 1 + smoothBass * 0.35;
       const skewX = beat ? (Math.random() - 0.5) * bass * 30 : 0;
       
-      textEl.style.transform = `translate(${mouseX + floatX}px, ${mouseY + floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
+      textEl.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
       
       // Multi-layer chromatic split
-      const redLayer = textEl.querySelector('.asa-layer-r');
-      const cyanLayer = textEl.querySelector('.asa-layer-c');
-      const mainLayer = textEl.querySelector('.asa-layer-main');
+      const redLayer = domRefs.current.redLayer;
+      const cyanLayer = domRefs.current.cyanLayer;
+      const mainLayer = domRefs.current.mainLayer;
       
       if (redLayer && cyanLayer && mainLayer) {
         if (beat) {
@@ -725,17 +1320,18 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
           cyanLayer.style.clipPath = 'none';
         }
         
-        // Main layer: massive neon glow + strobe flash
-        const coreGlow = `0 0 ${20 + bass * 200}px rgba(160, 32, 240, ${0.4 + bass * 0.6})`;
-        const outerGlow = `0 0 ${60 + bass * 500}px rgba(160, 32, 240, ${0.15 + bass * 0.4})`;
-        const megaGlow = `0 0 ${120 + bass * 800}px rgba(120, 0, 220, ${bass * 0.25})`;
-        mainLayer.style.textShadow = `${coreGlow}, ${outerGlow}, ${megaGlow}`;
+        // Main layer: massive neon glow + strobe flash (static radii for performance)
+        const coreAlpha = 0.4 + bass * 0.6;
+        const outerAlpha = 0.15 + bass * 0.4;
+        const megaAlpha = bass * 0.3;
+        mainLayer.style.textShadow = `0 0 30px rgba(160, 32, 240, ${coreAlpha}), 0 0 100px rgba(160, 32, 240, ${outerAlpha}), 0 0 250px rgba(120, 0, 220, ${megaAlpha})`;
         mainLayer.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.3})`;
       }
     }
     
     // ── SCREEN FLASH ON HEAVY BEATS ──
-    const flashEl = document.getElementById('screen-flash');
+    if (!domRefs.current.flashEl) domRefs.current.flashEl = document.getElementById('screen-flash');
+    const flashEl = domRefs.current.flashEl;
     if (flashEl) {
       if (beat && bass > 0.4) {
         flashEl.style.transition = 'none';
@@ -747,17 +1343,25 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     }
     
     // ── SCANLINE INTENSITY ──
-    const scanEl = document.querySelector('.screen-scanlines');
+    if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
+    const scanEl = domRefs.current.scanEl;
     if (scanEl) {
       scanEl.style.opacity = String(0.1 + smoothBass * 0.3);
     }
 
     // ── EDGE GLOW INTENSITY ──
-    const edgeEl = document.querySelector('.screen-edge-glow');
+    if (!domRefs.current.edgeEl) domRefs.current.edgeEl = document.querySelector('.screen-edge-glow');
+    const edgeEl = domRefs.current.edgeEl;
     if (edgeEl) {
       const glowSize = 40 + smoothBass * 200;
       const glowAlpha = 0.08 + smoothBass * 0.5;
       edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
+    }
+    
+    // ── REACTIVE MUSIC BAR ──
+    if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
+    if (domRefs.current.musicBar) {
+      domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
     }
     
     // ══════════════════════════════════════
@@ -766,42 +1370,49 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
-      if (elapsed < 2.5) {
-        const progress = Math.min(elapsed / 2.5, 1);
+      
+      if (elapsed < window.INTRO_DELAY_SEC) {
+        const hoverY = 150 + Math.sin(time * 0.5) * 10;
+        state.camera.position.lerp(new THREE.Vector3(0, hoverY, 100), 2 * d);
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20, 0), 2 * d);
+      } else if (elapsed < window.INTRO_DELAY_SEC + 2.5) {
+        const progress = Math.min((elapsed - window.INTRO_DELAY_SEC) / 2.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
         
-        const startPos = new THREE.Vector3(0, 200, 50);
+        const startPos = new THREE.Vector3(0, 150, 100);
         const targetPos = new THREE.Vector3(0, 0, 65);
         
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
         
-        state.camera.position.x += Math.sin(progress * Math.PI * 4) * 80 * (1 - easeOut);
-        state.camera.position.z += Math.cos(progress * Math.PI * 4) * 80 * (1 - easeOut);
+        state.camera.position.x += Math.sin(progress * Math.PI * 2) * 25 * (1 - easeOut);
+        state.camera.position.z += Math.cos(progress * Math.PI * 2) * 25 * (1 - easeOut);
         
-        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * d);
       } else {
         introFinished.current = true;
       }
     } else if (introFinished.current && !introSpinFinished.current && playing) {
-      const elapsedSinceSpinStart = (performance.now() - window.introTime - 4000) / 1000;
+      const elapsedSinceSpinStart = (performance.now() - window.introTime - (window.INTRO_DELAY_SEC * 1000 + 4000)) / 1000;
       if (elapsedSinceSpinStart > 0) {
           if (elapsedSinceSpinStart < 2.0) {
              const spinProgress = elapsedSinceSpinStart / 2.0;
              const spinEase = 1 - Math.pow(1 - spinProgress, 4);
-             pointerTracker.current.target = (Math.PI * 4) * spinEase;
+             pointerTracker.current.target = randomIntroSpin.current * spinEase;
           } else {
              introSpinFinished.current = true;
-             pointerTracker.current.target = Math.PI * 4;
+             pointerTracker.current.target = randomIntroSpin.current;
           }
       }
       
-      pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
+      pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
       targetRot.current = pointerTracker.current.current;
-      carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+      if (carouselRef.current) {
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
+      }
       
       const targetCamPos = new THREE.Vector3(0, 0, 65);
-      state.camera.position.lerp(targetCamPos, 6 * delta);
-      lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * delta);
+      state.camera.position.lerp(targetCamPos, 6 * d);
+      lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * d);
 
     } else if (introFinished.current && introSpinFinished.current) {
       
@@ -813,40 +1424,42 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
       
       if (activeSection) {
         // ZOOMED IN
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
-        
-        const targetCamPos = new THREE.Vector3(0, -2, R + 25);
-        state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, R), lerpSpeed * delta);
-        
-      } else {
-        // OVERVIEW — edge panning + micro-orbit
-        if (!window.isHoveringCard) {
-          const px = state.pointer.x;
-          if (Math.abs(px) > 0.05) {
-             const speed = (Math.abs(px) - 0.05) * Math.sign(px) * 4.0;
-             pointerTracker.current.target += speed * delta;
-          } else {
-             const cardSpacing = Math.PI / 2;
-             const closestAngle = Math.round(pointerTracker.current.target / cardSpacing) * cardSpacing;
-             pointerTracker.current.target = THREE.MathUtils.lerp(pointerTracker.current.target, closestAngle, 3.0 * delta);
-          }
+        if (carouselRef.current) {
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * d);
         }
         
-        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
-        targetRot.current = pointerTracker.current.current;
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+        const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
+        const cx = activeData?.camOffset?.[0] || 0;
+        const cy = activeData?.camOffset?.[1] || -2;
+        const cz = activeData?.camOffset?.[2] || 25;
         
-        // Micro-orbit: slow XY movement + bass modulation
+        const lx = activeData?.lookOffset?.[0] || 0;
+        const ly = activeData?.lookOffset?.[1] || 0;
+        const lz = activeData?.lookOffset?.[2] || 0;
+        
+        const targetCamPos = new THREE.Vector3(cx, cy, R + cz);
+        state.camera.position.lerp(targetCamPos, lerpSpeed * d);
+        lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * d);
+        
+      } else {
+        // OVERVIEW — micro-orbit
+        
+        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
+        targetRot.current = pointerTracker.current.current;
+        if (carouselRef.current) {
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
+        }
+        
+        // Micro-orbit: slow XY movement + bass modulation + mouse parallax
         const orbitAngle = time * 0.15;
         const orbitRadius = 2 + smoothBass * 4;
         const targetCamPos = new THREE.Vector3(
-          Math.sin(orbitAngle) * orbitRadius,
-          Math.cos(orbitAngle * 0.7) * (1 + smoothBass * 2),
+          Math.sin(orbitAngle) * orbitRadius + parallaxX,
+          Math.cos(orbitAngle * 0.7) * (1 + smoothBass * 2) + parallaxY,
           65
         );
-        state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), lerpSpeed * delta);
+        state.camera.position.lerp(targetCamPos, lerpSpeed * d);
+        lookAtPos.current.lerp(new THREE.Vector3(parallaxX * 0.5, parallaxY * 0.5, 0), lerpSpeed * d);
       }
     }
     
@@ -855,18 +1468,36 @@ const SceneController = ({ activeSection, playing, carouselRef }) => {
     // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
       // FOV breathing — expands on bass, contracts between
-      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * delta);
+      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * d);
       state.camera.fov = 60 + bassFovPunch.current * 14;
       
+      // Swap glitch warp
+      if (swapGlitch.current > 0) {
+        swapGlitch.current = Math.max(0, swapGlitch.current - d * 4.0);
+        const intensity = swapGlitch.current;
+        state.camera.fov += intensity * 35; // Dramatic FOV pull
+        state.camera.rotateZ((Math.random() - 0.5) * intensity * 0.15); // Slight camera shake/roll
+      }
+      
+      state.camera.updateProjectionMatrix();
+      
       // Bass punch: push camera forward on beat
-      if (beat && !activeSection) {
+      if (beat && !activeSection && swapGlitch.current === 0) {
         state.camera.position.z -= audioState.beatEnergy * 3;
       }
       
       state.camera.updateProjectionMatrix();
       
       // Camera roll sway — subtle drunken float
-      state.camera.rotation.z += Math.sin(time * 0.6) * smoothBass * 0.035;
+      let rollAmt = Math.sin(time * 0.6) * smoothBass * 0.035;
+      if (window.toxicMode) {
+        rollAmt += Math.cos(time * 2.1) * smoothBass * 0.1;
+        state.camera.position.x += Math.sin(time * 3.5) * smoothBass * 1.5;
+        state.camera.position.y += Math.cos(time * 4.2) * smoothBass * 1.5;
+        state.camera.fov += Math.sin(time * 8) * smoothBass * 5;
+        state.camera.updateProjectionMatrix();
+      }
+      state.camera.rotation.z += rollAmt;
     }
   });
 
@@ -890,21 +1521,79 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
+window.INTRO_DELAY_SEC = 3.2;
+
+window.toxicMode = false;
+
 function App() {
   const [started, setStarted] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [introTextVisible, setIntroTextVisible] = useState(false);
+  const [introFading, setIntroFading] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(0.45);
+  const [isToxicMode, setIsToxicMode] = useState(false);
   
   const carouselRef = useRef();
+
+  useEffect(() => {
+    const handleTrackSwitched = (e) => {
+      setIsToxicMode(e.detail === 'favorite');
+    };
+    
+    const handleGlobalClick = (e) => {
+      if (e.target.closest('#btn-fav-song')) {
+        switchTrack('favorite');
+      }
+    };
+    
+    window.addEventListener('track-switched', handleTrackSwitched);
+    document.addEventListener('click', handleGlobalClick);
+    
+    return () => {
+      window.removeEventListener('track-switched', handleTrackSwitched);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+
+  const handleRevert = () => {
+    switchTrack('initial');
+  };
 
   const handleStart = () => {
     initAudio();
     playAudio();
     setStarted(true);
     
+    // Show ASA title shortly after start
     setTimeout(() => {
       setIntroTextVisible(true);
-    }, 500);
+    }, 300);
+
+    // Start fading ASA title before cards materialize
+    setTimeout(() => {
+      setIntroFading(true);
+    }, window.INTRO_DELAY_SEC * 1000 + 2000);
+
+    // Fully remove ASA title after fade completes
+    setTimeout(() => {
+      setIntroTextVisible(false);
+      setIntroFading(false);
+    }, window.INTRO_DELAY_SEC * 1000 + 2800);
+  };
+
+  const handleMute = (e) => {
+    e.stopPropagation();
+    setIsMuted(toggleMute());
+  };
+
+  const handleVolumeChange = (e) => {
+    e.stopPropagation();
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+    if (audioRef) {
+      audioRef.volume = newVol;
+    }
   };
 
   return (
@@ -912,19 +1601,19 @@ function App() {
       
       <div className={`splash-screen ${started ? 'hidden' : ''}`} onClick={handleStart}>
         <img src="/icon.png" alt="ASA" className="splash-avatar" />
-        <div className="enter-text">ENTER THE VOID</div>
-        <p style={{ color: '#666', marginTop: '20px', fontFamily: 'Inter, sans-serif' }}>
-          (Click anywhere. Warning: flashing lights &amp; loud audio)
+        <div className="enter-text">INITIALIZE EXPERIENCE</div>
+        <p style={{ color: '#888', marginTop: '20px', fontFamily: 'Inter, sans-serif', fontSize: '1.2rem', fontWeight: 'bold' }}>
+          (Click anywhere. Warning: Loud audio and screen shake)
         </p>
       </div>
 
       {/* ── ASA TITLE: Multi-Layer Chromatic Glitch ── */}
       {started && introTextVisible && (
-        <div className="asa-title-wrapper">
+        <div className={`asa-title-wrapper ${introFading ? 'fading' : ''}`}>
           <div id="asa-bg-text" className="asa-title-container">
             <span className="asa-layer asa-layer-r">ASA</span>
             <span className="asa-layer asa-layer-c">ASA</span>
-            <span className="asa-layer asa-layer-main">ASA</span>
+            <span className="asa-layer asa-layer-main" data-text="ASA">ASA</span>
           </div>
         </div>
       )}
@@ -941,6 +1630,7 @@ function App() {
       {/* ── Audio-reactive radial blur overlay ── */}
       {started && <div className="audio-blur-overlay"></div>}
 
+      {/* ── Lyrics removed from HTML overlay ── */}
       {started && (
         <div className="ui-layer">
           {activeSection && (
@@ -948,13 +1638,33 @@ function App() {
               [ BACK TO OVERVIEW ]
             </button>
           )}
+          {isToxicMode && (
+            <button className="revert-btn" onClick={handleRevert}>
+              [ REVERT TO NORMAL ]
+            </button>
+          )}
+          <button className="mute-btn" onClick={handleMute}>
+            {isMuted ? '[ UNMUTE ]' : '[ MUTE ]'}
+          </button>
+          <input 
+            type="range" 
+            className="volume-slider"
+            min="0" max="1" step="0.01" 
+            value={volume} 
+            onChange={handleVolumeChange} 
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
+          <div className="space-notifier">
+            [ PRESS SPACE TO ROTATE / CYCLE ]
+          </div>
         </div>
       )}
 
       <Canvas
         camera={{ position: [0, 150, 100], fov: 60 }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        dpr={[1, 2]}
+        dpr={1}
       >
         <color attach="background" args={['#020202']} />
         <fogExp2 attach="fog" args={['#020202', 0.015]} />
@@ -966,9 +1676,13 @@ function App() {
         <AudioDriver />
         <ReactiveFog />
         
+        <IntroParticles playing={started} />
+        
         <Suspense fallback={null}>
+          <Lyrics3D playing={started} />
           <AmbientParticles />
           <VoidShapes />
+          <HeartShapes />
           <HorizonTrees />
           <BassShockwaves />
           <AudioVisualizerRing />
@@ -982,12 +1696,14 @@ function App() {
                 activeId={activeSection} 
                 onClick={setActiveSection} 
                 playing={started}
+                carouselRef={carouselRef}
               />
             ))}
           </group>
 
           <SceneController 
             activeSection={activeSection} 
+            setActiveSection={setActiveSection}
             playing={started} 
             carouselRef={carouselRef} 
           />
