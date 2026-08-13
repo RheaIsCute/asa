@@ -1493,6 +1493,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         state.camera.updateProjectionMatrix();
       }
       state.camera.rotation.z += rollAmt;
+    }
   });
 
   return null;
