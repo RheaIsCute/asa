@@ -656,10 +656,10 @@ body {
 }
 
 @keyframes cardGlitch {
-  0% { transform: translate(0); filter: hue-rotate(0deg); }
-  20% { transform: translate(-5px, 5px); filter: hue-rotate(90deg); box-shadow: -5px 0 15px #f0f, 5px 0 15px #0ff; }
-  40% { transform: translate(5px, -5px); filter: hue-rotate(-90deg); box-shadow: 5px 0 15px #f0f, -5px 0 15px #0ff; }
-  60% { transform: translate(-3px, -3px); filter: hue-rotate(45deg); }
-  80% { transform: translate(3px, 3px); filter: hue-rotate(-45deg); }
-  100% { transform: translate(0); filter: hue-rotate(0deg); }
+  0% { transform: translate(0); filter: invert(0%); }
+  20% { transform: translate(-5px, 5px); filter: invert(100%); box-shadow: -5px 0 15px #fff, 5px 0 15px #000; }
+  40% { transform: translate(5px, -5px); filter: invert(0%); box-shadow: 5px 0 15px #000, -5px 0 15px #fff; }
+  60% { transform: translate(-3px, -3px); filter: invert(100%); }
+  80% { transform: translate(3px, 3px); filter: invert(0%); }
+  100% { transform: translate(0); filter: invert(0%); }
 }
