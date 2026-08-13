@@ -722,7 +722,7 @@ const SECTIONS_DATA = [
           <div class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
           <div class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
           <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 0; left: 0; height: 100%; width: 45%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
+            <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
           </div>
         </div>
       </div>
@@ -1142,6 +1142,12 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       const glowSize = 40 + smoothBass * 200;
       const glowAlpha = 0.08 + smoothBass * 0.5;
       edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
+    }
+    
+    // ── REACTIVE MUSIC BAR ──
+    if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
+    if (domRefs.current.musicBar) {
+      domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
     }
     
     // ══════════════════════════════════════
