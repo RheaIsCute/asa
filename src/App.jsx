@@ -1348,12 +1348,18 @@ const Effects = () => {
   const chromRef = useRef();
 
   useFrame(() => {
-    if (chromRef.current && audioState.playing) {
-      const b = audioState.smoothBass;
-      const beat = audioState.beatDetected ? audioState.beatEnergy : 0;
-      const intensity = 0.002 + (b * 0.015) + (beat * 0.03);
-      chromRef.current.offset.x = intensity;
-      chromRef.current.offset.y = intensity * 0.5;
+    try {
+      if (chromRef.current && audioState.playing) {
+        const b = audioState.smoothBass;
+        const beat = audioState.beatDetected ? audioState.beatEnergy : 0;
+        const intensity = 0.002 + (b * 0.015) + (beat * 0.03);
+        if (chromRef.current.offset) {
+          chromRef.current.offset.x = intensity;
+          chromRef.current.offset.y = intensity * 0.5;
+        }
+      }
+    } catch (e) {
+      // Ignore to prevent crash
     }
   });
 
