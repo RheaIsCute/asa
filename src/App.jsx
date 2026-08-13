@@ -874,6 +874,24 @@ const SECTIONS_DATA = [
   {
     id: 'status',
     title: 'CURRENTLY',
+    icon: ICONS.status,
+    camOffset: [4, 5, 23],
+    lookOffset: [0, 0, 0],
+    content: `
+      <div class="hud-grid" style="gap: 15px;">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">Learning & Building</div></div>
+        </div>
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
+          <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / Programming</div></div>
+        </div>
+      </div>
+    `
+  }
+];
+
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
   
