@@ -1173,7 +1173,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       
       pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
       targetRot.current = pointerTracker.current.current;
-      carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+      if (carouselRef.current) {
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+      }
       
       const targetCamPos = new THREE.Vector3(0, 0, 65);
       state.camera.position.lerp(targetCamPos, 6 * delta);
@@ -1189,7 +1191,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       
       if (activeSection) {
         // ZOOMED IN
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
+        if (carouselRef.current) {
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
+        }
         
         const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
         const cx = activeData?.camOffset?.[0] || 0;
@@ -1213,7 +1217,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
         targetRot.current = pointerTracker.current.current;
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+        if (carouselRef.current) {
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+        }
         
         // Micro-orbit: slow XY movement + bass modulation + mouse parallax
         const orbitAngle = time * 0.15;
