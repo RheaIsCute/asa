@@ -728,3 +728,50 @@ body {
   border: 1px solid rgba(160, 32, 240, 0.5);
   box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(160,32,240,0.3);
 }
+
+/* ── LYRICS OVERLAY ── */
+.lyrics-container {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,1);
+}
+
+.lyrics-line {
+  font-family: 'Inter', sans-serif;
+  font-size: 2vw;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  transition: all 0.2s ease-out;
+  animation: lyricFadeIn 0.3s ease-out forwards;
+}
+
+.toxic-word {
+  color: #ff0055;
+  text-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055;
+  display: inline-block;
+  animation: pulseToxic 0.5s infinite alternate;
+}
+
+@keyframes lyricFadeIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pulseToxic {
+  0% { transform: scale(1); text-shadow: 0 0 20px #ff0055; }
+  100% { transform: scale(1.1); text-shadow: 0 0 30px #ff0055, 0 0 50px #ff0055; }
+}
+
+body.toxic-theme .lyrics-line {
+  font-family: 'Outfit', sans-serif;
+  font-style: italic;
+  font-size: 2.5vw;
+}
