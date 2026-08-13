@@ -21,12 +21,27 @@ const audioState = {
   smoothBass: 0,
   smoothMid: 0,
   smoothHigh: 0,
-  beatDetected: false,
-  beatEnergy: 0,
-  lastBeatTime: 0,
-  energyAccumulator: 0,
   currentTime: 0,
+  currentTrack: 'default',
   raw: new Uint8Array(128)
+};
+
+window.switchTrack = (trackName) => {
+  if (!window.audioRef) return;
+  const wasPlaying = !window.audioRef.paused;
+  
+  if (trackName === 'addict') {
+    window.audioRef.src = '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3';
+    audioState.currentTrack = 'addict';
+  } else {
+    window.audioRef.src = '/music_and_me.mp3';
+    audioState.currentTrack = 'default';
+  }
+  
+  window.audioRef.load();
+  if (wasPlaying) {
+    window.audioRef.play().catch(console.error);
+  }
 };
 
 let audioCtx, analyser, source, audioRef;
@@ -43,7 +58,8 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3');
+  audioRef = new Audio('/music_and_me.mp3');
+  window.audioRef = audioRef; // expose for switchTrack
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
@@ -724,11 +740,18 @@ const SECTIONS_DATA = [
     lookOffset: [0, 0, 0],
     content: `
       <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; gap: 15px;">
-        <div style="font-size: 0.75rem; letter-spacing: 0.3em; color: var(--accent); opacity: 0.9; text-transform: uppercase;">Fav Song</div>
-        <div style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.1em; color: #fff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);">Addict (ft. DAEGHO)</div>
-        <div id="lyric-container" style="font-size: 1.1rem; min-height: 3rem; margin-top: 5px; font-style: italic; color: rgba(255, 255, 255, 0.85); transition: opacity 0.2s;">
+        <div class="hud-label" style="align-self: flex-start;">NOW PLAYING</div>
+        <div id="track-title" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.1em; color: #fff;">Music and me</div>
+        <div id="track-artist" style="font-size: 0.9rem; color: var(--text-muted);">by Fakemink</div>
+        
+        <div id="lyric-container" style="display: none; font-size: 1.1rem; min-height: 3rem; margin-top: 5px; font-style: italic; color: rgba(255, 255, 255, 0.85); transition: opacity 0.2s;">
           ...
         </div>
+
+        <button class="hud-block social-link switch-track-btn" onclick="window.switchTrack(audioState.currentTrack === 'addict' ? 'default' : 'addict')" style="margin-top: 10px; width: 100%; padding: 12px; pointer-events: auto; background: rgba(255, 20, 147, 0.1); border: 1px solid var(--accent); color: var(--accent); text-transform: uppercase; cursor: pointer; transition: all 0.2s;">
+           Play Fav Song
+        </button>
+
         <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; position: relative; margin-top: auto;">
             <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
         </div>
@@ -1151,20 +1174,45 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
     }
     
-    // ── SCANLINE INTENSITY ──
-    if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
-    const scanEl = domRefs.current.scanEl;
-    if (scanEl) {
-      scanEl.style.opacity = String(0.1 + smoothBass * 0.3);
-    }
-
-    // ── EDGE GLOW INTENSITY ──
-    if (!domRefs.current.edgeEl) domRefs.current.edgeEl = document.querySelector('.screen-edge-glow');
-    const edgeEl = domRefs.current.edgeEl;
-    if (edgeEl) {
-      const glowSize = 40 + smoothBass * 200;
-      const glowAlpha = 0.08 + smoothBass * 0.5;
-      edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
+    // Update lyrics and track info
+    const titleEl = document.getElementById('track-title');
+    const artistEl = document.getElementById('track-artist');
+    const lyricEl = document.getElementById('lyric-container');
+    const btnEl = document.querySelector('.switch-track-btn');
+    
+    if (titleEl && artistEl && lyricEl && btnEl) {
+      if (audioState.currentTrack === 'addict') {
+        titleEl.innerText = "Addict (ft. DAEGHO)";
+        artistEl.style.display = "none";
+        lyricEl.style.display = "block";
+        btnEl.innerText = "Revert Track";
+        
+        if (parsedLyrics) {
+          const time = audioState.currentTime;
+          let activeLyric = "";
+          for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+            if (time >= parsedLyrics[i].time) {
+              activeLyric = parsedLyrics[i].text;
+              break;
+            }
+          }
+          if (lyricEl.getAttribute('data-active') !== activeLyric) {
+            lyricEl.setAttribute('data-active', activeLyric);
+            const toxicWords = ['addict', 'fuck', 'ruin', 'junkie', 'drug', 'fiend', 'freak', 'sickness'];
+            let highlighted = activeLyric;
+            toxicWords.forEach(word => {
+              const regex = new RegExp(`\\b${word}\\b`, 'gi');
+              highlighted = highlighted.replace(regex, `<span style="color: #ff3333; text-shadow: 0 0 12px #ff3333; font-weight: bold;">$&</span>`);
+            });
+            lyricEl.innerHTML = highlighted;
+          }
+        }
+      } else {
+        titleEl.innerText = "Music and me";
+        artistEl.style.display = "block";
+        lyricEl.style.display = "none";
+        btnEl.innerText = "Play Fav Song";
+      }
     }
     
     // ── REACTIVE MUSIC BAR ──
@@ -1472,7 +1520,7 @@ function App() {
         
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
-        <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
+        <directionalLight position={[0, -10, -5]} intensity={1} color="#ff1493" />
         
         <AudioDriver />
         <ReactiveFog />
