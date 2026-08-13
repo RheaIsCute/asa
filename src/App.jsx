@@ -992,31 +992,32 @@ const Lyrics3D = ({ playing }) => {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      let fontSize = 68;
+      let fontSize = 180;
       ctx.font = `900 ${fontSize}px "Inter", "Arial Black", system-ui, sans-serif`;
-      const textWidth = ctx.measureText(text).width;
-      const maxW = canvas.width - 240;
+      let textWidth = ctx.measureText(text).width;
+      const maxW = canvas.width - 160;
       if (textWidth > maxW) {
-        fontSize = Math.max(36, Math.floor(fontSize * (maxW / textWidth)));
+        fontSize = Math.max(60, Math.floor(fontSize * (maxW / textWidth)));
         ctx.font = `900 ${fontSize}px "Inter", "Arial Black", system-ui, sans-serif`;
+        textWidth = ctx.measureText(text).width;
       }
 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       // ── 1. Cyberpunk Corner Brackets / HUD Frame ──
-      const frameW = Math.min(textWidth + 80, maxW + 60);
-      const frameH = fontSize * 1.5;
+      const frameW = Math.min(textWidth + 100, maxW + 60);
+      const frameH = fontSize * 1.35;
       const leftX = centerX - frameW / 2;
       const rightX = centerX + frameW / 2;
       const topY = centerY - frameH / 2;
       const bottomY = centerY + frameH / 2;
-      const bracketLen = 24;
+      const bracketLen = 36;
 
-      ctx.strokeStyle = isToxic ? 'rgba(255, 0, 85, 0.6)' : 'rgba(160, 32, 240, 0.6)';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = isToxic ? 'rgba(255, 0, 85, 0.7)' : 'rgba(160, 32, 240, 0.7)';
+      ctx.lineWidth = 5;
       ctx.shadowColor = isToxic ? '#ff0055' : '#a020f0';
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 20;
 
       // Top-Left Bracket
       ctx.beginPath();
@@ -1049,14 +1050,14 @@ const Lyrics3D = ({ playing }) => {
       // ── 2. Chromatic Aberration Layers (Cyan & Red/Magenta Split) ──
       ctx.shadowBlur = 0;
       ctx.fillStyle = isToxic ? 'rgba(0, 255, 200, 0.75)' : 'rgba(0, 240, 255, 0.75)';
-      ctx.fillText(text, centerX - 4, centerY + 2);
+      ctx.fillText(text, centerX - 7, centerY + 3);
 
       ctx.fillStyle = isToxic ? 'rgba(255, 0, 100, 0.85)' : 'rgba(255, 30, 120, 0.75)';
-      ctx.fillText(text, centerX + 4, centerY - 2);
+      ctx.fillText(text, centerX + 7, centerY - 3);
 
       // ── 3. Cyberpunk Ambient Glow Layer ──
       ctx.shadowColor = isToxic ? 'rgba(255, 0, 85, 0.95)' : 'rgba(160, 32, 240, 0.95)';
-      ctx.shadowBlur = 40;
+      ctx.shadowBlur = 45;
       ctx.fillStyle = isToxic ? '#ff0055' : '#a020f0';
       ctx.fillText(text, centerX, centerY);
 
@@ -1146,7 +1147,7 @@ const Lyrics3D = ({ playing }) => {
 
   return (
     <mesh ref={meshRef} position={[0, 0, -12]}>
-      <planeGeometry args={[24, 6]} />
+      <planeGeometry args={[52, 13]} />
       <meshBasicMaterial ref={materialRef} map={texture} transparent opacity={0.95} depthWrite={false} />
     </mesh>
   );
