@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, useTexture } from '@react-three/drei';
+import { Html, useTexture, Text } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
@@ -1095,16 +1095,16 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   );
 };
 
-const LyricsDisplay = ({ playing }) => {
-  const lineRef = useRef();
+const Lyrics3D = ({ playing }) => {
+  const textRef = useRef();
+  const materialRef = useRef();
   const [lyricsVersion, setLyricsVersion] = useState(0);
   
   useEffect(() => {
     const handleLoaded = () => setLyricsVersion(v => v + 1);
     const handleCleared = () => {
-       if (lineRef.current) {
-         lineRef.current.dataset.text = '';
-         lineRef.current.innerHTML = '';
+       if (textRef.current) {
+         textRef.current.text = '';
        }
     };
     window.addEventListener('lyrics-loaded', handleLoaded);
@@ -1115,47 +1115,57 @@ const LyricsDisplay = ({ playing }) => {
     }
   }, []);
   
-  useEffect(() => {
-    if (!playing) return;
+  useFrame((state, delta) => {
+    if (!playing || !textRef.current || !materialRef.current) return;
     
-    let rafId;
-    const updateLyrics = () => {
-      const time = audioRef ? audioRef.currentTime : 0;
-      let activeLine = '';
-      for (let i = 0; i < currentLyrics.length; i++) {
-        if (time >= currentLyrics[i].time) {
-          activeLine = currentLyrics[i].text;
-        } else {
-          break;
-        }
+    const time = audioRef ? audioRef.currentTime : 0;
+    let activeLine = '';
+    for (let i = 0; i < currentLyrics.length; i++) {
+      if (time >= currentLyrics[i].time) {
+        activeLine = currentLyrics[i].text;
+      } else {
+        break;
       }
-      
-      if (lineRef.current && lineRef.current.dataset.text !== activeLine) {
-        lineRef.current.dataset.text = activeLine;
-        
-        const toxicWords = ['addict', 'ruin', 'sickness', 'temptation', 'secret', 'fiend', 'junkie', 'drug', 'deeper', 'falling', 'fuck', 'freak', 'pleased', 'tease', 'harder', 'dumber'];
-        let html = activeLine;
-        if (window.toxicMode) {
-          toxicWords.forEach(word => {
-            const regex = new RegExp(`\\b${word}\\b`, 'gi');
-            html = html.replace(regex, match => `<span class="toxic-word">${match}</span>`);
-          });
-        }
-        
-        lineRef.current.innerHTML = html;
-      }
-      
-      rafId = requestAnimationFrame(updateLyrics);
-    };
+    }
     
-    rafId = requestAnimationFrame(updateLyrics);
-    return () => cancelAnimationFrame(rafId);
-  }, [playing, lyricsVersion]);
+    if (textRef.current.text !== activeLine) {
+      textRef.current.text = activeLine;
+      // Trigger a slight pop effect when text changes
+      textRef.current.scale.set(1.1, 1.1, 1.1);
+    }
+    
+    // Smoothly return scale to 1
+    textRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 5);
+    
+    // Float the text slightly
+    textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.2;
+    
+    if (window.toxicMode) {
+      materialRef.current.color.setHex(0xff0055);
+      materialRef.current.emissive.setHex(0xff0055);
+      materialRef.current.emissiveIntensity = 2.0 + Math.sin(time * 5) * 0.5;
+    } else {
+      materialRef.current.color.setHex(0xffffff);
+      materialRef.current.emissive.setHex(0xffffff);
+      materialRef.current.emissiveIntensity = 1.0;
+    }
+  });
   
   return (
-    <div className="lyrics-container">
-      <div className="lyrics-line" ref={lineRef}></div>
-    </div>
+    <Text
+      ref={textRef}
+      position={[0, 0, -12]}
+      fontSize={1.5}
+      maxWidth={25}
+      textAlign="center"
+      anchorX="center"
+      anchorY="middle"
+      fontWeight="bold"
+      letterSpacing={-0.05}
+    >
+      {''}
+      <meshStandardMaterial ref={materialRef} toneMapped={false} transparent opacity={0.9} />
+    </Text>
   );
 };
 
@@ -1637,9 +1647,7 @@ function App() {
       {/* ── Audio-reactive radial blur overlay ── */}
       {started && <div className="audio-blur-overlay"></div>}
 
-      {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
-      <LyricsDisplay playing={started} />
-
+      {/* ── Lyrics removed from HTML overlay ── */}
       {started && (
         <div className="ui-layer">
           {activeSection && (
@@ -1688,6 +1696,7 @@ function App() {
         <IntroParticles playing={started} />
         
         <Suspense fallback={null}>
+          <Lyrics3D playing={started} />
           <AmbientParticles />
           <VoidShapes />
           <HeartShapes />
