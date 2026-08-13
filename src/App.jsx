@@ -5,86 +5,19 @@ import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-thr
 import * as THREE from 'three';
 import './App.css';
 
-const RAW_LYRICS = `[00:12.32]Make me an addict
-[00:13.90]Make me an addict
-[00:15.44]I'm going dumber every time I answer you
-[00:18.50]Ooh ooh ooh ooh ooh
-[00:19.80]Can't say no to you
-[00:21.46]Ooh ooh ooh ooh ooh
-[00:22.80]Can't say no to you
-[00:24.42]Make me an addict
-[00:25.84]Make me an addict
-[00:27.36]I'm falling harder every time I cum for you
-[00:30.76]Ooh ooh ooh ooh ooh
-[00:31.80]Can't say no to you
-[00:33.38]Ooh ooh ooh ooh ooh
-[00:34.82]Can't say no to you
-[00:36.32]Fall in deeper, falling into you
-[00:39.32]Falling deeper, like you want me to
-[00:42.32]Fall in deeper, falling into you
-[00:45.30]Falling deeper, like you need me to
-[00:48.68]Plug me in and baby I could be your quick fix
-[00:51.70]Loving this addiction
-[00:53.06]Entertainment sickness
-[00:54.70]Getting off to all your desperation
-[00:57.08]I love it, you love giving into temptation
-[01:00.68]Love it when you call my name
-[01:03.08]I don't wanna use my brain
-[01:04.84]I just wanna be your secrеt and your plaything
-[01:07.80]Ah ah ah ah
-[01:08.38]Love it when you make mе
-[01:10.20]Ah ah ah ah
-[01:10.66]Now come and ruin me baby
-[01:12.68]And we never gave a fuck about each other
-[01:14.88]And we never gave a fuck about each other
-[01:17.10]Play with me until you go and find another
-[01:19.10]Never really gave a fuck, now fuck me up
-[01:24.90]Make me an addict
-[01:26.20]Make me an addict
-[01:27.30]I'm going dumber every time I answer you
-[01:30.50]Ooh ooh ooh ooh ooh
-[01:31.80]Can't say no to you
-[01:33.46]Ooh ooh ooh ooh ooh
-[01:34.82]Can't say no to you
-[01:36.46]Make me an addict
-[01:37.84]Make me an addict
-[01:39.30]I'm falling harder every time I cum for you
-[01:42.50]Ooh ooh ooh ooh ooh
-[01:43.80]Can't say no to you
-[01:45.54]Ooh ooh ooh ooh ooh
-[01:46.86]Can't say no to you
-[01:48.34]Fall in deeper, falling into you
-[01:51.56]Falling deeper, like you want me to
-[01:54.32]Fall in deeper, falling into you
-[01:57.34]Falling deeper, like you need me to
-[02:00.22]I'm going dumber every time I answer you
-[02:06.48]And I'm falling harder every time I come for you
-[02:15.00]I wanna be your fiend
-[02:19.00]I wanna see you pleased
-[02:23.90]I wanna prove I can match your freak
-[02:29.58]Begging down on my knees for you to tease me
-[02:35.00]And if I'm good, will I get a treat?
-[02:38.24]So come and whisper all the dirty little things that you wanna do to me
-[02:43.60]I'm a junkie, you're the drug that keeps me coming back for more
-[02:48.44]Make me an addict
-[02:49.88]Make me an addict
-[02:51.30]I'm going dumber every time I answer you
-[02:54.48]Ooh ooh ooh ooh ooh
-[02:55.80]Can't say no to you
-[02:57.50]Ooh ooh ooh ooh ooh
-[02:58.82]Can't say no to you
-[03:00.44]Make me an addict
-[03:01.84]Make me an addict
-[03:03.34]I'm falling harder every time I cum for you
-[03:06.50]Ooh ooh ooh ooh ooh
-[03:07.80]Can't say no to you
-[03:09.72]Ooh ooh ooh ooh ooh
-[03:10.86]Can't say no to you
-[03:12.32]Fall in deeper, falling into you
-[03:15.32]Falling deeper, like you want me to
-[03:18.32]Fall in deeper, falling into you
-[03:21.32]Falling deeper, like you need me to
-[03:24.24]I need you so bad`;
+const TRACKS = {
+  initial: {
+    audio: '/music_and_me.mp3',
+    lyrics: '/11004.lrc'
+  },
+  favorite: {
+    audio: '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3',
+    lyrics: '/11165.lrc'
+  }
+};
+
+let currentTrackId = 'initial';
+let currentLyrics = [];
 
 const parseLrc = (lrc) => {
   const lines = lrc.split('\n');
@@ -101,7 +34,6 @@ const parseLrc = (lrc) => {
   });
   return parsed;
 };
-const LYRICS_DATA = parseLrc(RAW_LYRICS);
 
 // ═══════════════════════════════════════════════════════════
 // AUDIO ENGINE — Beat Detection + Smoothed Frequency Bands
@@ -139,10 +71,17 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/music_and_me.mp3');
+  const track = TRACKS[currentTrackId];
+  audioRef = new Audio(track.audio);
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
+  
+  // Load initial lyrics
+  fetch(track.lyrics).then(res => res.text()).then(text => {
+    currentLyrics = parseLrc(text);
+    window.dispatchEvent(new Event('lyrics-loaded'));
+  }).catch(console.error);
   
   source = audioCtx.createMediaElementSource(audioRef);
   source.connect(analyser);
@@ -158,6 +97,53 @@ const playAudio = () => {
   if (audioRef) {
     audioRef.play().catch(console.error);
     audioState.playing = true;
+  }
+};
+
+const switchTrack = async (trackId) => {
+  const track = TRACKS[trackId];
+  if (!track) return;
+  
+  currentTrackId = trackId;
+  window.toxicMode = trackId === 'favorite';
+  document.body.classList.toggle('toxic-theme', window.toxicMode);
+  window.dispatchEvent(new CustomEvent('track-switched', { detail: trackId }));
+  
+  if (audioRef) {
+    const wasPlaying = !audioRef.paused;
+    audioRef.pause();
+    audioRef.currentTime = 0;
+    audioRef.src = track.audio;
+    audioRef.load();
+    if (wasPlaying) audioRef.play().catch(console.error);
+  }
+  
+  // Reset audio visualizer state
+  audioState.smoothSub = 0;
+  audioState.smoothBass = 0;
+  audioState.smoothMid = 0;
+  audioState.smoothHigh = 0;
+  audioState.sub = 0;
+  audioState.bass = 0;
+  audioState.mid = 0;
+  audioState.high = 0;
+  audioState.beatDetected = false;
+  audioState.beatEnergy = 0;
+  audioState.energyAccumulator = 0;
+  prevEnergy = 0;
+  historyIndex = 0;
+  energyHistory.fill(0);
+  
+  currentLyrics = [];
+  window.dispatchEvent(new Event('lyrics-cleared'));
+  
+  try {
+    const response = await fetch(track.lyrics);
+    const lrcText = await response.text();
+    currentLyrics = parseLrc(lrcText);
+    window.dispatchEvent(new Event('lyrics-loaded'));
+  } catch (err) {
+    console.error("Failed to load lyrics:", err);
   }
 };
 
@@ -1034,9 +1020,8 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
       let targetRotY = 0;
       
       if (!isFocused && isHovered) {
-         targetRotX = hoverPos.y * 0.2;
-         const currentGlobalY = window.toxicMode ? outerGroupRef.current.rotation.y : (carouselRef.current ? carouselRef.current.rotation.y + data.angle : 0);
-         targetRotY = -currentGlobalY + hoverPos.x * 0.2;
+         targetRotX = hoverPos.y * 0.04;
+         targetRotY = hoverPos.x * 0.04;
       }
       
       innerGroupRef.current.position.y = THREE.MathUtils.lerp(innerGroupRef.current.position.y, floatY, delta * 5);
@@ -1093,7 +1078,15 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
             {data.title}
           </h2>
           <div className="panel-content-wrapper">
-            <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+            <div 
+              className="panel-content" 
+              dangerouslySetInnerHTML={{ __html: data.content }} 
+              onClick={(e) => {
+                if (e.target.closest('a, button')) {
+                  e.stopPropagation();
+                }
+              }}
+            />
           </div>
         </div>
         </Html>
@@ -1104,17 +1097,34 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
 
 const LyricsDisplay = ({ playing }) => {
   const lineRef = useRef();
+  const [lyricsVersion, setLyricsVersion] = useState(0);
   
   useEffect(() => {
-    if (!window.toxicMode || !playing) return;
+    const handleLoaded = () => setLyricsVersion(v => v + 1);
+    const handleCleared = () => {
+       if (lineRef.current) {
+         lineRef.current.dataset.text = '';
+         lineRef.current.innerHTML = '';
+       }
+    };
+    window.addEventListener('lyrics-loaded', handleLoaded);
+    window.addEventListener('lyrics-cleared', handleCleared);
+    return () => {
+       window.removeEventListener('lyrics-loaded', handleLoaded);
+       window.removeEventListener('lyrics-cleared', handleCleared);
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (!playing) return;
     
     let rafId;
     const updateLyrics = () => {
-      const time = audioState.currentTime;
+      const time = audioRef ? audioRef.currentTime : 0;
       let activeLine = '';
-      for (let i = 0; i < LYRICS_DATA.length; i++) {
-        if (time >= LYRICS_DATA[i].time) {
-          activeLine = LYRICS_DATA[i].text;
+      for (let i = 0; i < currentLyrics.length; i++) {
+        if (time >= currentLyrics[i].time) {
+          activeLine = currentLyrics[i].text;
         } else {
           break;
         }
@@ -1125,10 +1135,12 @@ const LyricsDisplay = ({ playing }) => {
         
         const toxicWords = ['addict', 'ruin', 'sickness', 'temptation', 'secret', 'fiend', 'junkie', 'drug', 'deeper', 'falling', 'fuck', 'freak', 'pleased', 'tease', 'harder', 'dumber'];
         let html = activeLine;
-        toxicWords.forEach(word => {
-          const regex = new RegExp(`\\b${word}\\b`, 'gi');
-          html = html.replace(regex, match => `<span class="toxic-word">${match}</span>`);
-        });
+        if (window.toxicMode) {
+          toxicWords.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            html = html.replace(regex, match => `<span class="toxic-word">${match}</span>`);
+          });
+        }
         
         lineRef.current.innerHTML = html;
       }
@@ -1138,7 +1150,7 @@ const LyricsDisplay = ({ playing }) => {
     
     rafId = requestAnimationFrame(updateLyrics);
     return () => cancelAnimationFrame(rafId);
-  }, [playing]); // Note: window.toxicMode changes aren't reactive this way, but we will mount/unmount LyricsDisplay using state in App
+  }, [playing, lyricsVersion]);
   
   return (
     <div className="lyrics-container">
@@ -1532,43 +1544,27 @@ function App() {
   const carouselRef = useRef();
 
   useEffect(() => {
-    const handleToggle = () => {
-      setIsToxicMode(true);
-      window.toxicMode = true;
-      document.body.classList.add('toxic-theme');
-      if (audioRef) {
-        const wasPlaying = !audioRef.paused;
-        audioRef.src = '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3';
-        audioRef.load();
-        if (wasPlaying) audioRef.play();
-      }
+    const handleTrackSwitched = (e) => {
+      setIsToxicMode(e.detail === 'favorite');
     };
     
     const handleGlobalClick = (e) => {
       if (e.target.closest('#btn-fav-song')) {
-        window.dispatchEvent(new Event('toggle-toxic-mode'));
+        switchTrack('favorite');
       }
     };
     
-    window.addEventListener('toggle-toxic-mode', handleToggle);
+    window.addEventListener('track-switched', handleTrackSwitched);
     document.addEventListener('click', handleGlobalClick);
     
     return () => {
-      window.removeEventListener('toggle-toxic-mode', handleToggle);
+      window.removeEventListener('track-switched', handleTrackSwitched);
       document.removeEventListener('click', handleGlobalClick);
     };
   }, []);
 
   const handleRevert = () => {
-    setIsToxicMode(false);
-    window.toxicMode = false;
-    document.body.classList.remove('toxic-theme');
-    if (audioRef) {
-      const wasPlaying = !audioRef.paused;
-      audioRef.src = '/music_and_me.mp3';
-      audioRef.load();
-      if (wasPlaying) audioRef.play();
-    }
+    switchTrack('initial');
   };
 
   const handleStart = () => {
