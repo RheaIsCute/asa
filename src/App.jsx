@@ -699,7 +699,7 @@ const SECTIONS_DATA = [
     content: `
       <div style="display: flex; flex-direction: column; gap: 15px; height: 100%;">
         <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block social-link" style="flex: 1; flex-direction:column; justify-content:center; align-items:center; gap: 8px; text-decoration: none;">
-           <div style="width: 64px; height: 64px; fill: none; stroke: var(--text-main); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9;">
+           <div style="width: 64px; height: 64px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9;">
              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
            </div>
            <div class="hud-label">Click to redirect</div>
