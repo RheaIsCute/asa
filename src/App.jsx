@@ -157,8 +157,8 @@ const LYRICS = [
   { start: 0.50, end: 4.80, text: "(Ok is the hardest, I swear to God)" },
   { start: 4.90, end: 7.40, text: "(We gon' be okay)" },
   // [Chorus]
-  { start: 7.50, end: 10.70, text: "I'm like, \"Where you at? Can't see you, I need you now\"" }, // Adjusted from LRC 1.62
-  { start: 10.80, end: 15.00, text: "You do it so right, dare to teach me how" },
+  { start: 9.10, end: 12.90, text: "I'm like, \"Where you at? Can't see you, I need you now\"" },
+  { start: 13.00, end: 15.00, text: "You do it so right, dare to teach me how" },
   { start: 15.10, end: 18.30, text: "You talk about a feelin', I feel it now" },
   { start: 18.42, end: 20.80, text: "Look back if I could, but I'm not allowed" },
   { start: 20.98, end: 23.60, text: "I'm like, \"Where you at? Really need you now\"" },
