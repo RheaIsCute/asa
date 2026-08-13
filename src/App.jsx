@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import { parsedLyrics } from './lyrics';
 import './App.css';
 
 // ═══════════════════════════════════════════════════════════
@@ -24,6 +25,7 @@ const audioState = {
   beatEnergy: 0,
   lastBeatTime: 0,
   energyAccumulator: 0,
+  currentTime: 0,
   raw: new Uint8Array(128)
 };
 
@@ -41,7 +43,7 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  audioRef = new Audio('/music_and_me.mp3');
+  audioRef = new Audio('/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
@@ -76,6 +78,7 @@ const updateAudioData = () => {
   
   analyser.getByteFrequencyData(audioState.raw);
   const bins = analyser.frequencyBinCount; // 128
+  audioState.currentTime = audioRef ? audioRef.currentTime : 0;
   
   // Sub bass (deep rumble, bins 0-3)
   let subSum = 0;
@@ -717,17 +720,17 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
-    camOffset: [0, -5, 20],
+    camOffset: [0, -1, 18],
     lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full" style="padding: 24px;">
-          <div class="hud-label">NOW PLAYING</div>
-          <div class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
-          <div class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
-          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; gap: 15px;">
+        <div style="font-size: 0.75rem; letter-spacing: 0.3em; color: var(--accent); opacity: 0.9; text-transform: uppercase;">Fav Song</div>
+        <div style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.1em; color: #fff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);">Addict (ft. DAEGHO)</div>
+        <div id="lyric-container" style="font-size: 1.1rem; min-height: 3rem; margin-top: 5px; font-style: italic; color: rgba(255, 255, 255, 0.85); transition: opacity 0.2s;">
+          ...
+        </div>
+        <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; position: relative; margin-top: auto;">
             <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
-          </div>
         </div>
       </div>
     `
@@ -768,14 +771,18 @@ const SECTIONS_DATA = [
 ];
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
-  const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
+  const t = (i / SECTIONS_DATA.length) * Math.PI * 2;
+  const scale = 1.4;
+  const x = scale * 16 * Math.pow(Math.sin(t), 3);
+  const z = -scale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+  const angle = Math.atan2(x, z);
 
   return {
     ...s,
     index: i,
     angle: angle,
-    x: Math.sin(angle) * R,
-    z: Math.cos(angle) * R
+    x: x,
+    z: z
   };
 });
 
@@ -992,7 +999,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
 
   useEffect(() => {
     if (activeSection && carouselRef.current) {
-      const targetData = SECTIONS.find(s => s.id === activeSection);
+      const targetData = SECTIONS_DATA.find(s => s.id === activeSection);
       let current = carouselRef.current.rotation.y;
       let target = targetData.angle; 
       
@@ -1012,11 +1019,11 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         e.preventDefault();
         if (introSpinFinished.current) {
           if (activeSection && setActiveSection) {
-            const currentIndex = SECTIONS.findIndex(s => s.id === activeSection);
-            const nextIndex = (currentIndex + 1) % SECTIONS.length;
-            setActiveSection(SECTIONS[nextIndex].id);
+            const currentIndex = SECTIONS_DATA.findIndex(s => s.id === activeSection);
+            const nextIndex = (currentIndex + 1) % SECTIONS_DATA.length;
+            setActiveSection(SECTIONS_DATA[nextIndex].id);
           } else {
-            const cardSpacing = (Math.PI * 2) / SECTIONS.length;
+            const cardSpacing = (Math.PI * 2) / SECTIONS_DATA.length;
             pointerTracker.current.target -= cardSpacing;
           }
         }
@@ -1161,9 +1168,36 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     }
     
     // ── REACTIVE MUSIC BAR ──
-    if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
-    if (domRefs.current.musicBar) {
-      domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
+    if (audioState.playing && audioRef) {
+      const pb = document.getElementById('music-progress-bar');
+      if (pb) {
+        const pct = (audioRef.currentTime / audioRef.duration) * 100;
+        pb.style.width = `${pct}%`;
+      }
+      
+      // Update lyrics
+      if (parsedLyrics) {
+        const time = audioState.currentTime;
+        let activeLyric = "";
+        for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+          if (time >= parsedLyrics[i].time) {
+            activeLyric = parsedLyrics[i].text;
+            break;
+          }
+        }
+        
+        const lyricEl = document.getElementById('lyric-container');
+        if (lyricEl && lyricEl.getAttribute('data-active') !== activeLyric) {
+          lyricEl.setAttribute('data-active', activeLyric);
+          const toxicWords = ['addict', 'fuck', 'ruin', 'junkie', 'drug', 'fiend', 'freak', 'sickness'];
+          let highlighted = activeLyric;
+          toxicWords.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            highlighted = highlighted.replace(regex, `<span style="color: #ff3333; text-shadow: 0 0 12px #ff3333; font-weight: bold;">$&</span>`);
+          });
+          lyricEl.innerHTML = highlighted;
+        }
+      }
     }
     
     // ══════════════════════════════════════
@@ -1270,8 +1304,14 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
       // FOV breathing — expands on bass, contracts between
-      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * d);
-      state.camera.fov = 60 + bassFovPunch.current * 14;
+      const baseFov = 60;
+      const smoothSub = smoothBass; 
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, baseFov - (smoothSub * 18) - (audioState.beatEnergy * 10), 10 * d);
+      state.camera.updateProjectionMatrix();
+      
+      // Add "alive" camera roll
+      const rollAmount = (Math.sin(time * 0.5) * 0.05) + (smoothBass * 0.1);
+      state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, rollAmount, 5 * d);
       
       // Swap glitch warp
       if (swapGlitch.current > 0) {
@@ -1289,9 +1329,6 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
       
       state.camera.updateProjectionMatrix();
-      
-      // Camera roll sway — subtle drunken float
-      state.camera.rotation.z += Math.sin(time * 0.6) * smoothBass * 0.035;
     }
   });
 

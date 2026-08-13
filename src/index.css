@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+:root {
+  --bg-color: #05000a;
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --accent: #ff1493; /* Hot Pink */
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
