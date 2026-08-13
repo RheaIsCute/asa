@@ -657,10 +657,10 @@ window.isHoveringCard = false;
 
 const ICONS = {
   identity: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-  socials: '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>',
+  socials: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
   archive: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-  status: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>'
+  status: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'
 };
 
 const SECTIONS_DATA = [
@@ -674,16 +674,16 @@ const SECTIONS_DATA = [
     content: `
       <div style="display: flex; gap: 25px; height: 100%;">
         <div style="flex: 0 0 220px; display: flex;">
-          <img src="/profile.png" style="width: 100%; height: 100%; min-height: 250px; object-fit: cover; border-radius: 8px; border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(160, 32, 240, 0.3);" />
+          <img src="/profile.png" style="width: 100%; height: 100%; min-height: 250px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);" />
         </div>
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-          <div class="hud-grid" style="margin: 0;">
-            <div class="hud-block full"><div class="hud-label">BIRTHDAY</div><div class="hud-value">JUN 23</div></div>
-            <div class="hud-block full"><div class="hud-label">AGE</div><div class="hud-value">18</div></div>
+          <div class="hud-grid" style="margin: 0; gap: 15px;">
+            <div class="hud-block full"><div class="hud-label">BIRTHDAY</div><div class="hud-value mono">JUN 23</div></div>
+            <div class="hud-block full"><div class="hud-label">AGE</div><div class="hud-value mono">18</div></div>
             <div class="hud-block full"><div class="hud-label">STATUS</div>
-              <div class="hud-value small">STUDENT</div>
-              <div class="hud-value small" style="margin-top:5px">ASPIRING AI ENGINEER</div>
-              <div class="hud-value small" style="margin-top:5px">TECHNOLOGY / PROGRAMMING</div>
+              <div class="hud-value small">Student</div>
+              <div class="hud-value small" style="margin-top:6px; color:rgba(255,255,255,0.7)">Aspiring AI Engineer</div>
+              <div class="hud-value small" style="margin-top:6px; color:rgba(255,255,255,0.7)">Technology & Programming</div>
             </div>
           </div>
         </div>
@@ -697,14 +697,14 @@ const SECTIONS_DATA = [
     camOffset: [6, -2, 24],
     lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
+      <div class="hud-grid" style="gap: 15px;">
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
-          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value" style="color:var(--text-main)">hataeruu</div></div>
+          <div class="hud-data"><div class="hud-label">INSTAGRAM</div><div class="hud-value mono" style="color:var(--text-main); font-size: 1rem;">@hataeruu</div></div>
         </a>
-        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:15px">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value" style="color:var(--text-main)">asari_atari</div></div>
+        <a href="https://discord.com/users/1408523273548988456" target="_blank" class="hud-block full social-link" style="text-decoration: none; flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
+          <div class="hud-icon"><svg viewBox="0 0 24 24" style="fill: var(--accent); stroke: none;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></div>
+          <div class="hud-data"><div class="hud-label">DISCORD</div><div class="hud-value mono" style="color:var(--text-main); font-size: 1rem;">@asari_atari</div></div>
         </a>
       </div>
     `
@@ -717,10 +717,13 @@ const SECTIONS_DATA = [
     lookOffset: [0, 0, 0],
     content: `
       <div class="hud-grid">
-        <div class="hud-block full">
+        <div class="hud-block full" style="padding: 24px;">
           <div class="hud-label">NOW PLAYING</div>
-          <div class="hud-value">Music and me</div>
-          <div class="hud-value small" style="margin-top:5px; color:var(--text-muted)">by Fakemink</div>
+          <div class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
+          <div class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; height: 100%; width: 45%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
+          </div>
         </div>
       </div>
     `
@@ -732,10 +735,10 @@ const SECTIONS_DATA = [
     camOffset: [-5, -4, 25],
     lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full"><div class="hud-label">INTERESTS</div><div class="hud-value small">PROGRAMMING / AI / TECHNOLOGY</div></div>
-        <div class="hud-block full"><div class="hud-label">HOBBIES</div><div class="hud-value small">GAMING / ANIME / MUSIC / JAPANESE</div></div>
-        <div class="hud-block full"><div class="hud-label">VIBE</div><div class="hud-value small">CYBER Y2K AMBIENT</div></div>
+      <div class="hud-grid" style="gap: 12px;">
+        <div class="hud-block full"><div class="hud-label">INTERESTS</div><div class="hud-value small">Programming / AI / Technology</div></div>
+        <div class="hud-block full"><div class="hud-label">HOBBIES</div><div class="hud-value small">Gaming / Anime / Music / Japanese</div></div>
+        <div class="hud-block full"><div class="hud-label">VIBE</div><div class="hud-value small">Cyber Y2K Ambient</div></div>
       </div>
     `
   },
@@ -746,14 +749,14 @@ const SECTIONS_DATA = [
     camOffset: [4, 5, 23],
     lookOffset: [0, 0, 0],
     content: `
-      <div class="hud-grid">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+      <div class="hud-grid" style="gap: 15px;">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">LEARNING / BUILDING</div></div>
+          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">Learning & Building</div></div>
         </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:15px">
+        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
           <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / PROGRAMMING</div></div>
+          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / Programming</div></div>
         </div>
       </div>
     `
