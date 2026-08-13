@@ -3,8 +3,105 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { parsedLyrics } from './lyrics';
 import './App.css';
+
+const RAW_LYRICS = `[00:12.32]Make me an addict
+[00:13.90]Make me an addict
+[00:15.44]I'm going dumber every time I answer you
+[00:18.50]Ooh ooh ooh ooh ooh
+[00:19.80]Can't say no to you
+[00:21.46]Ooh ooh ooh ooh ooh
+[00:22.80]Can't say no to you
+[00:24.42]Make me an addict
+[00:25.84]Make me an addict
+[00:27.36]I'm falling harder every time I cum for you
+[00:30.76]Ooh ooh ooh ooh ooh
+[00:31.80]Can't say no to you
+[00:33.38]Ooh ooh ooh ooh ooh
+[00:34.82]Can't say no to you
+[00:36.32]Fall in deeper, falling into you
+[00:39.32]Falling deeper, like you want me to
+[00:42.32]Fall in deeper, falling into you
+[00:45.30]Falling deeper, like you need me to
+[00:48.68]Plug me in and baby I could be your quick fix
+[00:51.70]Loving this addiction
+[00:53.06]Entertainment sickness
+[00:54.70]Getting off to all your desperation
+[00:57.08]I love it, you love giving into temptation
+[01:00.68]Love it when you call my name
+[01:03.08]I don't wanna use my brain
+[01:04.84]I just wanna be your secrеt and your plaything
+[01:07.80]Ah ah ah ah
+[01:08.38]Love it when you make mе
+[01:10.20]Ah ah ah ah
+[01:10.66]Now come and ruin me baby
+[01:12.68]And we never gave a fuck about each other
+[01:14.88]And we never gave a fuck about each other
+[01:17.10]Play with me until you go and find another
+[01:19.10]Never really gave a fuck, now fuck me up
+[01:24.90]Make me an addict
+[01:26.20]Make me an addict
+[01:27.30]I'm going dumber every time I answer you
+[01:30.50]Ooh ooh ooh ooh ooh
+[01:31.80]Can't say no to you
+[01:33.46]Ooh ooh ooh ooh ooh
+[01:34.82]Can't say no to you
+[01:36.46]Make me an addict
+[01:37.84]Make me an addict
+[01:39.30]I'm falling harder every time I cum for you
+[01:42.50]Ooh ooh ooh ooh ooh
+[01:43.80]Can't say no to you
+[01:45.54]Ooh ooh ooh ooh ooh
+[01:46.86]Can't say no to you
+[01:48.34]Fall in deeper, falling into you
+[01:51.56]Falling deeper, like you want me to
+[01:54.32]Fall in deeper, falling into you
+[01:57.34]Falling deeper, like you need me to
+[02:00.22]I'm going dumber every time I answer you
+[02:06.48]And I'm falling harder every time I come for you
+[02:15.00]I wanna be your fiend
+[02:19.00]I wanna see you pleased
+[02:23.90]I wanna prove I can match your freak
+[02:29.58]Begging down on my knees for you to tease me
+[02:35.00]And if I'm good, will I get a treat?
+[02:38.24]So come and whisper all the dirty little things that you wanna do to me
+[02:43.60]I'm a junkie, you're the drug that keeps me coming back for more
+[02:48.44]Make me an addict
+[02:49.88]Make me an addict
+[02:51.30]I'm going dumber every time I answer you
+[02:54.48]Ooh ooh ooh ooh ooh
+[02:55.80]Can't say no to you
+[02:57.50]Ooh ooh ooh ooh ooh
+[02:58.82]Can't say no to you
+[03:00.44]Make me an addict
+[03:01.84]Make me an addict
+[03:03.34]I'm falling harder every time I cum for you
+[03:06.50]Ooh ooh ooh ooh ooh
+[03:07.80]Can't say no to you
+[03:09.72]Ooh ooh ooh ooh ooh
+[03:10.86]Can't say no to you
+[03:12.32]Fall in deeper, falling into you
+[03:15.32]Falling deeper, like you want me to
+[03:18.32]Fall in deeper, falling into you
+[03:21.32]Falling deeper, like you need me to
+[03:24.24]I need you so bad`;
+
+const parseLrc = (lrc) => {
+  const lines = lrc.split('\n');
+  const parsed = [];
+  lines.forEach(line => {
+    const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
+    if (match) {
+      const min = parseInt(match[1]);
+      const sec = parseInt(match[2]);
+      const millis = parseInt(match[3]) * 10;
+      const time = min * 60 + sec + millis / 1000;
+      parsed.push({ time, text: match[4].trim() });
+    }
+  });
+  return parsed;
+};
+const LYRICS_DATA = parseLrc(RAW_LYRICS);
 
 // ═══════════════════════════════════════════════════════════
 // AUDIO ENGINE — Beat Detection + Smoothed Frequency Bands
@@ -21,27 +118,11 @@ const audioState = {
   smoothBass: 0,
   smoothMid: 0,
   smoothHigh: 0,
-  currentTime: 0,
-  currentTrack: 'default',
+  beatDetected: false,
+  beatEnergy: 0,
+  lastBeatTime: 0,
+  energyAccumulator: 0,
   raw: new Uint8Array(128)
-};
-
-window.switchTrack = (trackName) => {
-  if (!window.audioRef) return;
-  const wasPlaying = !window.audioRef.paused;
-  
-  if (trackName === 'addict') {
-    window.audioRef.src = '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3';
-    audioState.currentTrack = 'addict';
-  } else {
-    window.audioRef.src = '/music_and_me.mp3';
-    audioState.currentTrack = 'default';
-  }
-  
-  window.audioRef.load();
-  if (wasPlaying) {
-    window.audioRef.play().catch(console.error);
-  }
 };
 
 let audioCtx, analyser, source, audioRef;
@@ -59,7 +140,6 @@ const initAudio = () => {
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
   audioRef = new Audio('/music_and_me.mp3');
-  window.audioRef = audioRef; // expose for switchTrack
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
@@ -94,7 +174,6 @@ const updateAudioData = () => {
   
   analyser.getByteFrequencyData(audioState.raw);
   const bins = analyser.frequencyBinCount; // 128
-  audioState.currentTime = audioRef ? audioRef.currentTime : 0;
   
   // Sub bass (deep rumble, bins 0-3)
   let subSum = 0;
@@ -354,6 +433,66 @@ const IntroParticles = ({ playing }) => {
   );
 };
 
+const HeartShapes = () => {
+  const group = useRef();
+  const count = 8;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const heartShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const x = -2.5, y = -5;
+    shape.moveTo(x + 2.5, y + 2.5);
+    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+    return shape;
+  }, []);
+
+  const shapesData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < count; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100 + 40, (Math.random() - 0.5) * 150],
+        rot: [Math.PI, Math.random() * Math.PI * 2, 0],
+        speed: (Math.random() - 0.5) * 0.5,
+        scale: Math.random() * 0.2 + 0.1,
+      });
+    }
+    return data;
+  }, [count]);
+
+  const matRef = useRef();
+
+  useFrame((state, delta) => {
+    if (group.current) {
+      shapesData.forEach((shape, i) => {
+        shape.pos[1] += Math.sin(state.clock.elapsedTime + i) * 0.05;
+        shape.rot[1] += shape.speed * delta;
+        dummy.position.set(...shape.pos);
+        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
+        const s = shape.scale * (1 + audioState.smoothBass * 0.5);
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
+        group.current.setMatrixAt(i, dummy.matrix);
+      });
+      group.current.instanceMatrix.needsUpdate = true;
+    }
+    if (matRef.current) {
+      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
+  });
+
+  return (
+    <instancedMesh ref={group} args={[null, null, count]}>
+      <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
+      <meshBasicMaterial ref={matRef} color="#a020f0" transparent opacity={0.3} wireframe />
+    </instancedMesh>
+  );
+};
+
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
   texture.wrapS = THREE.RepeatWrapping;
@@ -366,7 +505,11 @@ const HorizonTrees = () => {
     if (matRef.current) {
       matRef.current.map.offset.x += delta * 0.01;
       const b = audioState.smoothBass;
-      matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
+      if (window.toxicMode) {
+        matRef.current.color.setRGB(1 - b * 0.1, 1 - b * 0.9, 1 - b * 0.4);
+      } else {
+        matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
+      }
       matRef.current.opacity = 0.5 + b * 0.3;
     }
   });
@@ -405,6 +548,8 @@ const VoidShapes = () => {
     return data;
   }, []);
 
+  const matRef = useRef();
+
   useFrame((state, delta) => {
     if (group.current) {
       const bassScale = 1 + audioState.smoothBass * 1.2;
@@ -414,7 +559,6 @@ const VoidShapes = () => {
         shape.rot[0] += (shape.speed + audioState.smoothMid * 0.5) * delta;
         shape.rot[1] += (shape.speed + audioState.smoothHigh * 0.3) * delta;
         
-        // Pulse position outward on beat
         const beatPush = beat ? audioState.beatEnergy * 3 : 0;
         const dist = Math.sqrt(shape.pos[0] ** 2 + shape.pos[2] ** 2);
         const pushX = dist > 0 ? (shape.pos[0] / dist) * beatPush : 0;
@@ -429,12 +573,15 @@ const VoidShapes = () => {
       });
       group.current.instanceMatrix.needsUpdate = true;
     }
+    if (matRef.current) {
+      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
   });
 
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
+      <meshBasicMaterial ref={matRef} color="#a020f0" wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
 };
@@ -466,7 +613,11 @@ const AmbientParticles = () => {
         
         // Color shift on heavy bass
         const b = audioState.smoothBass;
-        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        if (window.toxicMode) {
+          matRef.current.color.setRGB(1.0, b * 0.2, 0.3 + b * 0.4);
+        } else {
+          matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        }
       }
     }
   });
@@ -519,11 +670,11 @@ const BassShockwaves = () => {
           mesh.scale.set(scale, scale, 1);
           mesh.material.opacity = (1 - progress * progress) * 0.35;
           
-          // White flash on spawn, fade to purple
+          // White flash on spawn, fade to purple/pink
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
           } else {
-            mesh.material.color.setHex(0xa020f0);
+            mesh.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
           }
         }
       } else {
@@ -571,6 +722,11 @@ const AudioVisualizerRing = () => {
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
+    
+    // Dynamically update material color
+    if (meshRef.current.material) {
+      meshRef.current.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+    }
   });
   
   return (
@@ -589,7 +745,11 @@ const ReactiveFloor = () => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
       meshRef.current.material.opacity = 0.1 + b * 0.35;
-      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      if (window.toxicMode) {
+        meshRef.current.material.color.setRGB(b * 0.6, 0, 0.02 + b * 0.2);
+      } else {
+        meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      }
     }
   });
   
@@ -681,25 +841,19 @@ const SECTIONS_DATA = [
     id: 'music',
     title: 'MUSIC',
     icon: ICONS.music,
-    camOffset: [0, -1, 18],
+    camOffset: [0, -5, 20],
     lookOffset: [0, 0, 0],
     content: `
-      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; gap: 15px;">
-        <div class="hud-label" style="align-self: flex-start;">NOW PLAYING</div>
-        <div id="track-title" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.1em; color: #fff;">Music and me</div>
-        <div id="track-artist" style="font-size: 0.9rem; color: var(--text-muted);">by Fakemink</div>
-        
-        <div id="lyric-container" style="display: none; font-size: 1.1rem; min-height: 3rem; margin-top: 5px; font-style: italic; color: rgba(255, 255, 255, 0.85); transition: opacity 0.2s;">
-          ...
-        </div>
-
-        <button class="hud-block social-link switch-track-btn" onclick="window.switchTrack(audioState.currentTrack === 'addict' ? 'default' : 'addict')" style="margin-top: 10px; width: 100%; padding: 12px; pointer-events: auto; background: rgba(255, 20, 147, 0.1); border: 1px solid var(--accent); color: var(--accent); text-transform: uppercase; cursor: pointer; transition: all 0.2s;">
-           Play Fav Song
-        </button>
-
-        <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; position: relative; margin-top: auto;">
+      <div class="hud-grid">
+        <div class="hud-block full" style="padding: 24px;">
+          <div class="hud-label">NOW PLAYING</div>
+          <div id="music-title" class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
+          <div id="music-artist" class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
             <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
+          </div>
         </div>
+        <button id="btn-fav-song" class="hud-block social-link" style="width: 100%; margin-top: 4px; padding: 12px; border: 1px solid var(--accent); background: transparent; color: #fff; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;">Fav Song</button>
       </div>
     `
   },
@@ -720,33 +874,27 @@ const SECTIONS_DATA = [
   {
     id: 'status',
     title: 'CURRENTLY',
-    icon: ICONS.status,
-    camOffset: [4, 5, 23],
-    lookOffset: [0, 0, 0],
-    content: `
-      <div class="hud-grid" style="gap: 15px;">
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-          <div class="hud-data"><div class="hud-label">DOING</div><div class="hud-value">Learning & Building</div></div>
-        </div>
-        <div class="hud-block full" style="flex-direction:row; justify-content:flex-start; gap:20px; padding: 20px;">
-          <div class="hud-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-          <div class="hud-data"><div class="hud-label">FOCUS</div><div class="hud-value">AI / Programming</div></div>
-        </div>
-      </div>
-    `
-  }
-];
-
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
+  
+  // Heart parameters mapping
+  const tVals = [Math.PI, Math.PI/4, 0, 7*Math.PI/4, 3*Math.PI/2]; 
+  const t = tVals[i] || 0;
+  
+  const scl = 1.3;
+  const hx = 16 * Math.pow(Math.sin(t), 3) * scl;
+  const hy = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * scl;
 
   return {
     ...s,
     index: i,
     angle: angle,
     x: Math.sin(angle) * R,
-    z: Math.cos(angle) * R
+    z: Math.cos(angle) * R,
+    toxicX: hx,
+    toxicY: hy + 5, // shift up slightly
+    toxicZ: -15,
+    toxicAngle: 0
   };
 });
 
@@ -820,15 +968,13 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     }
   });
 
-  if (materialized) return null;
-
   return (
     <points ref={meshRef}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 };
@@ -836,40 +982,53 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
 const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
-  const [materialized, setMaterialized] = useState(false);
+  
   const [isHovered, setIsHovered] = useState(false);
-  const [isGlitching, setIsGlitching] = useState(false);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   
+  const [materialized, setMaterialized] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
+
   useFrame((state, delta) => {
-    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
-    if (outerGroupRef.current && innerGroupRef.current) {
-      const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
-      const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-      outerGroupRef.current.position.y = baseFloat + bassFloat;
-      
-      const targetScale = isHovered && !activeId ? 1.03 : 1.0;
-      const targetZ = isHovered && !activeId ? 2.0 : 0;
-      let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
-      let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
-      
-      if (isHovered && !activeId && carouselRef?.current) {
-        // Counteract the world rotation so the card faces the camera directly
-        const worldRotY = carouselRef.current.rotation.y + data.angle;
+    const time = state.clock.elapsedTime;
+    
+    // Dynamic Layout Lerping
+    if (outerGroupRef.current) {
+      if (window.toxicMode) {
+        outerGroupRef.current.position.lerp(new THREE.Vector3(data.toxicX, data.toxicY, data.toxicZ), delta * 3);
         
-        // We calculate the shortest path to facing forward (rotation 0)
-        let diff = -worldRotY;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        
-        targetRotY += diff;
+        // Counteract carousel rotation to face front
+        const currentCarouselRot = carouselRef.current ? carouselRef.current.rotation.y : 0;
+        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.toxicAngle - currentCarouselRot, delta * 3);
+      } else {
+        outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, 0, data.z), delta * 3);
+        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.angle, delta * 3);
+      }
+    }
+
+    if (innerGroupRef.current && materialized) {
+      const isFocused = activeId === data.id;
+      
+      const floatY = Math.sin(time * 2 + data.index) * 0.5;
+      const floatX = Math.cos(time * 1.5 + data.index) * 0.3;
+      
+      let targetRotX = 0;
+      let targetRotY = 0;
+      
+      if (!isFocused && isHovered) {
+         targetRotX = hoverPos.y * 0.2;
+         const currentGlobalY = window.toxicMode ? outerGroupRef.current.rotation.y : (carouselRef.current ? carouselRef.current.rotation.y + data.angle : 0);
+         targetRotY = -currentGlobalY + hoverPos.x * 0.2;
       }
       
-      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
-      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
-      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
-      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
+      innerGroupRef.current.position.y = THREE.MathUtils.lerp(innerGroupRef.current.position.y, floatY, delta * 5);
+      innerGroupRef.current.position.x = THREE.MathUtils.lerp(innerGroupRef.current.position.x, floatX, delta * 5);
       
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, delta * 5);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, delta * 5);
+    }
+    
+    if (!materialized) {
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
           setMaterialized(true);
@@ -925,6 +1084,51 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   );
 };
 
+const LyricsDisplay = ({ playing }) => {
+  const lineRef = useRef();
+  
+  useEffect(() => {
+    if (!window.toxicMode || !playing) return;
+    
+    let rafId;
+    const updateLyrics = () => {
+      const time = audioState.currentTime;
+      let activeLine = '';
+      for (let i = 0; i < LYRICS_DATA.length; i++) {
+        if (time >= LYRICS_DATA[i].time) {
+          activeLine = LYRICS_DATA[i].text;
+        } else {
+          break;
+        }
+      }
+      
+      if (lineRef.current && lineRef.current.dataset.text !== activeLine) {
+        lineRef.current.dataset.text = activeLine;
+        
+        const toxicWords = ['addict', 'ruin', 'sickness', 'temptation', 'secret', 'fiend', 'junkie', 'drug', 'deeper', 'falling', 'fuck', 'freak', 'pleased', 'tease', 'harder', 'dumber'];
+        let html = activeLine;
+        toxicWords.forEach(word => {
+          const regex = new RegExp(`\\b${word}\\b`, 'gi');
+          html = html.replace(regex, match => `<span class="toxic-word">${match}</span>`);
+        });
+        
+        lineRef.current.innerHTML = html;
+      }
+      
+      rafId = requestAnimationFrame(updateLyrics);
+    };
+    
+    rafId = requestAnimationFrame(updateLyrics);
+    return () => cancelAnimationFrame(rafId);
+  }, [playing]); // Note: window.toxicMode changes aren't reactive this way, but we will mount/unmount LyricsDisplay using state in App
+  
+  return (
+    <div className="lyrics-container">
+      <div className="lyrics-line" ref={lineRef}></div>
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════
 // SCENE CONTROLLER — Camera + DOM Effects
 // ═══════════════════════════════════════════════════════════
@@ -963,7 +1167,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
 
   useEffect(() => {
     if (activeSection && carouselRef.current) {
-      const targetData = SECTIONS_DATA.find(s => s.id === activeSection);
+      const targetData = SECTIONS.find(s => s.id === activeSection);
       let current = carouselRef.current.rotation.y;
       let target = targetData.angle; 
       
@@ -983,11 +1187,11 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         e.preventDefault();
         if (introSpinFinished.current) {
           if (activeSection && setActiveSection) {
-            const currentIndex = SECTIONS_DATA.findIndex(s => s.id === activeSection);
-            const nextIndex = (currentIndex + 1) % SECTIONS_DATA.length;
-            setActiveSection(SECTIONS_DATA[nextIndex].id);
+            const currentIndex = SECTIONS.findIndex(s => s.id === activeSection);
+            const nextIndex = (currentIndex + 1) % SECTIONS.length;
+            setActiveSection(SECTIONS[nextIndex].id);
           } else {
-            const cardSpacing = (Math.PI * 2) / SECTIONS_DATA.length;
+            const cardSpacing = (Math.PI * 2) / SECTIONS.length;
             pointerTracker.current.target -= cardSpacing;
           }
         }
@@ -1115,78 +1319,26 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
     }
     
-    // Update lyrics and track info
-    const titleEl = document.getElementById('track-title');
-    const artistEl = document.getElementById('track-artist');
-    const lyricEl = document.getElementById('lyric-container');
-    const btnEl = document.querySelector('.switch-track-btn');
-    
-    if (titleEl && artistEl && lyricEl && btnEl) {
-      if (audioState.currentTrack === 'addict') {
-        titleEl.innerText = "Addict (ft. DAEGHO)";
-        artistEl.style.display = "none";
-        lyricEl.style.display = "block";
-        btnEl.innerText = "Revert Track";
-        
-        if (parsedLyrics) {
-          const time = audioState.currentTime;
-          let activeLyric = "";
-          for (let i = parsedLyrics.length - 1; i >= 0; i--) {
-            if (time >= parsedLyrics[i].time) {
-              activeLyric = parsedLyrics[i].text;
-              break;
-            }
-          }
-          if (lyricEl.getAttribute('data-active') !== activeLyric) {
-            lyricEl.setAttribute('data-active', activeLyric);
-            const toxicWords = ['addict', 'fuck', 'ruin', 'junkie', 'drug', 'fiend', 'freak', 'sickness'];
-            let highlighted = activeLyric;
-            toxicWords.forEach(word => {
-              const regex = new RegExp(`\\b${word}\\b`, 'gi');
-              highlighted = highlighted.replace(regex, `<span style="color: #ff3333; text-shadow: 0 0 12px #ff3333; font-weight: bold;">$&</span>`);
-            });
-            lyricEl.innerHTML = highlighted;
-          }
-        }
-      } else {
-        titleEl.innerText = "Music and me";
-        artistEl.style.display = "block";
-        lyricEl.style.display = "none";
-        btnEl.innerText = "Play Fav Song";
-      }
+    // ── SCANLINE INTENSITY ──
+    if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
+    const scanEl = domRefs.current.scanEl;
+    if (scanEl) {
+      scanEl.style.opacity = String(0.1 + smoothBass * 0.3);
+    }
+
+    // ── EDGE GLOW INTENSITY ──
+    if (!domRefs.current.edgeEl) domRefs.current.edgeEl = document.querySelector('.screen-edge-glow');
+    const edgeEl = domRefs.current.edgeEl;
+    if (edgeEl) {
+      const glowSize = 40 + smoothBass * 200;
+      const glowAlpha = 0.08 + smoothBass * 0.5;
+      edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
     }
     
     // ── REACTIVE MUSIC BAR ──
-    if (audioState.playing && audioRef) {
-      const pb = document.getElementById('music-progress-bar');
-      if (pb) {
-        const pct = (audioRef.currentTime / audioRef.duration) * 100;
-        pb.style.width = `${pct}%`;
-      }
-      
-      // Update lyrics
-      if (parsedLyrics) {
-        const time = audioState.currentTime;
-        let activeLyric = "";
-        for (let i = parsedLyrics.length - 1; i >= 0; i--) {
-          if (time >= parsedLyrics[i].time) {
-            activeLyric = parsedLyrics[i].text;
-            break;
-          }
-        }
-        
-        const lyricEl = document.getElementById('lyric-container');
-        if (lyricEl && lyricEl.getAttribute('data-active') !== activeLyric) {
-          lyricEl.setAttribute('data-active', activeLyric);
-          const toxicWords = ['addict', 'fuck', 'ruin', 'junkie', 'drug', 'fiend', 'freak', 'sickness'];
-          let highlighted = activeLyric;
-          toxicWords.forEach(word => {
-            const regex = new RegExp(`\\b${word}\\b`, 'gi');
-            highlighted = highlighted.replace(regex, `<span style="color: #ff3333; text-shadow: 0 0 12px #ff3333; font-weight: bold;">$&</span>`);
-          });
-          lyricEl.innerHTML = highlighted;
-        }
-      }
+    if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
+    if (domRefs.current.musicBar) {
+      domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
     }
     
     // ══════════════════════════════════════
@@ -1293,14 +1445,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
       // FOV breathing — expands on bass, contracts between
-      const baseFov = 60;
-      const smoothSub = smoothBass; 
-      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, baseFov - (smoothSub * 18) - (audioState.beatEnergy * 10), 10 * d);
-      state.camera.updateProjectionMatrix();
-      
-      // Add "alive" camera roll
-      const rollAmount = (Math.sin(time * 0.5) * 0.05) + (smoothBass * 0.1);
-      state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, rollAmount, 5 * d);
+      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * d);
+      state.camera.fov = 60 + bassFovPunch.current * 14;
       
       // Swap glitch warp
       if (swapGlitch.current > 0) {
@@ -1318,7 +1464,17 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       }
       
       state.camera.updateProjectionMatrix();
-    }
+      
+      // Camera roll sway — subtle drunken float
+      let rollAmt = Math.sin(time * 0.6) * smoothBass * 0.035;
+      if (window.toxicMode) {
+        rollAmt += Math.cos(time * 2.1) * smoothBass * 0.1;
+        state.camera.position.x += Math.sin(time * 3.5) * smoothBass * 1.5;
+        state.camera.position.y += Math.cos(time * 4.2) * smoothBass * 1.5;
+        state.camera.fov += Math.sin(time * 8) * smoothBass * 5;
+        state.camera.updateProjectionMatrix();
+      }
+      state.camera.rotation.z += rollAmt;
   });
 
   return null;
@@ -1341,7 +1497,9 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
-window.INTRO_DELAY_SEC = 3.2; // Wait 3.2 seconds for the intro drop
+window.INTRO_DELAY_SEC = 3.2;
+
+window.toxicMode = false;
 
 function App() {
   const [started, setStarted] = useState(false);
@@ -1350,8 +1508,49 @@ function App() {
   const [introFading, setIntroFading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.45);
+  const [isToxicMode, setIsToxicMode] = useState(false);
   
   const carouselRef = useRef();
+
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsToxicMode(true);
+      window.toxicMode = true;
+      document.body.classList.add('toxic-theme');
+      if (audioRef) {
+        const wasPlaying = !audioRef.paused;
+        audioRef.src = '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3';
+        audioRef.load();
+        if (wasPlaying) audioRef.play();
+      }
+    };
+    
+    const handleGlobalClick = (e) => {
+      if (e.target.closest('#btn-fav-song')) {
+        window.dispatchEvent(new Event('toggle-toxic-mode'));
+      }
+    };
+    
+    window.addEventListener('toggle-toxic-mode', handleToggle);
+    document.addEventListener('click', handleGlobalClick);
+    
+    return () => {
+      window.removeEventListener('toggle-toxic-mode', handleToggle);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+
+  const handleRevert = () => {
+    setIsToxicMode(false);
+    window.toxicMode = false;
+    document.body.classList.remove('toxic-theme');
+    if (audioRef) {
+      const wasPlaying = !audioRef.paused;
+      audioRef.src = '/music_and_me.mp3';
+      audioRef.load();
+      if (wasPlaying) audioRef.play();
+    }
+  };
 
   const handleStart = () => {
     initAudio();
@@ -1424,13 +1623,18 @@ function App() {
       {started && <div className="audio-blur-overlay"></div>}
 
       {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
-      <LyricsOverlay started={started} />
+      <LyricsDisplay playing={started} />
 
       {started && (
         <div className="ui-layer">
           {activeSection && (
             <button className="back-btn" onClick={() => setActiveSection(null)}>
               [ BACK TO OVERVIEW ]
+            </button>
+          )}
+          {isToxicMode && (
+            <button className="revert-btn" onClick={handleRevert}>
+              [ REVERT TO NORMAL ]
             </button>
           )}
           <button className="mute-btn" onClick={handleMute}>
@@ -1461,7 +1665,7 @@ function App() {
         
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
-        <directionalLight position={[0, -10, -5]} intensity={1} color="#ff1493" />
+        <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
         
         <AudioDriver />
         <ReactiveFog />
@@ -1471,6 +1675,7 @@ function App() {
         <Suspense fallback={null}>
           <AmbientParticles />
           <VoidShapes />
+          <HeartShapes />
           <HorizonTrees />
           <BassShockwaves />
           <AudioVisualizerRing />
