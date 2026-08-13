@@ -663,3 +663,63 @@ body {
   80% { transform: translate(3px, 3px); filter: hue-rotate(-45deg); }
   100% { transform: translate(0); filter: hue-rotate(0deg); }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   3D FLIP CARDS (SOCIALS)
+   ═══════════════════════════════════════════════════════════ */
+.social-flip-card {
+  perspective: 1000px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  height: 160px;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+
+.social-flip-card:hover {
+  transform: translateY(-4px);
+}
+
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.social-flip-card.flipped .flip-inner {
+  transform: rotateY(180deg) scale(1.05);
+}
+
+.flip-front, .flip-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(160, 32, 240, 0.05);
+  border: 1px solid rgba(160, 32, 240, 0.2);
+  transition: all 0.3s ease;
+}
+
+.social-flip-card:hover .flip-front {
+  background: rgba(160, 32, 240, 0.1);
+  border-color: rgba(160, 32, 240, 0.4);
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(160, 32, 240, 0.5);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(160,32,240,0.3);
+}
