@@ -354,61 +354,6 @@ const IntroParticles = ({ playing }) => {
   );
 };
 
-const HeartShapes = () => {
-  const group = useRef();
-  const count = 8;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  
-  const heartShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const x = -2.5, y = -5;
-    shape.moveTo(x + 2.5, y + 2.5);
-    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
-    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
-    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
-    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
-    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
-    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-    return shape;
-  }, []);
-
-  const shapesData = useMemo(() => {
-    const data = [];
-    for (let i = 0; i < count; i++) {
-      data.push({
-        pos: [(Math.random() - 0.5) * 150, (Math.random() - 0.5) * 100 + 40, (Math.random() - 0.5) * 150],
-        rot: [Math.PI, Math.random() * Math.PI * 2, 0],
-        speed: (Math.random() - 0.5) * 0.5,
-        scale: Math.random() * 0.2 + 0.1,
-      });
-    }
-    return data;
-  }, [count]);
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      shapesData.forEach((shape, i) => {
-        shape.pos[1] += Math.sin(state.clock.elapsedTime + i) * 0.05;
-        shape.rot[1] += shape.speed * delta;
-        dummy.position.set(...shape.pos);
-        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
-        const s = shape.scale * (1 + audioState.smoothBass * 0.5);
-        dummy.scale.set(s, s, s);
-        dummy.updateMatrix();
-        group.current.setMatrixAt(i, dummy.matrix);
-      });
-      group.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  return (
-    <instancedMesh ref={group} args={[null, null, count]}>
-      <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
-    </instancedMesh>
-  );
-};
-
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
   texture.wrapS = THREE.RepeatWrapping;
@@ -794,18 +739,14 @@ const SECTIONS_DATA = [
 ];
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
-  const t = (i / SECTIONS_DATA.length) * Math.PI * 2;
-  const scale = 1.4;
-  const x = scale * 16 * Math.pow(Math.sin(t), 3);
-  const z = -scale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-  const angle = Math.atan2(x, z);
+  const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
 
   return {
     ...s,
     index: i,
     angle: angle,
-    x: x,
-    z: z
+    x: Math.sin(angle) * R,
+    z: Math.cos(angle) * R
   };
 });
 
@@ -1530,7 +1471,6 @@ function App() {
         <Suspense fallback={null}>
           <AmbientParticles />
           <VoidShapes />
-          <HeartShapes />
           <HorizonTrees />
           <BassShockwaves />
           <AudioVisualizerRing />
