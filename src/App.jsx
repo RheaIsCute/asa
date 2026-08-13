@@ -856,6 +856,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   
   useFrame((state, delta) => {
+    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
     if (outerGroupRef.current && innerGroupRef.current) {
       const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
       const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
@@ -866,10 +867,10 @@ const FloatingPanel = ({ data, activeId, onClick, playing }) => {
       const targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
       const targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
       
-      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 10);
-      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, delta * 10);
-      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, delta * 10);
-      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, delta * 10);
+      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
+      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
       
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
@@ -1017,14 +1018,15 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   }, [activeSection, setActiveSection]);
 
   useFrame((state, delta) => {
+    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
     const time = state.clock.elapsedTime;
     const bass = audioState.bass;
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
     
     // Smoothly track mouse
-    currentMousePos.current.x = THREE.MathUtils.lerp(currentMousePos.current.x, mousePos.current.x, delta * 3);
-    currentMousePos.current.y = THREE.MathUtils.lerp(currentMousePos.current.y, mousePos.current.y, delta * 3);
+    currentMousePos.current.x = THREE.MathUtils.lerp(currentMousePos.current.x, mousePos.current.x, d * 3);
+    currentMousePos.current.y = THREE.MathUtils.lerp(currentMousePos.current.y, mousePos.current.y, d * 3);
     
     const parallaxX = currentMousePos.current.x * 3.5;
     const parallaxY = currentMousePos.current.y * 2.5;
@@ -1140,8 +1142,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       
       if (elapsed < window.INTRO_DELAY_SEC) {
         const hoverY = 150 + Math.sin(time * 0.5) * 10;
-        state.camera.position.lerp(new THREE.Vector3(0, hoverY, 100), 2 * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(0, -20, 0), 2 * delta);
+        state.camera.position.lerp(new THREE.Vector3(0, hoverY, 100), 2 * d);
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20, 0), 2 * d);
       } else if (elapsed < window.INTRO_DELAY_SEC + 2.5) {
         const progress = Math.min((elapsed - window.INTRO_DELAY_SEC) / 2.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
@@ -1154,7 +1156,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         state.camera.position.x += Math.sin(progress * Math.PI * 2) * 25 * (1 - easeOut);
         state.camera.position.z += Math.cos(progress * Math.PI * 2) * 25 * (1 - easeOut);
         
-        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * delta);
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * d);
       } else {
         introFinished.current = true;
       }
@@ -1171,15 +1173,15 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           }
       }
       
-      pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
+      pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
       targetRot.current = pointerTracker.current.current;
       if (carouselRef.current) {
-        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+        carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
       }
       
       const targetCamPos = new THREE.Vector3(0, 0, 65);
-      state.camera.position.lerp(targetCamPos, 6 * delta);
-      lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * delta);
+      state.camera.position.lerp(targetCamPos, 6 * d);
+      lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * d);
 
     } else if (introFinished.current && introSpinFinished.current) {
       
@@ -1192,7 +1194,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       if (activeSection) {
         // ZOOMED IN
         if (carouselRef.current) {
-          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * delta);
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * d);
         }
         
         const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
@@ -1205,20 +1207,20 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         const lz = activeData?.lookOffset?.[2] || 0;
         
         const targetCamPos = new THREE.Vector3(cx, cy, R + cz);
-        state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * delta);
+        state.camera.position.lerp(targetCamPos, lerpSpeed * d);
+        lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * d);
         
       } else {
         // OVERVIEW — micro-orbit
         
         if (!window.isHoveringCard && !activeSection) {
-          pointerTracker.current.target += delta * 0.15;
+          pointerTracker.current.target += d * 0.15;
         }
         
-        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * delta);
+        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
         targetRot.current = pointerTracker.current.current;
         if (carouselRef.current) {
-          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * delta);
+          carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
         }
         
         // Micro-orbit: slow XY movement + bass modulation + mouse parallax
@@ -1229,8 +1231,8 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           Math.cos(orbitAngle * 0.7) * (1 + smoothBass * 2) + parallaxY,
           65
         );
-        state.camera.position.lerp(targetCamPos, lerpSpeed * delta);
-        lookAtPos.current.lerp(new THREE.Vector3(parallaxX * 0.5, parallaxY * 0.5, 0), lerpSpeed * delta);
+        state.camera.position.lerp(targetCamPos, lerpSpeed * d);
+        lookAtPos.current.lerp(new THREE.Vector3(parallaxX * 0.5, parallaxY * 0.5, 0), lerpSpeed * d);
       }
     }
     
@@ -1239,12 +1241,12 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
       // FOV breathing — expands on bass, contracts between
-      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * delta);
+      bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * d);
       state.camera.fov = 60 + bassFovPunch.current * 14;
       
       // Swap glitch warp
       if (swapGlitch.current > 0) {
-        swapGlitch.current = Math.max(0, swapGlitch.current - delta * 4.0);
+        swapGlitch.current = Math.max(0, swapGlitch.current - d * 4.0);
         const intensity = swapGlitch.current;
         state.camera.fov += intensity * 35; // Dramatic FOV pull
         state.camera.rotateZ((Math.random() - 0.5) * intensity * 0.15); // Slight camera shake/roll
