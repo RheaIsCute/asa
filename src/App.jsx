@@ -1,39 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Html, useTexture, Text } from '@react-three/drei';
+import { Html, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './App.css';
-
-const TRACKS = {
-  initial: {
-    audio: '/music_and_me.mp3',
-    lyrics: '/11004.lrc'
-  },
-  favorite: {
-    audio: '/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3',
-    lyrics: '/11165.lrc'
-  }
-};
-
-let currentTrackId = 'initial';
-let currentLyrics = [];
-
-const parseLrc = (lrc) => {
-  const lines = lrc.split('\n');
-  const parsed = [];
-  lines.forEach(line => {
-    const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
-    if (match) {
-      const min = parseInt(match[1]);
-      const sec = parseInt(match[2]);
-      const millis = parseInt(match[3]) * 10;
-      const time = min * 60 + sec + millis / 1000;
-      parsed.push({ time, text: match[4].trim() });
-    }
-  });
-  return parsed;
-};
 
 // ═══════════════════════════════════════════════════════════
 // AUDIO ENGINE — Beat Detection + Smoothed Frequency Bands
@@ -71,17 +41,10 @@ const initAudio = () => {
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
   
-  const track = TRACKS[currentTrackId];
-  audioRef = new Audio(track.audio);
+  audioRef = new Audio('/music_and_me.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
-  
-  // Load initial lyrics
-  fetch(track.lyrics).then(res => res.text()).then(text => {
-    currentLyrics = parseLrc(text);
-    window.dispatchEvent(new Event('lyrics-loaded'));
-  }).catch(console.error);
   
   source = audioCtx.createMediaElementSource(audioRef);
   source.connect(analyser);
@@ -97,53 +60,6 @@ const playAudio = () => {
   if (audioRef) {
     audioRef.play().catch(console.error);
     audioState.playing = true;
-  }
-};
-
-const switchTrack = async (trackId) => {
-  const track = TRACKS[trackId];
-  if (!track) return;
-  
-  currentTrackId = trackId;
-  window.toxicMode = trackId === 'favorite';
-  document.body.classList.toggle('toxic-theme', window.toxicMode);
-  window.dispatchEvent(new CustomEvent('track-switched', { detail: trackId }));
-  
-  if (audioRef) {
-    const wasPlaying = !audioRef.paused;
-    audioRef.pause();
-    audioRef.currentTime = 0;
-    audioRef.src = track.audio;
-    audioRef.load();
-    if (wasPlaying) audioRef.play().catch(console.error);
-  }
-  
-  // Reset audio visualizer state
-  audioState.smoothSub = 0;
-  audioState.smoothBass = 0;
-  audioState.smoothMid = 0;
-  audioState.smoothHigh = 0;
-  audioState.sub = 0;
-  audioState.bass = 0;
-  audioState.mid = 0;
-  audioState.high = 0;
-  audioState.beatDetected = false;
-  audioState.beatEnergy = 0;
-  audioState.energyAccumulator = 0;
-  prevEnergy = 0;
-  historyIndex = 0;
-  energyHistory.fill(0);
-  
-  currentLyrics = [];
-  window.dispatchEvent(new Event('lyrics-cleared'));
-  
-  try {
-    const response = await fetch(track.lyrics);
-    const lrcText = await response.text();
-    currentLyrics = parseLrc(lrcText);
-    window.dispatchEvent(new Event('lyrics-loaded'));
-  } catch (err) {
-    console.error("Failed to load lyrics:", err);
   }
 };
 
@@ -450,8 +366,6 @@ const HeartShapes = () => {
     return data;
   }, [count]);
 
-  const matRef = useRef();
-
   useFrame((state, delta) => {
     if (group.current) {
       shapesData.forEach((shape, i) => {
@@ -466,15 +380,12 @@ const HeartShapes = () => {
       });
       group.current.instanceMatrix.needsUpdate = true;
     }
-    if (matRef.current) {
-      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
-    }
   });
 
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial ref={matRef} color="#a020f0" transparent opacity={0.3} wireframe />
+      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
     </instancedMesh>
   );
 };
@@ -491,11 +402,7 @@ const HorizonTrees = () => {
     if (matRef.current) {
       matRef.current.map.offset.x += delta * 0.01;
       const b = audioState.smoothBass;
-      if (window.toxicMode) {
-        matRef.current.color.setRGB(1 - b * 0.1, 1 - b * 0.9, 1 - b * 0.4);
-      } else {
-        matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
-      }
+      matRef.current.color.setRGB(1 - b * 0.4, 1 - b * 0.9, 1 - b * 0.1);
       matRef.current.opacity = 0.5 + b * 0.3;
     }
   });
@@ -534,8 +441,6 @@ const VoidShapes = () => {
     return data;
   }, []);
 
-  const matRef = useRef();
-
   useFrame((state, delta) => {
     if (group.current) {
       const bassScale = 1 + audioState.smoothBass * 1.2;
@@ -545,6 +450,7 @@ const VoidShapes = () => {
         shape.rot[0] += (shape.speed + audioState.smoothMid * 0.5) * delta;
         shape.rot[1] += (shape.speed + audioState.smoothHigh * 0.3) * delta;
         
+        // Pulse position outward on beat
         const beatPush = beat ? audioState.beatEnergy * 3 : 0;
         const dist = Math.sqrt(shape.pos[0] ** 2 + shape.pos[2] ** 2);
         const pushX = dist > 0 ? (shape.pos[0] / dist) * beatPush : 0;
@@ -559,15 +465,12 @@ const VoidShapes = () => {
       });
       group.current.instanceMatrix.needsUpdate = true;
     }
-    if (matRef.current) {
-      matRef.current.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
-    }
   });
 
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial ref={matRef} color="#a020f0" wireframe transparent opacity={0.15} />
+      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
 };
@@ -599,11 +502,7 @@ const AmbientParticles = () => {
         
         // Color shift on heavy bass
         const b = audioState.smoothBass;
-        if (window.toxicMode) {
-          matRef.current.color.setRGB(1.0, b * 0.2, 0.3 + b * 0.4);
-        } else {
-          matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
-        }
+        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
       }
     }
   });
@@ -656,11 +555,11 @@ const BassShockwaves = () => {
           mesh.scale.set(scale, scale, 1);
           mesh.material.opacity = (1 - progress * progress) * 0.35;
           
-          // White flash on spawn, fade to purple/pink
+          // White flash on spawn, fade to purple
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
           } else {
-            mesh.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
+            mesh.material.color.setHex(0xa020f0);
           }
         }
       } else {
@@ -708,11 +607,6 @@ const AudioVisualizerRing = () => {
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
-    
-    // Dynamically update material color
-    if (meshRef.current.material) {
-      meshRef.current.material.color.setHex(window.toxicMode ? 0xff0055 : 0xa020f0);
-    }
   });
   
   return (
@@ -731,11 +625,7 @@ const ReactiveFloor = () => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
       meshRef.current.material.opacity = 0.1 + b * 0.35;
-      if (window.toxicMode) {
-        meshRef.current.material.color.setRGB(b * 0.6, 0, 0.02 + b * 0.2);
-      } else {
-        meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
-      }
+      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
     }
   });
   
@@ -833,13 +723,12 @@ const SECTIONS_DATA = [
       <div class="hud-grid">
         <div class="hud-block full" style="padding: 24px;">
           <div class="hud-label">NOW PLAYING</div>
-          <div id="music-title" class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
-          <div id="music-artist" class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
+          <div class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
+          <div class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
           <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
             <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
           </div>
         </div>
-        <button id="btn-fav-song" class="hud-block social-link" style="width: 100%; margin-top: 4px; padding: 12px; border: 1px solid var(--accent); background: transparent; color: #fff; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;">Fav Song</button>
       </div>
     `
   },
@@ -880,25 +769,13 @@ const SECTIONS_DATA = [
 
 const SECTIONS = SECTIONS_DATA.map((s, i) => {
   const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
-  
-  // Heart parameters mapping
-  const tVals = [Math.PI, Math.PI/4, 0, 7*Math.PI/4, 3*Math.PI/2]; 
-  const t = tVals[i] || 0;
-  
-  const scl = 1.3;
-  const hx = 16 * Math.pow(Math.sin(t), 3) * scl;
-  const hy = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * scl;
 
   return {
     ...s,
     index: i,
     angle: angle,
     x: Math.sin(angle) * R,
-    z: Math.cos(angle) * R,
-    toxicX: hx,
-    toxicY: hy + 5, // shift up slightly
-    toxicZ: -15,
-    toxicAngle: 0
+    z: Math.cos(angle) * R
   };
 });
 
@@ -972,13 +849,15 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
     }
   });
 
+  if (materialized) return null;
+
   return (
     <points ref={meshRef}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={currentPositions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial ref={matRef} size={0.3} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 };
@@ -986,52 +865,40 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
 const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
-  
+  const [materialized, setMaterialized] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   
-  const [materialized, setMaterialized] = useState(false);
-  const [isGlitching, setIsGlitching] = useState(false);
-
   useFrame((state, delta) => {
-    const time = state.clock.elapsedTime;
-    
-    // Dynamic Layout Lerping
-    if (outerGroupRef.current) {
-      if (window.toxicMode) {
-        outerGroupRef.current.position.lerp(new THREE.Vector3(data.toxicX, data.toxicY, data.toxicZ), delta * 3);
+    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
+    if (outerGroupRef.current && innerGroupRef.current) {
+      const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
+      const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
+      outerGroupRef.current.position.y = baseFloat + bassFloat;
+      
+      const targetScale = isHovered && !activeId ? 1.03 : 1.0;
+      const targetZ = isHovered && !activeId ? 2.0 : 0;
+      let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
+      let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
+      
+      if (isHovered && !activeId && carouselRef?.current) {
+        // Counteract the world rotation so the card faces the camera directly
+        const worldRotY = carouselRef.current.rotation.y + data.angle;
         
-        // Counteract carousel rotation to face front
-        const currentCarouselRot = carouselRef.current ? carouselRef.current.rotation.y : 0;
-        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.toxicAngle - currentCarouselRot, delta * 3);
-      } else {
-        outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, 0, data.z), delta * 3);
-        outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, data.angle, delta * 3);
-      }
-    }
-
-    if (innerGroupRef.current && materialized) {
-      const isFocused = activeId === data.id;
-      
-      const floatY = Math.sin(time * 2 + data.index) * 0.5;
-      const floatX = Math.cos(time * 1.5 + data.index) * 0.3;
-      
-      let targetRotX = 0;
-      let targetRotY = 0;
-      
-      if (!isFocused && isHovered) {
-         targetRotX = hoverPos.y * 0.04;
-         targetRotY = hoverPos.x * 0.04;
+        // We calculate the shortest path to facing forward (rotation 0)
+        let diff = -worldRotY;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        
+        targetRotY += diff;
       }
       
-      innerGroupRef.current.position.y = THREE.MathUtils.lerp(innerGroupRef.current.position.y, floatY, delta * 5);
-      innerGroupRef.current.position.x = THREE.MathUtils.lerp(innerGroupRef.current.position.x, floatX, delta * 5);
+      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
+      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
       
-      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, delta * 5);
-      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, delta * 5);
-    }
-    
-    if (!materialized) {
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
           setMaterialized(true);
@@ -1078,94 +945,12 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
             {data.title}
           </h2>
           <div className="panel-content-wrapper">
-            <div 
-              className="panel-content" 
-              dangerouslySetInnerHTML={{ __html: data.content }} 
-              onClick={(e) => {
-                if (e.target.closest('a, button')) {
-                  e.stopPropagation();
-                }
-              }}
-            />
+            <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
           </div>
         </div>
         </Html>
       </group>
     </group>
-  );
-};
-
-const Lyrics3D = ({ playing }) => {
-  const textRef = useRef();
-  const materialRef = useRef();
-  const [lyricsVersion, setLyricsVersion] = useState(0);
-  
-  useEffect(() => {
-    const handleLoaded = () => setLyricsVersion(v => v + 1);
-    const handleCleared = () => {
-       if (textRef.current) {
-         textRef.current.text = '';
-       }
-    };
-    window.addEventListener('lyrics-loaded', handleLoaded);
-    window.addEventListener('lyrics-cleared', handleCleared);
-    return () => {
-       window.removeEventListener('lyrics-loaded', handleLoaded);
-       window.removeEventListener('lyrics-cleared', handleCleared);
-    }
-  }, []);
-  
-  useFrame((state, delta) => {
-    if (!playing || !textRef.current || !materialRef.current) return;
-    
-    const time = audioRef ? audioRef.currentTime : 0;
-    let activeLine = '';
-    for (let i = 0; i < currentLyrics.length; i++) {
-      if (time >= currentLyrics[i].time) {
-        activeLine = currentLyrics[i].text;
-      } else {
-        break;
-      }
-    }
-    
-    if (textRef.current.text !== activeLine) {
-      textRef.current.text = activeLine;
-      // Trigger a slight pop effect when text changes
-      textRef.current.scale.set(1.1, 1.1, 1.1);
-    }
-    
-    // Smoothly return scale to 1
-    textRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), delta * 5);
-    
-    // Float the text slightly
-    textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.2;
-    
-    if (window.toxicMode) {
-      materialRef.current.color.setHex(0xff0055);
-      materialRef.current.emissive.setHex(0xff0055);
-      materialRef.current.emissiveIntensity = 2.0 + Math.sin(time * 5) * 0.5;
-    } else {
-      materialRef.current.color.setHex(0xffffff);
-      materialRef.current.emissive.setHex(0xffffff);
-      materialRef.current.emissiveIntensity = 1.0;
-    }
-  });
-  
-  return (
-    <Text
-      ref={textRef}
-      position={[0, 0, -12]}
-      fontSize={1.5}
-      maxWidth={25}
-      textAlign="center"
-      anchorX="center"
-      anchorY="middle"
-      fontWeight="bold"
-      letterSpacing={-0.05}
-    >
-      {''}
-      <meshStandardMaterial ref={materialRef} toneMapped={false} transparent opacity={0.9} />
-    </Text>
   );
 };
 
@@ -1506,15 +1291,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       state.camera.updateProjectionMatrix();
       
       // Camera roll sway — subtle drunken float
-      let rollAmt = Math.sin(time * 0.6) * smoothBass * 0.035;
-      if (window.toxicMode) {
-        rollAmt += Math.cos(time * 2.1) * smoothBass * 0.1;
-        state.camera.position.x += Math.sin(time * 3.5) * smoothBass * 1.5;
-        state.camera.position.y += Math.cos(time * 4.2) * smoothBass * 1.5;
-        state.camera.fov += Math.sin(time * 8) * smoothBass * 5;
-        state.camera.updateProjectionMatrix();
-      }
-      state.camera.rotation.z += rollAmt;
+      state.camera.rotation.z += Math.sin(time * 0.6) * smoothBass * 0.035;
     }
   });
 
@@ -1538,9 +1315,7 @@ const Effects = () => {
 // APP
 // ═══════════════════════════════════════════════════════════
 
-window.INTRO_DELAY_SEC = 3.2;
-
-window.toxicMode = false;
+window.INTRO_DELAY_SEC = 3.2; // Wait 3.2 seconds for the intro drop
 
 function App() {
   const [started, setStarted] = useState(false);
@@ -1549,33 +1324,8 @@ function App() {
   const [introFading, setIntroFading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.45);
-  const [isToxicMode, setIsToxicMode] = useState(false);
   
   const carouselRef = useRef();
-
-  useEffect(() => {
-    const handleTrackSwitched = (e) => {
-      setIsToxicMode(e.detail === 'favorite');
-    };
-    
-    const handleGlobalClick = (e) => {
-      if (e.target.closest('#btn-fav-song')) {
-        switchTrack('favorite');
-      }
-    };
-    
-    window.addEventListener('track-switched', handleTrackSwitched);
-    document.addEventListener('click', handleGlobalClick);
-    
-    return () => {
-      window.removeEventListener('track-switched', handleTrackSwitched);
-      document.removeEventListener('click', handleGlobalClick);
-    };
-  }, []);
-
-  const handleRevert = () => {
-    switchTrack('initial');
-  };
 
   const handleStart = () => {
     initAudio();
@@ -1647,17 +1397,14 @@ function App() {
       {/* ── Audio-reactive radial blur overlay ── */}
       {started && <div className="audio-blur-overlay"></div>}
 
-      {/* ── Lyrics removed from HTML overlay ── */}
+      {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
+      <LyricsOverlay started={started} />
+
       {started && (
         <div className="ui-layer">
           {activeSection && (
             <button className="back-btn" onClick={() => setActiveSection(null)}>
               [ BACK TO OVERVIEW ]
-            </button>
-          )}
-          {isToxicMode && (
-            <button className="revert-btn" onClick={handleRevert}>
-              [ REVERT TO NORMAL ]
             </button>
           )}
           <button className="mute-btn" onClick={handleMute}>
@@ -1696,7 +1443,6 @@ function App() {
         <IntroParticles playing={started} />
         
         <Suspense fallback={null}>
-          <Lyrics3D playing={started} />
           <AmbientParticles />
           <VoidShapes />
           <HeartShapes />
