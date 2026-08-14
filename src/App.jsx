@@ -362,7 +362,8 @@ const LyricsOverlay = ({ started, themeMode }) => {
             // Use constant blur radii to avoid expensive GPU shadow recalculations every frame
             const coreAlpha = 0.4 + bass * 0.5;
             const outerAlpha = 0.1 + bass * 0.3;
-            mainLayer.style.textShadow = `0 0 30px rgba(var(--accent-rgb), ${coreAlpha}), 0 0 80px rgba(var(--accent-rgb), ${outerAlpha})`;
+            const rgbColor = isFav ? '255, 105, 180' : '160, 32, 240';
+            mainLayer.style.textShadow = `0 0 30px rgba(${rgbColor}, ${coreAlpha}), 0 0 80px rgba(${rgbColor}, ${outerAlpha})`;
             mainLayer.style.color = `rgba(255, 255, 255, ${0.05 + bass * 0.2})`;
           }
         }
@@ -963,17 +964,33 @@ const SECTIONS_DATA = [
   }
 ];
 
-const SECTIONS = SECTIONS_DATA.map((s, i) => {
-  const angle = (i / SECTIONS_DATA.length) * Math.PI * 2;
-
-  return {
-    ...s,
-    index: i,
-    angle: angle,
-    x: Math.sin(angle) * R,
-    z: Math.cos(angle) * R
-  };
-});
+const FAV_SONG_CARDS_DATA = [
+  {
+    id: 'fav-1', title: 'LOVE NOTE', icon: ICONS.identity, width: '400px',
+    isFavCard: true,
+    content: `<div class="hud-block full" style="padding: 20px;"><div style="font-size: 1.1rem; color: #ffb6c1; line-height: 1.6;">You make my heart skip a beat every time I see you. I just wanted to leave this here to remind you how much you mean to me. Every second with you feels like a dream I never want to wake up from.</div></div>`
+  },
+  {
+    id: 'fav-2', title: 'MEMORIES', icon: ICONS.archive, width: '400px',
+    isFavCard: true,
+    content: `<div class="hud-block full" style="padding: 20px;"><div style="color: #fff; font-size: 1rem; line-height: 1.8;">&#x2022; Late night calls<br/>&#x2022; Playing games until 4AM<br/>&#x2022; Your beautiful laugh<br/>&#x2022; When we first met...</div></div>`
+  },
+  {
+    id: 'fav-3', title: 'THINGS I LOVE ABOUT YOU', icon: ICONS.socials, width: '400px',
+    isFavCard: true,
+    content: `<div class="hud-block full" style="padding: 20px;"><div style="color: #ff69b4; font-size: 1rem; line-height: 1.8;">Everything. Your smile, your eyes, the way you say my name, how safe you make me feel. I'm addicted to you.</div></div>`
+  },
+  {
+    id: 'fav-4', title: 'ABOUT ME', icon: ICONS.identity, width: '400px',
+    isFavCard: true,
+    content: `<div class="hud-block full" style="padding: 20px; text-align: center;"><div class="hud-label">STATUS</div><div class="hud-value" style="color: #ff69b4; font-size: 1.5rem; margin-top: 10px;">Completely Yours</div></div>`
+  },
+  {
+    id: 'fav-5', title: 'IF YOU EVER READ THIS', icon: ICONS.status, width: '400px',
+    isFavCard: true,
+    content: `<div class="hud-block full" style="padding: 20px;"><div style="font-size: 1.1rem; color: #fff;">I love you. More than anything in this world. Never forget that. 💕</div></div>`
+  }
+];
 
 // ═══════════════════════════════════════════════════════════
 // CARD SYSTEM
@@ -1058,7 +1075,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   );
 };
 
-const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert }) => {
+const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert, onFavCardClick }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
   const [materialized, setMaterialized] = useState(false);
@@ -1068,13 +1085,18 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
 
   const getHeartTarget = (index) => {
     const map = [
-      { x: 0, y: -15, z: 15 },
-      { x: -20, y: 5, z: 10 },
-      { x: -10, y: 20, z: 5 },
-      { x: 10, y: 20, z: 5 },
-      { x: 20, y: 5, z: 10 },
+      { x: 0, y: -22, z: 15 },
+      { x: -12, y: -10, z: 12 },
+      { x: -22, y: 2, z: 9 },
+      { x: -25, y: 16, z: 6 },
+      { x: -12, y: 25, z: 5 },
+      { x: 0, y: 14, z: 8 },
+      { x: 12, y: 25, z: 5 },
+      { x: 25, y: 16, z: 6 },
+      { x: 22, y: 2, z: 9 },
+      { x: 12, y: -10, z: 12 },
     ];
-    return map[index % 5];
+    return map[index % 10];
   };
 
   useFrame((state, delta) => {
@@ -1125,6 +1147,15 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
   const isDimmed = activeId && !isActive && favSongStage !== 'playing';
 
   const handleClick = () => {
+    if (data.isFavCard) {
+      if (favSongStage === 'playing') {
+        setIsGlitching(true);
+        setTimeout(() => setIsGlitching(false), 300);
+        if (onFavCardClick) onFavCardClick(data);
+      }
+      return;
+    }
+
     if (!isActive && favSongStage !== 'playing') {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
@@ -1581,6 +1612,21 @@ function App() {
   const [volume, setVolume] = useState(0.45);
   const [themeMode, setThemeMode] = useState('normal');
   const [favSongStage, setFavSongStage] = useState('idle');
+  const [favModalData, setFavModalData] = useState(null);
+
+  const activeSections = useMemo(() => {
+    const dataArray = themeMode === 'favSong' ? [...SECTIONS_DATA, ...FAV_SONG_CARDS_DATA] : SECTIONS_DATA;
+    return dataArray.map((s, i) => {
+      const angle = (i / dataArray.length) * Math.PI * 2;
+      return {
+        ...s,
+        index: i,
+        angle: angle,
+        x: Math.sin(angle) * R,
+        z: Math.cos(angle) * R
+      };
+    });
+  }, [themeMode]);
 
   useEffect(() => {
     if (themeMode === 'favSong') {
@@ -1675,6 +1721,20 @@ function App() {
       {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
       <LyricsOverlay started={started} themeMode={themeMode} />
 
+      {/* ── Fav Song Modal Overlay ── */}
+      {favModalData && (
+        <div className="fav-modal-overlay" onClick={() => setFavModalData(null)}>
+          <div className="fav-modal-content" onClick={e => e.stopPropagation()}>
+            <button className="fav-modal-close" onClick={() => setFavModalData(null)}>×</button>
+            <h2 className="fav-modal-title" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+              <div dangerouslySetInnerHTML={{ __html: favModalData.icon }} style={{ display: 'flex', width: '32px', height: '32px' }} />
+              {favModalData.title}
+            </h2>
+            <div dangerouslySetInnerHTML={{ __html: favModalData.content }} />
+          </div>
+        </div>
+      )}
+
       {started && (
         <div className="ui-layer">
           {activeSection && (
@@ -1729,7 +1789,7 @@ function App() {
           <ReactiveFloor themeMode={themeMode} />
 
           <group ref={carouselRef}>
-            {SECTIONS.map(s => (
+            {activeSections.map(s => (
               <FloatingPanel
                 key={s.id}
                 data={s}
@@ -1749,8 +1809,10 @@ function App() {
                 onRevert={() => {
                   setThemeMode('normal');
                   setFavSongStage('idle');
+                  setFavModalData(null);
                   handleRevert();
                 }}
+                onFavCardClick={setFavModalData}
               />
             ))}
           </group>
