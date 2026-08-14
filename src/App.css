@@ -638,10 +638,14 @@ body {
 
 .hud-block.social-link {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.html-panel.active .hud-block.social-link {
   pointer-events: auto;
 }
 
-.hud-block.social-link:hover { 
+.html-panel.active .hud-block.social-link:hover { 
   background: rgba(160, 32, 240, 0.12); 
   border-color: rgba(160, 32, 240, 0.5); 
   transform: translateY(-3px);
