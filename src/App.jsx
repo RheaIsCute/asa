@@ -34,22 +34,22 @@ let historyIndex = 0;
 
 const initAudio = () => {
   if (audioState.initialized) return;
-  
+
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
   analyser.smoothingTimeConstant = 0.4; // Snappy response for beat detection
   audioState.raw = new Uint8Array(analyser.frequencyBinCount);
-  
+
   audioRef = new Audio('/music_and_me.mp3');
   audioRef.crossOrigin = "anonymous";
   audioRef.loop = true;
   audioRef.volume = 0.45;
-  
+
   source = audioCtx.createMediaElementSource(audioRef);
   source.connect(analyser);
   analyser.connect(audioCtx.destination);
-  
+
   audioState.initialized = true;
 };
 
@@ -73,67 +73,67 @@ const toggleMute = () => {
 
 const updateAudioData = () => {
   if (!audioState.playing || !analyser) return;
-  
+
   analyser.getByteFrequencyData(audioState.raw);
   const bins = analyser.frequencyBinCount; // 128
-  
+
   // Sub bass (deep rumble, bins 0-3)
   let subSum = 0;
   for (let i = 0; i < 4; i++) subSum += audioState.raw[i];
   audioState.sub = subSum / 4 / 255;
-  
+
   // Bass (kicks + bass, bins 3-12)
   let bassSum = 0;
   for (let i = 3; i < 12; i++) bassSum += audioState.raw[i];
   audioState.bass = bassSum / 9 / 255;
-  
+
   // Mid (vocals + instruments, bins 12-50)
   let midSum = 0;
   for (let i = 12; i < 50; i++) midSum += audioState.raw[i];
   audioState.mid = midSum / 38 / 255;
-  
+
   // High (cymbals + air, bins 50-128)
   let highSum = 0;
   for (let i = 50; i < bins; i++) highSum += audioState.raw[i];
   audioState.high = highSum / (bins - 50) / 255;
-  
+
   // ── Exponential Smoothing (fast attack, slow release) ──
   const attack = 0.35;
   const release = 0.92;
-  
-  const smooth = (current, target) => 
+
+  const smooth = (current, target) =>
     target > current ? current * (1 - attack) + target * attack : current * release;
-  
+
   audioState.smoothSub = smooth(audioState.smoothSub, audioState.sub);
   audioState.smoothBass = smooth(audioState.smoothBass, audioState.bass);
   audioState.smoothMid = smooth(audioState.smoothMid, audioState.mid);
   audioState.smoothHigh = smooth(audioState.smoothHigh, audioState.high);
-  
+
   // ── Beat Detection via Spectral Flux ──
   const currentEnergy = audioState.bass + audioState.sub * 0.5;
-  
+
   energyHistory[historyIndex % energyHistory.length] = currentEnergy;
   historyIndex++;
   const avgEnergy = energyHistory.reduce((a, b) => a + b, 0) / energyHistory.length;
-  
+
   const now = performance.now();
   const timeSinceLastBeat = now - audioState.lastBeatTime;
-  
+
   audioState.beatDetected =
     currentEnergy > avgEnergy * 1.35 &&
     currentEnergy > 0.2 &&
     currentEnergy > prevEnergy &&
     timeSinceLastBeat > 120;
-  
+
   if (audioState.beatDetected) {
     audioState.lastBeatTime = now;
     audioState.beatEnergy = currentEnergy;
     audioState.energyAccumulator = Math.min(audioState.energyAccumulator + currentEnergy * 0.3, 3.0);
   }
-  
+
   audioState.energyAccumulator *= 0.995;
   prevEnergy = currentEnergy;
-  
+
   // ── Pipe to CSS ──
   const root = document.documentElement.style;
   root.setProperty('--bass', audioState.smoothBass.toFixed(3));
@@ -221,18 +221,18 @@ const LyricsOverlay = ({ started }) => {
           const bass = audioState.bass;
           const smoothBass = audioState.smoothBass;
           const beat = audioState.beatDetected;
-          
+
           const floatY = Math.sin(performance.now() / 1000 * 2) * 15;
           const floatX = Math.cos(performance.now() / 1000 * 1.5) * 8;
           const bassScale = 1 + smoothBass * 0.35;
           const skewX = beat ? (Math.random() - 0.5) * bass * 30 : 0;
-          
+
           textRef.current.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
-          
+
           const redLayer = textRef.current.querySelector('.asa-layer-r');
           const cyanLayer = textRef.current.querySelector('.asa-layer-c');
           const mainLayer = textRef.current.querySelector('.asa-layer-main');
-          
+
           if (redLayer && cyanLayer && mainLayer) {
             if (beat) {
               const split = bass * 40;
@@ -240,7 +240,7 @@ const LyricsOverlay = ({ started }) => {
               redLayer.style.opacity = String(0.4 + bass * 0.6);
               cyanLayer.style.transform = `translate(${-split}px, ${split * 0.5}px)`;
               cyanLayer.style.opacity = String(0.4 + bass * 0.6);
-              
+
               const y1 = Math.random() * 80;
               const h = 5 + Math.random() * 40;
               redLayer.style.clipPath = `inset(${y1}% 0 ${Math.max(0, 100 - y1 - h)}% 0)`;
@@ -254,7 +254,7 @@ const LyricsOverlay = ({ started }) => {
               redLayer.style.clipPath = 'none';
               cyanLayer.style.clipPath = 'none';
             }
-            
+
             // Use constant blur radii to avoid expensive GPU shadow recalculations every frame
             const coreAlpha = 0.4 + bass * 0.5;
             const outerAlpha = 0.1 + bass * 0.3;
@@ -339,7 +339,7 @@ const HeartShapes = ({ themeMode }) => {
   const group = useRef();
   const count = 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  
+
   const heartShape = useMemo(() => {
     const shape = new THREE.Shape();
     const x = -2.5, y = -5;
@@ -396,7 +396,7 @@ const FloatingHearts = ({ themeMode }) => {
   const group = useRef();
   const count = 25;
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  
+
   const heartShape = useMemo(() => {
     const shape = new THREE.Shape();
     const x = -2.5, y = -5;
@@ -455,9 +455,9 @@ const HorizonTrees = () => {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.repeat.set(12, 1);
-  
+
   const matRef = useRef();
-  
+
   useFrame((state, delta) => {
     if (matRef.current) {
       matRef.current.map.offset.x += delta * 0.01;
@@ -470,10 +470,10 @@ const HorizonTrees = () => {
   return (
     <mesh position={[0, -25, 0]} rotation={[0, 0, 0]}>
       <cylinderGeometry args={[90, 90, 50, 32, 1, true]} />
-      <meshBasicMaterial 
+      <meshBasicMaterial
         ref={matRef}
-        map={texture} 
-        transparent 
+        map={texture}
+        transparent
         opacity={0.6}
         color="white"
         side={THREE.BackSide}
@@ -486,7 +486,7 @@ const VoidShapes = ({ themeMode }) => {
   const group = useRef();
   const count = 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  
+
   const shapesData = useMemo(() => {
     const data = [];
     for (let i = 0; i < count; i++) {
@@ -505,17 +505,17 @@ const VoidShapes = ({ themeMode }) => {
     if (group.current) {
       const bassScale = 1 + audioState.smoothBass * 1.2;
       const beat = audioState.beatDetected;
-      
+
       shapesData.forEach((shape, i) => {
         shape.rot[0] += (shape.speed + audioState.smoothMid * 0.5) * delta;
         shape.rot[1] += (shape.speed + audioState.smoothHigh * 0.3) * delta;
-        
+
         // Pulse position outward on beat
         const beatPush = beat ? audioState.beatEnergy * 3 : 0;
         const dist = Math.sqrt(shape.pos[0] ** 2 + shape.pos[2] ** 2);
         const pushX = dist > 0 ? (shape.pos[0] / dist) * beatPush : 0;
         const pushZ = dist > 0 ? (shape.pos[2] / dist) * beatPush : 0;
-        
+
         dummy.position.set(shape.pos[0] + pushX, shape.pos[1], shape.pos[2] + pushZ);
         dummy.rotation.set(...shape.rot);
         const s = shape.scale * bassScale;
@@ -541,7 +541,7 @@ const AmbientParticles = ({ themeMode }) => {
   const count = 150;
   const mesh = useRef();
   const matRef = useRef();
-  
+
   const particles = useMemo(() => {
     const temp = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -551,21 +551,21 @@ const AmbientParticles = ({ themeMode }) => {
     }
     return temp;
   }, [count]);
-  
+
   useFrame((state, delta) => {
     if (mesh.current && matRef.current) {
       mesh.current.rotation.y += delta * 0.05;
       mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.2) * 5;
-      
+
       if (audioState.smoothBass > 0) {
         mesh.current.rotation.y += delta * audioState.smoothBass * 1.2;
         matRef.current.size = 0.4 + audioState.smoothBass * 2.0;
         matRef.current.opacity = 0.3 + audioState.smoothBass * 0.7;
-        
+
         // Color shift on heavy bass
         const b = audioState.smoothBass;
         if (themeMode === 'favSong') {
-          matRef.current.color.setRGB(1.0, 0.4 + b * 0.6, 0.7 + b * 0.3); 
+          matRef.current.color.setRGB(1.0, 0.4 + b * 0.6, 0.7 + b * 0.3);
         } else {
           matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
         }
@@ -592,7 +592,7 @@ const BassShockwaves = () => {
     startTime: 0
   })));
   const nextRing = useRef(0);
-  
+
   useFrame((state) => {
     // Spawn ring on beat
     if (audioState.beatDetected) {
@@ -601,17 +601,17 @@ const BassShockwaves = () => {
       ringState.current[idx].startTime = state.clock.elapsedTime;
       nextRing.current++;
     }
-    
+
     // Update active rings
     ringState.current.forEach((ring, i) => {
       const mesh = ringsRef.current[i];
       if (!mesh) return;
-      
+
       if (ring.active) {
         const elapsed = state.clock.elapsedTime - ring.startTime;
         const life = 2.0;
         const progress = elapsed / life;
-        
+
         if (progress >= 1) {
           ring.active = false;
           mesh.visible = false;
@@ -620,7 +620,7 @@ const BassShockwaves = () => {
           const scale = 1 + progress * 80;
           mesh.scale.set(scale, scale, 1);
           mesh.material.opacity = (1 - progress * progress) * 0.35;
-          
+
           // White flash on spawn, fade to purple
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
@@ -633,7 +633,7 @@ const BassShockwaves = () => {
       }
     });
   });
-  
+
   return (
     <group position={[0, -19, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       {Array.from({ length: MAX_RINGS }, (_, i) => (
@@ -649,7 +649,7 @@ const BassShockwaves = () => {
 const RomanticSparkles = ({ themeMode }) => {
   const count = 300;
   const mesh = useRef();
-  
+
   const particles = useMemo(() => {
     const temp = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -659,7 +659,7 @@ const RomanticSparkles = ({ themeMode }) => {
     }
     return temp;
   }, [count]);
-  
+
   useFrame((state, delta) => {
     if (mesh.current && themeMode === 'favSong') {
       mesh.current.rotation.y += delta * 0.15;
@@ -685,20 +685,20 @@ const AudioVisualizerRing = () => {
   const barCount = 64;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const radius = 38;
-  
+
   useFrame(() => {
     if (!meshRef.current || !audioState.playing) return;
-    
+
     for (let i = 0; i < barCount; i++) {
       const angle = (i / barCount) * Math.PI * 2;
       const freqIndex = Math.floor((i / barCount) * 128);
       const value = audioState.raw[freqIndex] / 255;
-      
+
       const barHeight = 0.3 + value * 14;
-      
+
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      
+
       dummy.position.set(x, -19 + barHeight * 0.5, z);
       dummy.scale.set(0.35, barHeight, 0.35);
       dummy.rotation.set(0, 0, 0);
@@ -707,7 +707,7 @@ const AudioVisualizerRing = () => {
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
   });
-  
+
   return (
     <instancedMesh ref={meshRef} args={[null, null, barCount]}>
       <boxGeometry args={[1, 1, 1]} />
@@ -719,7 +719,7 @@ const AudioVisualizerRing = () => {
 // ── Reactive Floor Grid ──
 const ReactiveFloor = () => {
   const meshRef = useRef();
-  
+
   useFrame(() => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
@@ -727,7 +727,7 @@ const ReactiveFloor = () => {
       meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
     }
   });
-  
+
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -20, 0]}>
       <planeGeometry args={[300, 300, 32, 32]} />
@@ -886,28 +886,28 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   const count = 600;
   const meshRef = useRef();
   const matRef = useRef();
-  
+
   const { targetPositions, currentPositions, colors } = useMemo(() => {
     const tPos = new Float32Array(count * 3);
     const cPos = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);
-    
-    for(let i = 0; i < count; i++) {
-      tPos[i*3] = (Math.random() - 0.5) * 22;
-      tPos[i*3+1] = (Math.random() - 0.5) * 32;
-      tPos[i*3+2] = (Math.random() - 0.5) * 2;
-      
-      cPos[i*3] = tPos[i*3] + (Math.random() - 0.5) * 40;
-      cPos[i*3+1] = tPos[i*3+1] + 30 + Math.random() * 40;
-      cPos[i*3+2] = tPos[i*3+2] + (Math.random() - 0.5) * 30;
-      
+
+    for (let i = 0; i < count; i++) {
+      tPos[i * 3] = (Math.random() - 0.5) * 22;
+      tPos[i * 3 + 1] = (Math.random() - 0.5) * 32;
+      tPos[i * 3 + 2] = (Math.random() - 0.5) * 2;
+
+      cPos[i * 3] = tPos[i * 3] + (Math.random() - 0.5) * 40;
+      cPos[i * 3 + 1] = tPos[i * 3 + 1] + 30 + Math.random() * 40;
+      cPos[i * 3 + 2] = tPos[i * 3 + 2] + (Math.random() - 0.5) * 30;
+
       const r = Math.random();
-      if(r > 0.6) {
-        cols[i*3] = 0; cols[i*3+1] = 0; cols[i*3+2] = 0;
+      if (r > 0.6) {
+        cols[i * 3] = 0; cols[i * 3 + 1] = 0; cols[i * 3 + 2] = 0;
       } else if (r > 0.3) {
-        cols[i*3] = 0.62; cols[i*3+1] = 0.12; cols[i*3+2] = 0.94;
+        cols[i * 3] = 0.62; cols[i * 3 + 1] = 0.12; cols[i * 3 + 2] = 0.94;
       } else {
-        cols[i*3] = 0.8; cols[i*3+1] = 0.5; cols[i*3+2] = 1.0;
+        cols[i * 3] = 0.8; cols[i * 3 + 1] = 0.5; cols[i * 3 + 2] = 1.0;
       }
     }
     return { targetPositions: tPos, currentPositions: cPos, colors: cols };
@@ -915,28 +915,28 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
 
   useFrame((state, delta) => {
     if (!meshRef.current || !matRef.current || materialized) return;
-    
+
     if (playing && window.introTime) {
       const timeSinceIntro = performance.now() - window.introTime;
-      const startTime = window.INTRO_DELAY_SEC * 1000 + 2500 + dataIndex * 150; 
-      
+      const startTime = window.INTRO_DELAY_SEC * 1000 + 2500 + dataIndex * 150;
+
       if (timeSinceIntro > startTime) {
         const positions = meshRef.current.geometry.attributes.position.array;
         const progress = Math.min((timeSinceIntro - startTime) / 800, 1);
         const scanY = 20 - progress * 40;
-        
-        for(let i = 0; i < count; i++) {
-           const targetY = targetPositions[i*3+1];
-           if (targetY > scanY) {
-             positions[i*3] = THREE.MathUtils.lerp(positions[i*3], targetPositions[i*3], 15 * delta);
-             positions[i*3+1] = THREE.MathUtils.lerp(positions[i*3+1], targetPositions[i*3+1], 15 * delta);
-             positions[i*3+2] = THREE.MathUtils.lerp(positions[i*3+2], targetPositions[i*3+2], 15 * delta);
-           } else {
-             positions[i*3+1] -= delta * 5;
-           }
+
+        for (let i = 0; i < count; i++) {
+          const targetY = targetPositions[i * 3 + 1];
+          if (targetY > scanY) {
+            positions[i * 3] = THREE.MathUtils.lerp(positions[i * 3], targetPositions[i * 3], 15 * delta);
+            positions[i * 3 + 1] = THREE.MathUtils.lerp(positions[i * 3 + 1], targetPositions[i * 3 + 1], 15 * delta);
+            positions[i * 3 + 2] = THREE.MathUtils.lerp(positions[i * 3 + 2], targetPositions[i * 3 + 2], 15 * delta);
+          } else {
+            positions[i * 3 + 1] -= delta * 5;
+          }
         }
         meshRef.current.geometry.attributes.position.needsUpdate = true;
-        
+
         if (progress > 0.8) {
           matRef.current.opacity = (1 - progress) * 5 * 0.9;
         } else {
@@ -968,54 +968,54 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
   const [isHovered, setIsHovered] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
-  
+
   const getHeartTarget = (index) => {
     const map = [
-      { x: 0, y: -15, z: 15 },    
-      { x: -20, y: 5, z: 10 },    
-      { x: -10, y: 20, z: 5 },    
-      { x: 10, y: 20, z: 5 },     
-      { x: 20, y: 5, z: 10 },     
+      { x: 0, y: -15, z: 15 },
+      { x: -20, y: 5, z: 10 },
+      { x: -10, y: 20, z: 5 },
+      { x: 10, y: 20, z: 5 },
+      { x: 20, y: 5, z: 10 },
     ];
     return map[index % 5];
   };
 
   useFrame((state, delta) => {
-    const d = Math.min(delta, 0.1); 
+    const d = Math.min(delta, 0.1);
     if (outerGroupRef.current && innerGroupRef.current) {
       if (favSongStage === 'playing') {
-         const tPos = getHeartTarget(data.index);
-         outerGroupRef.current.position.lerp(new THREE.Vector3(tPos.x, tPos.y + Math.sin(state.clock.elapsedTime + data.index) * 2, tPos.z), d * 3);
-         
-         const worldRotY = carouselRef.current ? carouselRef.current.rotation.y : 0;
-         innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -worldRotY - data.angle, d * 3);
-         innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, 0, d * 3);
-         innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, 0, d * 3);
-         innerGroupRef.current.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), d * 3);
+        const tPos = getHeartTarget(data.index);
+        outerGroupRef.current.position.lerp(new THREE.Vector3(tPos.x, tPos.y + Math.sin(state.clock.elapsedTime + data.index) * 2, tPos.z), d * 3);
+
+        const worldRotY = carouselRef.current ? carouselRef.current.rotation.y : 0;
+        innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -worldRotY - data.angle, d * 3);
+        innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, 0, d * 3);
+        innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, 0, d * 3);
+        innerGroupRef.current.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), d * 3);
       } else {
-         const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
-         const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-         outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, baseFloat + bassFloat, data.z), d * 5);
-         
-         const targetScale = isHovered && !activeId ? 1.03 : 1.0;
-         const targetZ = isHovered && !activeId ? 2.0 : 0;
-         let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
-         let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
-         
-         if (isHovered && !activeId && carouselRef?.current) {
-           const worldRotY = carouselRef.current.rotation.y + data.angle;
-           let diff = -worldRotY;
-           while (diff > Math.PI) diff -= Math.PI * 2;
-           while (diff < -Math.PI) diff += Math.PI * 2;
-           targetRotY += diff;
-         }
-         
-         innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
-         innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
-         innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
-         innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
+        const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
+        const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
+        outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, baseFloat + bassFloat, data.z), d * 5);
+
+        const targetScale = isHovered && !activeId ? 1.03 : 1.0;
+        const targetZ = isHovered && !activeId ? 2.0 : 0;
+        let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
+        let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
+
+        if (isHovered && !activeId && carouselRef?.current) {
+          const worldRotY = carouselRef.current.rotation.y + data.angle;
+          let diff = -worldRotY;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          targetRotY += diff;
+        }
+
+        innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
+        innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
+        innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
+        innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
       }
-      
+
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
           setMaterialized(true);
@@ -1049,44 +1049,44 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
       <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} themeMode={themeMode} />
       <group ref={innerGroupRef}>
         <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
-          <div 
+          <div
             className={`html-panel ${isActive ? 'active' : ''} ${isDimmed ? 'dimmed' : ''} ${materialized ? 'materialized' : ''} ${isGlitching ? 'glitch-effect' : ''}`}
             style={data.width ? { width: data.width } : {}}
             onClick={handleClick}
             onMouseEnter={() => { window.isHoveringCard = true; setIsHovered(true); }}
-            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); setHoverPos({x: 0, y: 0}); }}
+            onMouseLeave={() => { window.isHoveringCard = false; setIsHovered(false); setHoverPos({ x: 0, y: 0 }); }}
             onMouseMove={handleMouseMove}
           >
-          <h2 className="panel-title">
-            <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
-            {data.title}
-          </h2>
-          <div className="panel-content-wrapper">
-            <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
-            
-            {data.id === 'music' && (
-              <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                 {themeMode === 'normal' ? (
-                   <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
-                     <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
-                   </button>
-                 ) : (
-                   <>
-                     {favSongStage === 'idle' && (
-                       <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
-                         <div className="hud-label" style={{ margin: 'auto', color: '#fff' }}>PLAY SONG</div>
-                       </button>
-                     )}
-                     <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
-                       <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
-                     </button>
-                   </>
-                 )}
-              </div>
-            )}
-            
+            <h2 className="panel-title">
+              <div dangerouslySetInnerHTML={{ __html: data.icon }} style={{ display: 'flex' }} />
+              {data.title}
+            </h2>
+            <div className="panel-content-wrapper">
+              <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+
+              {data.id === 'music' && (
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  {themeMode === 'normal' ? (
+                    <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
+                      <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
+                    </button>
+                  ) : (
+                    <>
+                      {favSongStage === 'idle' && (
+                        <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
+                          <div className="hud-label" style={{ margin: 'auto', color: '#fff' }}>PLAY SONG</div>
+                        </button>
+                      )}
+                      <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
+                        <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+            </div>
           </div>
-        </div>
         </Html>
       </group>
     </group>
@@ -1110,9 +1110,9 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
   const currentMousePos = useRef({ x: 0, y: 0 });
   const swapGlitch = useRef(0);
   const prevSection = useRef(activeSection);
-  
+
   const bassFovPunch = useRef(0);
-  
+
   useEffect(() => {
     if (playing && startTime.current === 0) {
       startTime.current = performance.now();
@@ -1133,12 +1133,12 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     if (activeSection && carouselRef.current) {
       const targetData = SECTIONS.find(s => s.id === activeSection);
       let current = carouselRef.current.rotation.y;
-      let target = targetData.angle; 
-      
+      let target = targetData.angle;
+
       let diff = (-target - current) % (Math.PI * 2);
       if (diff < -Math.PI) diff += Math.PI * 2;
       if (diff > Math.PI) diff -= Math.PI * 2;
-      
+
       targetRot.current = current + diff;
       pointerTracker.current.target = targetRot.current;
       pointerTracker.current.current = targetRot.current;
@@ -1161,12 +1161,12 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         }
       }
     };
-    
+
     const handleMouseMove = (e) => {
       mousePos.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mousePos.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
-    
+
     const handleWheel = (e) => {
       if (introSpinFinished.current && !activeSection) {
         pointerTracker.current.target += e.deltaY * 0.0015;
@@ -1189,31 +1189,31 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
     const bass = audioState.bass;
     const smoothBass = audioState.smoothBass;
     const beat = audioState.beatDetected;
-    
+
     // Smoothly track mouse
     currentMousePos.current.x = THREE.MathUtils.lerp(currentMousePos.current.x, mousePos.current.x, d * 3);
     currentMousePos.current.y = THREE.MathUtils.lerp(currentMousePos.current.y, mousePos.current.y, d * 3);
-    
+
     const parallaxX = currentMousePos.current.x * 3.5;
     const parallaxY = currentMousePos.current.y * 2.5;
-    
+
     // ── CAMERA SHAKE (only after intro finishes) ──
     if (introSpinFinished.current) {
       const shakeBase = smoothBass > 0.25 ? (smoothBass - 0.25) * 1.0 : 0;
       const shakeIntensity = shakeBase * (activeSection ? 0.1 : (window.isHoveringCard ? 0.05 : 0.3));
-      
+
       if (shakeIntensity > 0) {
         const st = time * 35;
         state.camera.position.x += Math.sin(st * 1.1) * shakeIntensity * 0.2;
         state.camera.position.y += Math.cos(st * 1.3) * shakeIntensity * 0.15;
-        
+
         if (beat) {
           state.camera.position.x += (Math.random() - 0.5) * audioState.beatEnergy * 0.5;
           state.camera.position.y += (Math.random() - 0.5) * audioState.beatEnergy * 0.3;
         }
       }
     }
-    
+
     // ── ASA TITLE — MULTI-LAYER CHROMATIC GLITCH ──
     if (!domRefs.current.textEl) {
       domRefs.current.textEl = document.getElementById('asa-bg-text');
@@ -1230,14 +1230,14 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       const floatX = Math.cos(time * 1.5) * 8;
       const bassScale = 1 + smoothBass * 0.35;
       const skewX = beat ? (Math.random() - 0.5) * bass * 30 : 0;
-      
+
       textEl.style.transform = `translate(${floatX}px, ${floatY}px) scale(${bassScale}) skewX(${skewX}deg)`;
-      
+
       // Multi-layer chromatic split
       const redLayer = domRefs.current.redLayer;
       const cyanLayer = domRefs.current.cyanLayer;
       const mainLayer = domRefs.current.mainLayer;
-      
+
       if (redLayer && cyanLayer && mainLayer) {
         if (beat) {
           const split = bass * 40;
@@ -1245,7 +1245,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           redLayer.style.opacity = String(0.5 + bass * 0.5);
           cyanLayer.style.transform = `translate(${-split}px, ${split * 0.4}px)`;
           cyanLayer.style.opacity = String(0.5 + bass * 0.5);
-          
+
           // Random clip-path glitch slices
           const y1 = Math.random() * 70;
           const h = 8 + Math.random() * 30;
@@ -1260,7 +1260,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           redLayer.style.clipPath = 'none';
           cyanLayer.style.clipPath = 'none';
         }
-        
+
         // Main layer: massive neon glow + strobe flash (static radii for performance)
         const coreAlpha = 0.4 + bass * 0.6;
         const outerAlpha = 0.15 + bass * 0.4;
@@ -1269,7 +1269,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         mainLayer.style.color = `rgba(255, 255, 255, ${0.03 + bass * 0.3})`;
       }
     }
-    
+
     // ── SCREEN FLASH ON HEAVY BEATS ──
     if (!domRefs.current.flashEl) domRefs.current.flashEl = document.getElementById('screen-flash');
     const flashEl = domRefs.current.flashEl;
@@ -1282,7 +1282,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         flashEl.style.opacity = '0';
       }
     }
-    
+
     // ── SCANLINE INTENSITY ──
     if (!domRefs.current.scanEl) domRefs.current.scanEl = document.querySelector('.screen-scanlines');
     const scanEl = domRefs.current.scanEl;
@@ -1298,20 +1298,20 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       const glowAlpha = 0.08 + smoothBass * 0.5;
       edgeEl.style.boxShadow = `inset 0 0 ${glowSize}px rgba(160, 32, 240, ${glowAlpha})`;
     }
-    
+
     // ── REACTIVE MUSIC BAR ──
     if (!domRefs.current.musicBar) domRefs.current.musicBar = document.getElementById('music-progress-bar');
     if (domRefs.current.musicBar) {
       domRefs.current.musicBar.style.width = `${Math.min(100, 5 + smoothBass * 60 + audioState.energyAccumulator * 15)}%`;
     }
-    
+
     // ══════════════════════════════════════
     // CAMERA NAVIGATION (preserved logic)
     // ══════════════════════════════════════
-    
+
     if (playing && !introFinished.current) {
       const elapsed = (performance.now() - startTime.current) / 1000;
-      
+
       if (elapsed < window.INTRO_DELAY_SEC) {
         const hoverY = 150 + Math.sin(time * 0.5) * 10;
         state.camera.position.lerp(new THREE.Vector3(0, hoverY, 100), 2 * d);
@@ -1319,78 +1319,78 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       } else if (elapsed < window.INTRO_DELAY_SEC + 2.5) {
         const progress = Math.min((elapsed - window.INTRO_DELAY_SEC) / 2.5, 1);
         const easeOut = 1 - Math.pow(1 - progress, 5);
-        
+
         const startPos = new THREE.Vector3(0, 150, 100);
         const targetPos = new THREE.Vector3(0, 0, 65);
-        
+
         state.camera.position.lerpVectors(startPos, targetPos, easeOut);
-        
+
         state.camera.position.x += Math.sin(progress * Math.PI * 2) * 25 * (1 - easeOut);
         state.camera.position.z += Math.cos(progress * Math.PI * 2) * 25 * (1 - easeOut);
-        
-        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1-easeOut), 0), 5 * d);
+
+        lookAtPos.current.lerp(new THREE.Vector3(0, -20 * (1 - easeOut), 0), 5 * d);
       } else {
         introFinished.current = true;
       }
     } else if (introFinished.current && !introSpinFinished.current && playing) {
       const elapsedSinceSpinStart = (performance.now() - window.introTime - (window.INTRO_DELAY_SEC * 1000 + 4000)) / 1000;
       if (elapsedSinceSpinStart > 0) {
-          if (elapsedSinceSpinStart < 2.0) {
-             const spinProgress = elapsedSinceSpinStart / 2.0;
-             const spinEase = 1 - Math.pow(1 - spinProgress, 4);
-             pointerTracker.current.target = randomIntroSpin.current * spinEase;
-          } else {
-             introSpinFinished.current = true;
-             pointerTracker.current.target = randomIntroSpin.current;
-          }
+        if (elapsedSinceSpinStart < 2.0) {
+          const spinProgress = elapsedSinceSpinStart / 2.0;
+          const spinEase = 1 - Math.pow(1 - spinProgress, 4);
+          pointerTracker.current.target = randomIntroSpin.current * spinEase;
+        } else {
+          introSpinFinished.current = true;
+          pointerTracker.current.target = randomIntroSpin.current;
+        }
       }
-      
+
       pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
       targetRot.current = pointerTracker.current.current;
       if (carouselRef.current) {
         carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
       }
-      
+
       const targetCamPos = new THREE.Vector3(0, 0, 65);
       state.camera.position.lerp(targetCamPos, 6 * d);
       lookAtPos.current.lerp(new THREE.Vector3(0, 0, 0), 6 * d);
 
     } else if (introFinished.current && introSpinFinished.current) {
-      
+
       // Lerp speed — slow on massive impacts for "freeze frame" feel
       let lerpSpeed = 6;
       if (beat && audioState.beatEnergy > 0.8 && !activeSection) {
         lerpSpeed = 2;
       }
-      
+
       if (activeSection) {
         // ZOOMED IN
         if (carouselRef.current) {
           carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * d);
         }
-        
+
         const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
         const cx = activeData?.camOffset?.[0] || 0;
         const cy = activeData?.camOffset?.[1] || -2;
         const cz = activeData?.camOffset?.[2] || 25;
-        
+
         const lx = activeData?.lookOffset?.[0] || 0;
         const ly = activeData?.lookOffset?.[1] || 0;
         const lz = activeData?.lookOffset?.[2] || 0;
-        
+
         const targetCamPos = new THREE.Vector3(cx, cy, R + cz);
         state.camera.position.lerp(targetCamPos, lerpSpeed * d);
         lookAtPos.current.lerp(new THREE.Vector3(lx, ly, R + lz), lerpSpeed * d);
-        
+
       } else {
         // OVERVIEW — micro-orbit
-        
+
         pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
         targetRot.current = pointerTracker.current.current;
         if (carouselRef.current) {
           carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
         }
-        
+
         // Micro-orbit: slow XY movement + bass modulation + mouse parallax
         const orbitAngle = time * 0.15;
         const orbitRadius = 2 + smoothBass * 4;
@@ -1403,15 +1403,15 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         lookAtPos.current.lerp(new THREE.Vector3(parallaxX * 0.5, parallaxY * 0.5, 0), lerpSpeed * d);
       }
     }
-    
+
     state.camera.lookAt(lookAtPos.current);
-    
+
     // ── POST-LOOKAT EFFECTS (applied after lookAt so they're not overridden) ──
     if (audioState.playing && introSpinFinished.current) {
       // FOV breathing — expands on bass, contracts between
       bassFovPunch.current = THREE.MathUtils.lerp(bassFovPunch.current, smoothBass, 8 * d);
       state.camera.fov = 60 + bassFovPunch.current * 14;
-      
+
       // Swap glitch warp
       if (swapGlitch.current > 0) {
         swapGlitch.current = Math.max(0, swapGlitch.current - d * 4.0);
@@ -1419,16 +1419,16 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         state.camera.fov += intensity * 35; // Dramatic FOV pull
         state.camera.rotateZ((Math.random() - 0.5) * intensity * 0.15); // Slight camera shake/roll
       }
-      
+
       state.camera.updateProjectionMatrix();
-      
+
       // Bass punch: push camera forward on beat
       if (beat && !activeSection && swapGlitch.current === 0) {
         state.camera.position.z -= audioState.beatEnergy * 3;
       }
-      
+
       state.camera.updateProjectionMatrix();
-      
+
       // Camera roll sway — subtle drunken float
       state.camera.rotation.z += Math.sin(time * 0.6) * smoothBass * 0.035;
     }
@@ -1465,13 +1465,13 @@ function App() {
   const [volume, setVolume] = useState(0.45);
   const [themeMode, setThemeMode] = useState('normal');
   const [favSongStage, setFavSongStage] = useState('idle');
-  
+
   const carouselRef = useRef();
 
   const handlePlayFavSong = (playImmediately = false) => {
     switchAudio('/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3', playImmediately);
   };
-  
+
   const handleRevert = () => {
     switchAudio('/music_and_me.mp3', true);
   };
@@ -1480,7 +1480,7 @@ function App() {
     initAudio();
     playAudio();
     setStarted(true);
-    
+
     // Show ASA title shortly after start
     setTimeout(() => {
       setIntroTextVisible(true);
@@ -1514,7 +1514,7 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#000' }}>
-      
+
       <div className={`splash-screen ${started ? 'hidden' : ''}`} onClick={handleStart}>
         <img src="/icon.png" alt="ASA" className="splash-avatar" />
         <div className="enter-text">INITIALIZE EXPERIENCE</div>
@@ -1536,10 +1536,10 @@ function App() {
 
       {/* ── Screen Flash Overlay ── */}
       {started && <div id="screen-flash" className="screen-flash"></div>}
-      
+
       {/* ── Scanline Overlay ── */}
       {started && <div className="screen-scanlines"></div>}
-      
+
       {/* ── Edge Glow ── */}
       {started && <div className="screen-edge-glow"></div>}
 
@@ -1559,12 +1559,12 @@ function App() {
           <button className="mute-btn" onClick={handleMute}>
             {isMuted ? '[ UNMUTE ]' : '[ MUTE ]'}
           </button>
-          <input 
-            type="range" 
+          <input
+            type="range"
             className="volume-slider"
-            min="0" max="1" step="0.01" 
-            value={volume} 
-            onChange={handleVolumeChange} 
+            min="0" max="1" step="0.01"
+            value={volume}
+            onChange={handleVolumeChange}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
           />
@@ -1581,16 +1581,16 @@ function App() {
       >
         <color attach="background" args={['#020202']} />
         <fogExp2 attach="fog" args={['#020202', 0.015]} />
-        
+
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
         <directionalLight position={[0, -10, -5]} intensity={1} color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} />
-        
+
         <AudioDriver />
         <ReactiveFog />
-        
+
         <IntroParticles playing={started} />
-        
+
         <Suspense fallback={null}>
           <AmbientParticles themeMode={themeMode} />
           <VoidShapes themeMode={themeMode} />
@@ -1604,11 +1604,11 @@ function App() {
 
           <group ref={carouselRef}>
             {SECTIONS.map(s => (
-              <FloatingPanel 
-                key={s.id} 
-                data={s} 
-                activeId={activeSection} 
-                onClick={setActiveSection} 
+              <FloatingPanel
+                key={s.id}
+                data={s}
+                activeId={activeSection}
+                onClick={setActiveSection}
                 playing={started}
                 carouselRef={carouselRef}
                 themeMode={themeMode}
@@ -1630,8 +1630,8 @@ function App() {
             ))}
           </group>
 
-          <SceneController 
-            activeSection={activeSection} 
+          <SceneController
+            activeSection={activeSection}
             setActiveSection={setActiveSection}
             playing={started}
             carouselRef={carouselRef}
