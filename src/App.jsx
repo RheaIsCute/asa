@@ -830,18 +830,7 @@ const SECTIONS_DATA = [
     icon: ICONS.music,
     camOffset: [0, -5, 20],
     lookOffset: [0, 0, 0],
-    content: `
-      <div class="hud-grid">
-        <div class="hud-block full" style="padding: 24px;">
-          <div class="hud-label">NOW PLAYING</div>
-          <div class="hud-value" style="font-size: 1.4rem; margin-top: 8px;">Music and me</div>
-          <div class="hud-value small" style="margin-top:8px; color: rgba(255,255,255,0.6);">by Fakemink</div>
-          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 24px; position: relative; overflow: hidden;">
-            <div id="music-progress-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent);"></div>
-          </div>
-        </div>
-      </div>
-    `
+    content: ``
   },
   {
     id: 'archive',
@@ -1074,26 +1063,45 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
               {data.title}
             </h2>
             <div className="panel-content-wrapper">
-              <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+              {data.id !== 'music' && (
+                <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+              )}
 
               {data.id === 'music' && (
-                <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                  {themeMode === 'normal' ? (
-                    <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
-                      <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
-                    </div>
-                  ) : (
-                    <>
-                      {favSongStage === 'idle' && (
-                        <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
-                          <div className="hud-label" style={{ margin: 'auto' }}>PLAY SONG</div>
-                        </div>
-                      )}
-                      <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
-                        <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
+                <div className="panel-content">
+                  <div className="hud-grid">
+                    <div className="hud-block full" style={{ padding: '24px' }}>
+                      <div className="hud-label">NOW PLAYING</div>
+                      <div className="hud-value" style={{ fontSize: '1.4rem', marginTop: '8px' }}>
+                        {themeMode === 'favSong' && favSongStage === 'playing' ? 'Addict' : 'Music and me'}
                       </div>
-                    </>
-                  )}
+                      <div className="hud-value small" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.6)' }}>
+                        {themeMode === 'favSong' && favSongStage === 'playing' ? 'by PiNKII x DAEGHO' : 'by Fakemink'}
+                      </div>
+                      <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '24px', position: 'relative', overflow: 'hidden' }}>
+                        <div id="music-progress-bar" style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '0%', background: 'var(--accent)', borderRadius: '2px', boxShadow: '0 0 10px var(--accent)' }}></div>
+                      </div>
+
+                      <div style={{ marginTop: '24px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                        {themeMode === 'normal' ? (
+                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
+                            <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
+                          </div>
+                        ) : (
+                          <>
+                            {favSongStage === 'idle' && (
+                              <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
+                                <div className="hud-label" style={{ margin: 'auto' }}>PLAY SONG</div>
+                              </div>
+                            )}
+                            <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
+                              <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
