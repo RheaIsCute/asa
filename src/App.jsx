@@ -68,6 +68,7 @@ const switchAudio = (src, playImmediately = false) => {
   const wasPlaying = audioState.playing;
   audioRef.pause();
   audioRef.src = src;
+  audioRef.currentTime = 0;
   audioRef.load();
   if (wasPlaying || playImmediately) {
     audioRef.play().catch(console.error);
@@ -164,7 +165,7 @@ const AudioDriver = () => {
 // 3D SCENE COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
-const LYRICS = [
+const NORMAL_LYRICS = [
   // [Intro]
   { start: 0.50, end: 4.80, text: "(Ok is the hardest, I swear to God)" },
   { start: 4.90, end: 7.40, text: "(We gon' be okay)" },
@@ -214,8 +215,14 @@ const LYRICS = [
   { start: 123.60, end: 127.00, text: "Would you ever—, uh" }
 ];
 
+const FAV_SONG_LYRICS = [
+  // Placeholder lyrics for Addict (PiNKII x DAEGHO)
+  { start: 0.00, end: 5.00, text: "(Addict - Intro)" },
+  { start: 10.00, end: 15.00, text: "Wait for real lyrics..." }
+];
+
 // ── Lyrics Overlay (HTML — EXACT chromatic glitch effect matching ASA title) ──
-const LyricsOverlay = ({ started }) => {
+const LyricsOverlay = ({ started, themeMode }) => {
   const [currentLyric, setCurrentLyric] = useState("");
   const textRef = useRef();
 
@@ -225,7 +232,8 @@ const LyricsOverlay = ({ started }) => {
     const tick = () => {
       if (audioRef && audioState.playing) {
         const t = audioRef.currentTime;
-        const active = LYRICS.find(l => t >= l.start && t <= l.end);
+        const activeArray = themeMode === 'favSong' ? FAV_SONG_LYRICS : NORMAL_LYRICS;
+        const active = activeArray.find(l => t >= l.start && t <= l.end);
         setCurrentLyric(active ? active.text : "");
 
         // Drive exact same effect as SceneController
@@ -295,7 +303,7 @@ const LyricsOverlay = ({ started }) => {
 };
 
 // ── Intro Particles (3D — no Text component, just particles) ──
-const IntroParticles = ({ playing }) => {
+const IntroParticles = ({ playing, themeMode }) => {
   const groupRef = useRef();
   const meshRef = useRef();
   const particlesCount = 100;
@@ -341,7 +349,7 @@ const IntroParticles = ({ playing }) => {
     <group ref={groupRef} position={[0, 0, 0]}>
       <instancedMesh ref={meshRef} args={[null, null, particlesCount]}>
         <sphereGeometry args={[0.25, 6, 6]} />
-        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
   );
@@ -596,7 +604,7 @@ const AmbientParticles = ({ themeMode }) => {
 };
 
 // ── Bass Shockwave Rings ──
-const BassShockwaves = () => {
+const BassShockwaves = ({ themeMode }) => {
   const MAX_RINGS = 6;
   const ringsRef = useRef([]);
   const ringState = useRef(Array.from({ length: MAX_RINGS }, () => ({
@@ -637,7 +645,7 @@ const BassShockwaves = () => {
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
           } else {
-            mesh.material.color.setHex(0xa020f0);
+            mesh.material.color.setHex(themeMode === 'favSong' ? 0xff69b4 : 0xa020f0);
           }
         }
       } else {
@@ -651,7 +659,7 @@ const BassShockwaves = () => {
       {Array.from({ length: MAX_RINGS }, (_, i) => (
         <mesh key={i} ref={el => ringsRef.current[i] = el} visible={false}>
           <ringGeometry args={[0.85, 1, 64]} />
-          <meshBasicMaterial color="#a020f0" transparent opacity={0} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
       ))}
     </group>
@@ -692,7 +700,7 @@ const RomanticSparkles = ({ themeMode }) => {
 };
 
 // ── Audio Visualizer Ring ──
-const AudioVisualizerRing = () => {
+const AudioVisualizerRing = ({ themeMode }) => {
   const meshRef = useRef();
   const barCount = 64;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -723,20 +731,24 @@ const AudioVisualizerRing = () => {
   return (
     <instancedMesh ref={meshRef} args={[null, null, barCount]}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color="#a020f0" transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
     </instancedMesh>
   );
 };
 
 // ── Reactive Floor Grid ──
-const ReactiveFloor = () => {
+const ReactiveFloor = ({ themeMode }) => {
   const meshRef = useRef();
 
   useFrame(() => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
       meshRef.current.material.opacity = 0.1 + b * 0.35;
-      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      if (themeMode === 'favSong') {
+        meshRef.current.material.color.setRGB(b * 0.9 + 0.1, 0.05 + b * 0.2, 0.3 + b * 0.4);
+      } else {
+        meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
+      }
     }
   });
 
@@ -1486,6 +1498,16 @@ function App() {
   const [themeMode, setThemeMode] = useState('normal');
   const [favSongStage, setFavSongStage] = useState('idle');
 
+  useEffect(() => {
+    if (themeMode === 'favSong') {
+      document.body.classList.add('theme-favsong');
+      document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23ff69b4" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto`;
+    } else {
+      document.body.classList.remove('theme-favsong');
+      document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23a020f0" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto`;
+    }
+  }, [themeMode]);
+
   const carouselRef = useRef();
 
   const handlePlayFavSong = (playImmediately = false) => {
@@ -1609,7 +1631,7 @@ function App() {
         <AudioDriver />
         <ReactiveFog />
 
-        <IntroParticles playing={started} />
+        <IntroParticles playing={started} themeMode={themeMode} />
 
         <Suspense fallback={null}>
           <AmbientParticles themeMode={themeMode} />
@@ -1617,10 +1639,10 @@ function App() {
           <HeartShapes themeMode={themeMode} />
           <FloatingHearts themeMode={themeMode} />
           <RomanticSparkles themeMode={themeMode} />
-          <HorizonTrees />
-          <BassShockwaves />
-          <AudioVisualizerRing />
-          <ReactiveFloor />
+          <HorizonTrees themeMode={themeMode} />
+          <BassShockwaves themeMode={themeMode} />
+          <AudioVisualizerRing themeMode={themeMode} />
+          <ReactiveFloor themeMode={themeMode} />
 
           <group ref={carouselRef}>
             {SECTIONS.map(s => (
