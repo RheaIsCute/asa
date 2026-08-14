@@ -1147,12 +1147,10 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
   const isDimmed = activeId && !isActive && favSongStage !== 'playing';
 
   const handleClick = () => {
-    if (data.isFavCard) {
-      if (favSongStage === 'playing') {
-        setIsGlitching(true);
-        setTimeout(() => setIsGlitching(false), 300);
-        if (onFavCardClick) onFavCardClick(data);
-      }
+    if (favSongStage === 'playing') {
+      setIsGlitching(true);
+      setTimeout(() => setIsGlitching(false), 300);
+      if (onFavCardClick) onFavCardClick(data);
       return;
     }
 
