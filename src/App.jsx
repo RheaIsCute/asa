@@ -1244,7 +1244,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
 // SCENE CONTROLLER — Camera + DOM Effects
 // ═══════════════════════════════════════════════════════════
 
-const SceneController = ({ activeSection, setActiveSection, playing, carouselRef }) => {
+const SceneController = ({ activeSection, setActiveSection, playing, carouselRef, favSongStage, sections }) => {
   const domRefs = useRef({});
   const lookAtPos = useRef(new THREE.Vector3(0, 0, 0));
   const introFinished = useRef(false);
@@ -1278,7 +1278,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
 
   useEffect(() => {
     if (activeSection && carouselRef.current) {
-      const targetData = SECTIONS.find(s => s.id === activeSection);
+      const targetData = sections.find(s => s.id === activeSection);
       let current = carouselRef.current.rotation.y;
       let target = targetData.angle;
 
@@ -1298,11 +1298,11 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
         e.preventDefault();
         if (introSpinFinished.current) {
           if (activeSection && setActiveSection) {
-            const currentIndex = SECTIONS.findIndex(s => s.id === activeSection);
-            const nextIndex = (currentIndex + 1) % SECTIONS.length;
-            setActiveSection(SECTIONS[nextIndex].id);
+            const currentIndex = sections.findIndex(s => s.id === activeSection);
+            const nextIndex = (currentIndex + 1) % sections.length;
+            setActiveSection(sections[nextIndex].id);
           } else {
-            const cardSpacing = (Math.PI * 2) / SECTIONS.length;
+            const cardSpacing = (Math.PI * 2) / sections.length;
             pointerTracker.current.target -= cardSpacing;
           }
         }
@@ -1823,6 +1823,7 @@ function App() {
             playing={started}
             carouselRef={carouselRef}
             favSongStage={favSongStage}
+            sections={activeSections}
           />
           <Effects />
         </Suspense>
