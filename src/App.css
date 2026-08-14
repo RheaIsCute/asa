@@ -3,7 +3,7 @@
 :root {
   --primary: #ffffff;
   --accent: #a020f0;
-  --accent-rgb: var(--accent-rgb);
+  --accent-rgb: 160, 32, 240;
   --bg-color: #050505;
   --text-main: #ffffff;
   --text-muted: #888888;
@@ -644,13 +644,16 @@ body {
 .hud-block.social-link {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
+  cursor: pointer;
 }
 
-.html-panel.active .hud-block.social-link {
+.html-panel.active .hud-block.social-link,
+.fav-modal-content .hud-block.social-link {
   pointer-events: auto;
 }
 
-.html-panel.active .hud-block.social-link:hover { 
+.html-panel.active .hud-block.social-link:hover,
+.fav-modal-content .hud-block.social-link:hover { 
   background: rgba(var(--accent-rgb), 0.12); 
   border-color: rgba(var(--accent-rgb), 0.5); 
   transform: translateY(-3px);
@@ -805,13 +808,24 @@ body {
   filter: drop-shadow(0 0 8px #ff69b4);
 }
 
-.fav-modal-content svg {
-  stroke: #ff69b4;
+.fav-modal-content .hud-icon svg,
+.fav-modal-content .panel-title svg,
+.fav-modal-content .social-icon-instagram svg {
+  stroke: var(--accent);
   fill: none;
 }
 
-body.theme-favsong svg {
-  stroke: #ff69b4;
+.fav-modal-content .social-icon-discord svg,
+.social-icon-discord svg,
+.discord-svg {
+  fill: var(--accent) !important;
+  stroke: none !important;
+}
+
+body.theme-favsong .social-icon-discord svg,
+body.theme-favsong .discord-svg {
+  fill: #ff69b4 !important;
+  stroke: none !important;
 }
 
 body.theme-favsong .panel-title svg,
