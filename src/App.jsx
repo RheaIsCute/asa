@@ -303,6 +303,11 @@ const FAV_SONG_LYRICS = [
 const LyricsOverlay = ({ started, themeMode }) => {
   const [currentLyric, setCurrentLyric] = useState("");
   const textRef = useRef();
+  const themeModeRef = useRef(themeMode);
+
+  useEffect(() => {
+    themeModeRef.current = themeMode;
+  }, [themeMode]);
 
   useEffect(() => {
     if (!started) return;
@@ -310,7 +315,8 @@ const LyricsOverlay = ({ started, themeMode }) => {
     const tick = () => {
       if (audioRef && audioState.playing) {
         const t = audioRef.currentTime;
-        const activeArray = themeMode === 'favSong' ? FAV_SONG_LYRICS : NORMAL_LYRICS;
+        const isFav = (themeModeRef.current === 'favSong') || (audioRef.src && audioRef.src.toLowerCase().includes('addict'));
+        const activeArray = isFav ? FAV_SONG_LYRICS : NORMAL_LYRICS;
         const active = activeArray.find(l => t >= l.start && t <= l.end);
         setCurrentLyric(active ? active.text : "");
 
@@ -356,7 +362,7 @@ const LyricsOverlay = ({ started, themeMode }) => {
             // Use constant blur radii to avoid expensive GPU shadow recalculations every frame
             const coreAlpha = 0.4 + bass * 0.5;
             const outerAlpha = 0.1 + bass * 0.3;
-            mainLayer.style.textShadow = `0 0 30px rgba(160, 32, 240, ${coreAlpha}), 0 0 80px rgba(160, 32, 240, ${outerAlpha})`;
+            mainLayer.style.textShadow = `0 0 30px rgba(var(--accent-rgb), ${coreAlpha}), 0 0 80px rgba(var(--accent-rgb), ${outerAlpha})`;
             mainLayer.style.color = `rgba(255, 255, 255, ${0.05 + bass * 0.2})`;
           }
         }
@@ -1734,11 +1740,10 @@ function App() {
                 themeMode={themeMode}
                 favSongStage={favSongStage}
                 onPlayFavSong={(play = false) => {
+                  setThemeMode('favSong');
                   if (play) {
                     setFavSongStage('playing');
                     handlePlayFavSong(true);
-                  } else {
-                    setThemeMode('favSong');
                   }
                 }}
                 onRevert={() => {
