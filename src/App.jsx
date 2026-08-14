@@ -444,23 +444,27 @@ const IntroParticles = ({ playing, themeMode }) => {
   );
 };
 
+// Clean, symmetric heart outline (proper rounded lobes + a real point at the tip).
+// Drawn in shape-space; every instance below applies rot.x = PI to stand it upright,
+// so "up" here ends up as "down" on screen — see the notes on each point.
+const createHeartShape = () => {
+  const shape = new THREE.Shape();
+  shape.moveTo(-2.659, -5.183);                                         // left lobe peak
+  shape.bezierCurveTo(-4.301, -5.183, -5.6, -3.86, -5.6, -2.242);        // -> left shoulder (widest point)
+  shape.bezierCurveTo(-5.6, 1.066, -2.267, 1.924, -0.012, 5.183);        // -> tip (screen-bottom point)
+  shape.bezierCurveTo(2.144, 1.948, 5.6, 0.944, 5.6, -2.242);            // -> right shoulder
+  shape.bezierCurveTo(5.6, -3.86, 4.277, -5.183, 2.659, -5.183);         // -> right lobe peak
+  shape.bezierCurveTo(1.483, -5.183, 0.453, -4.497, -0.012, -3.492);     // -> cleft (screen-top notch)
+  shape.bezierCurveTo(-0.478, -4.497, -1.483, -5.183, -2.659, -5.183);   // back to left lobe peak
+  return shape;
+};
+
 const HeartShapes = ({ themeMode }) => {
   const group = useRef();
   const count = 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  const heartShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const x = -2.5, y = -5;
-    shape.moveTo(x + 2.5, y + 2.5);
-    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
-    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
-    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
-    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
-    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
-    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-    return shape;
-  }, []);
+  const heartShape = useMemo(() => createHeartShape(), []);
 
   const shapesData = useMemo(() => {
     const data = [];
@@ -506,18 +510,7 @@ const FloatingHearts = ({ themeMode }) => {
   const count = 25;
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  const heartShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const x = -2.5, y = -5;
-    shape.moveTo(x + 2.5, y + 2.5);
-    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
-    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
-    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
-    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
-    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
-    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-    return shape;
-  }, []);
+  const heartShape = useMemo(() => createHeartShape(), []);
 
   const shapesData = useMemo(() => {
     const data = [];
