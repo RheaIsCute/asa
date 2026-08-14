@@ -1067,19 +1067,19 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
               {data.id === 'music' && (
                 <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
                   {themeMode === 'normal' ? (
-                    <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
+                    <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
                       <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
-                    </button>
+                    </div>
                   ) : (
                     <>
                       {favSongStage === 'idle' && (
-                        <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
-                          <div className="hud-label" style={{ margin: 'auto', color: '#fff' }}>PLAY SONG</div>
-                        </button>
+                        <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
+                          <div className="hud-label" style={{ margin: 'auto' }}>PLAY SONG</div>
+                        </div>
                       )}
-                      <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
+                      <div className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
                         <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
-                      </button>
+                      </div>
                     </>
                   )}
                 </div>
