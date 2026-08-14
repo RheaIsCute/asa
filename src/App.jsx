@@ -981,7 +981,7 @@ const FAV_SONG_CARDS_DATA = [
     content: `<div class="hud-block full" style="padding: 20px;"><div style="color: #ff69b4; font-size: 1rem; line-height: 1.8;">Everything. Your smile, your eyes, the way you say my name, how safe you make me feel. I'm addicted to you.</div></div>`
   },
   {
-    id: 'fav-4', title: 'ABOUT ME', icon: ICONS.identity, width: '400px',
+    id: 'fav-4', title: 'CONFESSION', icon: ICONS.identity, width: '400px',
     isFavCard: true,
     content: `<div class="hud-block full" style="padding: 20px; text-align: center;"><div class="hud-label">STATUS</div><div class="hud-value" style="color: #ff69b4; font-size: 1.5rem; margin-top: 10px;">Completely Yours</div></div>`
   },
@@ -1156,7 +1156,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
       return;
     }
 
-    if (!isActive && favSongStage !== 'playing') {
+    if (!isActive) {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
       onClick(data.id);
@@ -1509,7 +1509,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
           carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 8 * d);
         }
 
-        const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
+        const activeData = sections.find(s => s.id === activeSection);
         const cx = activeData?.camOffset?.[0] || 0;
         const cy = activeData?.camOffset?.[1] || -2;
         const cz = activeData?.camOffset?.[2] || 25;
