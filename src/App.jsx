@@ -167,8 +167,8 @@ const AudioDriver = () => {
 
 const NORMAL_LYRICS = [
   // [Intro]
-  { start: 0.50, end: 4.80, text: "(Ok is the hardest, I swear to God)" },
-  { start: 4.90, end: 7.40, text: "(We gon' be okay)" },
+  { start: 0.50, end: 4.80, text: "Ok is the hardest, I swear to God" },
+  { start: 4.90, end: 7.40, text: "We gon' be okay" },
   // [Chorus]
   { start: 9.10, end: 12.90, text: "I'm like, \"Where you at? Can't see you, I need you now\"" },
   { start: 13.00, end: 15.00, text: "You do it so right, dare to teach me how" },
@@ -318,8 +318,8 @@ const LyricsOverlay = ({ started, themeMode }) => {
     let raf;
     const tick = () => {
       if (audioRef && audioState.playing) {
-        const t = audioRef.currentTime;
         const isFav = (themeModeRef.current === 'favSong') || (audioRef.src && audioRef.src.toLowerCase().includes('addict'));
+        const t = audioRef.currentTime + (isFav ? 0.243 : 0);
         const activeArray = isFav ? FAV_SONG_LYRICS : NORMAL_LYRICS;
         const active = activeArray.find(l => t >= l.start && t <= l.end);
         setCurrentLyric(active ? active.text : "");
@@ -1316,7 +1316,7 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [activeSection, setActiveSection]);
+  }, [activeSection, setActiveSection, sections]);
 
   useFrame((state, delta) => {
     const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
