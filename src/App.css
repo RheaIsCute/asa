@@ -794,6 +794,33 @@ body {
   text-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
 }
 
+.fav-modal-title svg {
+  width: 32px;
+  height: 32px;
+  stroke: #ff69b4;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px #ff69b4);
+}
+
+.fav-modal-content svg {
+  stroke: #ff69b4;
+  fill: none;
+}
+
+body.theme-favsong svg {
+  stroke: #ff69b4;
+}
+
+body.theme-favsong .panel-title svg,
+body.theme-favsong .hud-icon svg {
+  stroke: #ff69b4;
+  fill: none;
+  filter: drop-shadow(0 0 6px #ff69b4);
+}
+
 @keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

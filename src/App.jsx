@@ -902,8 +902,8 @@ const SECTIONS_DATA = [
     camOffset: [6, -2, 24],
     lookOffset: [0, 0, 0],
     content: `
-      <div style="display: flex; flex-direction: column; height: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(160, 32, 240, 0.15);">
-        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block social-link" style="flex: 1; border: none; border-radius: 0; border-bottom: 1px solid rgba(160, 32, 240, 0.15); flex-direction:column; justify-content:center; align-items:center; gap: 8px; text-decoration: none;">
+      <div style="display: flex; flex-direction: column; height: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(var(--accent-rgb), 0.15);">
+        <a href="https://www.instagram.com/hataeruu/" target="_blank" class="hud-block social-link" style="flex: 1; border: none; border-radius: 0; border-bottom: 1px solid rgba(var(--accent-rgb), 0.15); flex-direction:column; justify-content:center; align-items:center; gap: 8px; text-decoration: none;">
            <div style="width: 64px; height: 64px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; pointer-events: none;">
              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
            </div>
@@ -1725,7 +1725,71 @@ function App() {
               <div dangerouslySetInnerHTML={{ __html: favModalData.icon }} style={{ display: 'flex', width: '32px', height: '32px' }} />
               {favModalData.title}
             </h2>
-            <div dangerouslySetInnerHTML={{ __html: favModalData.content }} />
+            {favModalData.id === 'music' ? (
+              <div className="hud-block full" style={{ padding: '24px', textAlign: 'center' }}>
+                <div className="hud-label">NOW PLAYING</div>
+                <div className="hud-value" style={{ fontSize: '1.5rem', marginTop: '8px', color: '#ff69b4' }}>
+                  {favSongStage === 'playing' ? 'Addict' : 'Music and me'}
+                </div>
+                <div className="hud-value small" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.6)' }}>
+                  {favSongStage === 'playing' ? 'by PiNKII x DAEGHO' : 'by Fakemink'}
+                </div>
+                <div style={{ marginTop: '24px' }}>
+                  {favSongStage === 'playing' ? (
+                    <button
+                      className="hud-block hoverable"
+                      style={{
+                        cursor: 'pointer',
+                        width: '100%',
+                        padding: '14px',
+                        background: 'rgba(255, 20, 147, 0.25)',
+                        border: '1px solid #ff69b4',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.1em'
+                      }}
+                      onClick={() => {
+                        setFavModalData(null);
+                        setThemeMode('normal');
+                        setFavSongStage('idle');
+                        handleRevert();
+                      }}
+                    >
+                      [ REVERT TO NORMAL MODE ]
+                    </button>
+                  ) : (
+                    <button
+                      className="hud-block hoverable"
+                      style={{
+                        cursor: 'pointer',
+                        width: '100%',
+                        padding: '14px',
+                        background: 'rgba(255, 20, 147, 0.25)',
+                        border: '1px solid #ff69b4',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.1em'
+                      }}
+                      onClick={() => {
+                        setFavModalData(null);
+                        setThemeMode('favSong');
+                        setFavSongStage('playing');
+                        handlePlayFavSong(true);
+                        setActiveSection(null);
+                      }}
+                    >
+                      [ PLAY FAV SONG ]
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: favModalData.content }} />
+            )}
           </div>
         </div>
       )}
