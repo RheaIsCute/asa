@@ -63,6 +63,18 @@ const playAudio = () => {
   }
 };
 
+const switchAudio = (src, playImmediately = false) => {
+  if (!audioRef) return;
+  const wasPlaying = audioState.playing;
+  audioRef.pause();
+  audioRef.src = src;
+  audioRef.load();
+  if (wasPlaying || playImmediately) {
+    audioRef.play().catch(console.error);
+    audioState.playing = true;
+  }
+};
+
 const toggleMute = () => {
   if (audioRef) {
     audioRef.muted = !audioRef.muted;
