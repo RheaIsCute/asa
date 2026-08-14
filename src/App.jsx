@@ -1210,21 +1210,14 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
                       </div>
 
                       <div style={{ marginTop: '24px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                        {themeMode === 'normal' ? (
-                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
-                            <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
+                        {favSongStage !== 'playing' ? (
+                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
+                            <div className="hud-label" style={{ margin: 'auto' }}>PLAY FAV SONG</div>
                           </div>
                         ) : (
-                          <>
-                            {favSongStage === 'idle' && (
-                              <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
-                                <div className="hud-label" style={{ margin: 'auto' }}>PLAY SONG</div>
-                              </div>
-                            )}
-                            <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
-                              <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
-                            </div>
-                          </>
+                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
+                            <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1532,14 +1525,21 @@ const SceneController = ({ activeSection, setActiveSection, playing, carouselRef
       } else {
         // OVERVIEW — micro-orbit
 
-        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
-        targetRot.current = pointerTracker.current.current;
+        if (favSongStage === 'playing') {
+          pointerTracker.current.target = 0;
+          pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, 0, 8 * d);
+          targetRot.current = pointerTracker.current.current;
+        } else {
+          pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
+          targetRot.current = pointerTracker.current.current;
+        }
+
         if (carouselRef.current) {
           carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
         }
 
         // Micro-orbit: slow XY movement + bass modulation + mouse parallax
-        const orbitAngle = time * 0.15;
+        const orbitAngle = favSongStage === 'playing' ? 0 : time * 0.15;
         const orbitRadius = 2 + smoothBass * 4;
         const targetCamPos = new THREE.Vector3(
           Math.sin(orbitAngle) * orbitRadius + parallaxX,
@@ -1804,6 +1804,7 @@ function App() {
                   if (play) {
                     setFavSongStage('playing');
                     handlePlayFavSong(true);
+                    setActiveSection(null);
                   }
                 }}
                 onRevert={() => {
