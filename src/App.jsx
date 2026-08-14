@@ -335,7 +335,7 @@ const IntroParticles = ({ playing }) => {
   );
 };
 
-const HeartShapes = () => {
+const HeartShapes = ({ themeMode }) => {
   const group = useRef();
   const count = 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -382,10 +382,70 @@ const HeartShapes = () => {
     }
   });
 
+  const color = themeMode === 'favSong' ? '#ff1493' : '#a020f0';
+
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
+      <meshBasicMaterial color={color} transparent opacity={0.3} wireframe />
+    </instancedMesh>
+  );
+};
+
+const FloatingHearts = ({ themeMode }) => {
+  const group = useRef();
+  const count = 25;
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  
+  const heartShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const x = -2.5, y = -5;
+    shape.moveTo(x + 2.5, y + 2.5);
+    shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    shape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    shape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    shape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    shape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+    return shape;
+  }, []);
+
+  const shapesData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < count; i++) {
+      data.push({
+        pos: [(Math.random() - 0.5) * 120, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 120],
+        rot: [Math.PI, 0, 0],
+        speedY: Math.random() * 0.8 + 0.3,
+        scale: Math.random() * 0.08 + 0.03,
+      });
+    }
+    return data;
+  }, [count]);
+
+  useFrame((state, delta) => {
+    if (group.current && themeMode === 'favSong') {
+      shapesData.forEach((shape, i) => {
+        shape.pos[1] += shape.speedY * delta * 15;
+        if (shape.pos[1] > 100) shape.pos[1] = -40;
+        shape.rot[1] = Math.sin(state.clock.elapsedTime * 2 + i) * 0.3;
+        dummy.position.set(...shape.pos);
+        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
+        const s = shape.scale * (1 + audioState.smoothBass * 0.3);
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
+        group.current.setMatrixAt(i, dummy.matrix);
+      });
+      group.current.instanceMatrix.needsUpdate = true;
+    }
+  });
+
+  if (themeMode !== 'favSong') return null;
+
+  return (
+    <instancedMesh ref={group} args={[null, null, count]}>
+      <extrudeGeometry args={[heartShape, { depth: 0.2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.1, bevelThickness: 0.1 }]} />
+      <meshBasicMaterial color="#ff69b4" transparent opacity={0.5} blending={THREE.AdditiveBlending} />
     </instancedMesh>
   );
 };
@@ -422,7 +482,7 @@ const HorizonTrees = () => {
   );
 };
 
-const VoidShapes = () => {
+const VoidShapes = ({ themeMode }) => {
   const group = useRef();
   const count = 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -467,15 +527,17 @@ const VoidShapes = () => {
     }
   });
 
+  const color = themeMode === 'favSong' ? '#ff69b4' : '#a020f0';
+
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
+      <meshBasicMaterial color={color} wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
 };
 
-const AmbientParticles = () => {
+const AmbientParticles = ({ themeMode }) => {
   const count = 150;
   const mesh = useRef();
   const matRef = useRef();
@@ -502,7 +564,11 @@ const AmbientParticles = () => {
         
         // Color shift on heavy bass
         const b = audioState.smoothBass;
-        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        if (themeMode === 'favSong') {
+          matRef.current.color.setRGB(1.0, 0.4 + b * 0.6, 0.7 + b * 0.3); 
+        } else {
+          matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
+        }
       }
     }
   });
@@ -577,6 +643,39 @@ const BassShockwaves = () => {
         </mesh>
       ))}
     </group>
+  );
+};
+
+const RomanticSparkles = ({ themeMode }) => {
+  const count = 300;
+  const mesh = useRef();
+  
+  const particles = useMemo(() => {
+    const temp = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      temp[i * 3] = (Math.random() - 0.5) * 150;
+      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20;
+      temp[i * 3 + 2] = (Math.random() - 0.5) * 150;
+    }
+    return temp;
+  }, [count]);
+  
+  useFrame((state, delta) => {
+    if (mesh.current && themeMode === 'favSong') {
+      mesh.current.rotation.y += delta * 0.15;
+      mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 2;
+    }
+  });
+
+  if (themeMode !== 'favSong') return null;
+
+  return (
+    <points ref={mesh}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.6} color="#fff" transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
+    </points>
   );
 };
 
@@ -862,7 +961,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   );
 };
 
-const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
+const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
   const [materialized, setMaterialized] = useState(false);
@@ -870,34 +969,52 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   const [isGlitching, setIsGlitching] = useState(false);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
   
+  const getHeartTarget = (index) => {
+    const map = [
+      { x: 0, y: -15, z: 15 },    
+      { x: -20, y: 5, z: 10 },    
+      { x: -10, y: 20, z: 5 },    
+      { x: 10, y: 20, z: 5 },     
+      { x: 20, y: 5, z: 10 },     
+    ];
+    return map[index % 5];
+  };
+
   useFrame((state, delta) => {
-    const d = Math.min(delta, 0.1); // Clamp delta to prevent lerp explosions on frame drops
+    const d = Math.min(delta, 0.1); 
     if (outerGroupRef.current && innerGroupRef.current) {
-      const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
-      const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-      outerGroupRef.current.position.y = baseFloat + bassFloat;
-      
-      const targetScale = isHovered && !activeId ? 1.03 : 1.0;
-      const targetZ = isHovered && !activeId ? 2.0 : 0;
-      let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
-      let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
-      
-      if (isHovered && !activeId && carouselRef?.current) {
-        // Counteract the world rotation so the card faces the camera directly
-        const worldRotY = carouselRef.current.rotation.y + data.angle;
-        
-        // We calculate the shortest path to facing forward (rotation 0)
-        let diff = -worldRotY;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        
-        targetRotY += diff;
+      if (favSongStage === 'playing') {
+         const tPos = getHeartTarget(data.index);
+         outerGroupRef.current.position.lerp(new THREE.Vector3(tPos.x, tPos.y + Math.sin(state.clock.elapsedTime + data.index) * 2, tPos.z), d * 3);
+         
+         const worldRotY = carouselRef.current ? carouselRef.current.rotation.y : 0;
+         innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -worldRotY - data.angle, d * 3);
+         innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, 0, d * 3);
+         innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, 0, d * 3);
+         innerGroupRef.current.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), d * 3);
+      } else {
+         const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
+         const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
+         outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, baseFloat + bassFloat, data.z), d * 5);
+         
+         const targetScale = isHovered && !activeId ? 1.03 : 1.0;
+         const targetZ = isHovered && !activeId ? 2.0 : 0;
+         let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
+         let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
+         
+         if (isHovered && !activeId && carouselRef?.current) {
+           const worldRotY = carouselRef.current.rotation.y + data.angle;
+           let diff = -worldRotY;
+           while (diff > Math.PI) diff -= Math.PI * 2;
+           while (diff < -Math.PI) diff += Math.PI * 2;
+           targetRotY += diff;
+         }
+         
+         innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
+         innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
+         innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
+         innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
       }
-      
-      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
-      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
-      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
-      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
       
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
@@ -908,10 +1025,10 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   });
 
   const isActive = activeId === data.id;
-  const isDimmed = activeId && !isActive;
+  const isDimmed = activeId && !isActive && favSongStage !== 'playing';
 
   const handleClick = () => {
-    if (!isActive) {
+    if (!isActive && favSongStage !== 'playing') {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
       onClick(data.id);
@@ -928,8 +1045,8 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
   };
 
   return (
-    <group ref={outerGroupRef} position={[data.x, 0, data.z]} rotation={[0, data.angle, 0]}>
-      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} />
+    <group ref={outerGroupRef} rotation={[0, data.angle, 0]}>
+      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} themeMode={themeMode} />
       <group ref={innerGroupRef}>
         <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
           <div 
@@ -946,6 +1063,28 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef }) => {
           </h2>
           <div className="panel-content-wrapper">
             <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+            
+            {data.id === 'music' && (
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                 {themeMode === 'normal' ? (
+                   <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,255,255,0.05)' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(); }}>
+                     <div className="hud-label" style={{ margin: 'auto' }}>FAV SONG MODE</div>
+                   </button>
+                 ) : (
+                   <>
+                     {favSongStage === 'idle' && (
+                       <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
+                         <div className="hud-label" style={{ margin: 'auto', color: '#fff' }}>PLAY SONG</div>
+                       </button>
+                     )}
+                     <button className="hud-block" style={{ cursor: 'pointer', flex: 1, textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
+                       <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
+                     </button>
+                   </>
+                 )}
+              </div>
+            )}
+            
           </div>
         </div>
         </Html>
@@ -1324,8 +1463,18 @@ function App() {
   const [introFading, setIntroFading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.45);
+  const [themeMode, setThemeMode] = useState('normal');
+  const [favSongStage, setFavSongStage] = useState('idle');
   
   const carouselRef = useRef();
+
+  const handlePlayFavSong = (playImmediately = false) => {
+    switchAudio('/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3', playImmediately);
+  };
+  
+  const handleRevert = () => {
+    switchAudio('/music_and_me.mp3', true);
+  };
 
   const handleStart = () => {
     initAudio();
@@ -1398,7 +1547,7 @@ function App() {
       {started && <div className="audio-blur-overlay"></div>}
 
       {/* ── Lyrics as HTML overlay (no 3D text = no Suspense risk) ── */}
-      <LyricsOverlay started={started} />
+      <LyricsOverlay started={started} themeMode={themeMode} />
 
       {started && (
         <div className="ui-layer">
@@ -1435,7 +1584,7 @@ function App() {
         
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
-        <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
+        <directionalLight position={[0, -10, -5]} intensity={1} color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} />
         
         <AudioDriver />
         <ReactiveFog />
@@ -1443,9 +1592,11 @@ function App() {
         <IntroParticles playing={started} />
         
         <Suspense fallback={null}>
-          <AmbientParticles />
-          <VoidShapes />
-          <HeartShapes />
+          <AmbientParticles themeMode={themeMode} />
+          <VoidShapes themeMode={themeMode} />
+          <HeartShapes themeMode={themeMode} />
+          <FloatingHearts themeMode={themeMode} />
+          <RomanticSparkles themeMode={themeMode} />
           <HorizonTrees />
           <BassShockwaves />
           <AudioVisualizerRing />
@@ -1460,6 +1611,21 @@ function App() {
                 onClick={setActiveSection} 
                 playing={started}
                 carouselRef={carouselRef}
+                themeMode={themeMode}
+                favSongStage={favSongStage}
+                onPlayFavSong={(play = false) => {
+                  if (play) {
+                    setFavSongStage('playing');
+                    handlePlayFavSong(true);
+                  } else {
+                    setThemeMode('favSong');
+                  }
+                }}
+                onRevert={() => {
+                  setThemeMode('normal');
+                  setFavSongStage('idle');
+                  handleRevert();
+                }}
               />
             ))}
           </group>
@@ -1467,8 +1633,9 @@ function App() {
           <SceneController 
             activeSection={activeSection} 
             setActiveSection={setActiveSection}
-            playing={started} 
-            carouselRef={carouselRef} 
+            playing={started}
+            carouselRef={carouselRef}
+            favSongStage={favSongStage}
           />
           <Effects />
         </Suspense>

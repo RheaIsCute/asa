@@ -732,3 +732,5 @@ body {
   border: 1px solid rgba(160, 32, 240, 0.5);
   box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(160,32,240,0.3);
 }
+
+.highlight-pink { color: #ff69b4; text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493; }
