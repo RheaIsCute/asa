@@ -1715,11 +1715,23 @@ function App() {
   const [themeMode, setThemeMode] = useState('normal');
   const [favSongStage, setFavSongStage] = useState('idle');
   const [favModalData, setFavModalData] = useState(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    setIsTouchDevice(isTouch);
+    const checkMobile = () => {
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth <= 768;
+      const isTouchTablet = (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) && window.innerWidth <= 1024;
+      setIsMobile(isMobileUA || isSmallScreen || isTouchTablet);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    window.addEventListener('orientationchange', checkMobile);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('orientationchange', checkMobile);
+    };
   }, []);
 
   const activeSections = useMemo(() => {
@@ -1827,7 +1839,7 @@ function App() {
         <img src="/icon.png" alt="ASA" className="splash-avatar" />
         <div className="enter-text">INITIALIZE EXPERIENCE</div>
         <p className="splash-hint">
-          {isTouchDevice ? '(Tap anywhere to enter // Audio reactive)' : '(Click anywhere. Warning: Loud audio and screen shake)'}
+          {isMobile ? '(Tap anywhere to enter // Audio reactive)' : '(Click anywhere. Warning: Loud audio and screen shake)'}
         </p>
       </div>
 
@@ -1963,8 +1975,8 @@ function App() {
             </button>
           )}
 
-          {/* Bottom mobile / desktop navigation bar */}
-          {favSongStage !== 'playing' && (
+          {/* Bottom mobile navigation bar (Mobile only) */}
+          {isMobile && favSongStage !== 'playing' && (
             <div className="mobile-nav-container">
               <button
                 className="nav-arrow-btn"
@@ -2012,7 +2024,7 @@ function App() {
 
           {/* Space / Swipe instruction */}
           <div className="space-notifier">
-            {isTouchDevice
+            {isMobile
               ? (activeSection ? '[ SWIPE FOR NEXT // TAP BACK TO CLOSE ]' : '[ SWIPE TO ROTATE // TAP CARD TO OPEN ]')
               : '[ PRESS SPACE TO ROTATE / CYCLE ]'}
           </div>

@@ -437,7 +437,7 @@ body {
    ═══════════════════════════════════════════════════════════ */
 .back-btn {
   position: absolute;
-  bottom: max(78px, calc(var(--safe-bottom) + 72px));
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(var(--accent-rgb), 0.15);
@@ -445,7 +445,7 @@ body {
   color: #fff;
   padding: 12px 24px;
   font-family: 'Inter', sans-serif;
-  font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+  font-size: 0.85rem;
   letter-spacing: 0.18em;
   font-weight: 700;
   cursor: pointer;
@@ -472,11 +472,11 @@ body {
 }
 
 .mobile-nav-container {
+  display: none;
   position: absolute;
   bottom: max(16px, var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
   align-items: center;
   gap: 10px;
   background: rgba(12, 4, 22, 0.75);
@@ -563,20 +563,20 @@ body {
 
 .space-notifier { 
   position: absolute; 
-  bottom: max(68px, calc(var(--safe-bottom) + 62px)); 
+  bottom: 25px; 
   left: 50%; 
   transform: translateX(-50%); 
   color: rgba(255, 255, 255, 0.75); 
   font-family: 'Inter', sans-serif; 
   font-weight: 600;
-  font-size: clamp(0.7rem, 2.2vw, 0.85rem); 
+  font-size: 0.85rem; 
   letter-spacing: 0.18em; 
   text-transform: uppercase; 
   pointer-events: none; 
   opacity: 0; 
   text-align: center;
   width: 90%;
-  max-width: 400px;
+  max-width: 450px;
   animation: notifierFadeIn 1s ease-out 5s forwards, notifierPulse 2s ease-in-out 6s infinite alternate; 
 }
 
@@ -988,9 +988,23 @@ body.theme-favsong .hud-icon svg {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   MEDIA QUERIES (MOBILE PHONE REDESIGN)
+   MEDIA QUERIES (MOBILE PHONE & TABLET REDESIGN)
    ═══════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) {
+  .mobile-nav-container {
+    display: flex;
+  }
+
+  .back-btn {
+    bottom: max(78px, calc(var(--safe-bottom) + 72px));
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+  }
+
+  .space-notifier {
+    bottom: max(68px, calc(var(--safe-bottom) + 62px));
+    font-size: clamp(0.7rem, 2.2vw, 0.85rem);
+  }
+
   .html-panel {
     width: 290px !important;
     height: 430px !important;
