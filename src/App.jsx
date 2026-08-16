@@ -386,10 +386,10 @@ const LyricsOverlay = ({ started, themeMode }) => {
 };
 
 // ── Intro Particles ──
-const IntroParticles = ({ playing, themeMode }) => {
+const IntroParticles = ({ playing, themeMode, isMobile }) => {
   const groupRef = useRef();
   const meshRef = useRef();
-  const particlesCount = 100;
+  const particlesCount = isMobile ? 30 : 100;
 
   const particlesData = useMemo(() => {
     const data = [];
@@ -450,9 +450,9 @@ const createHeartShape = () => {
   return shape;
 };
 
-const HeartShapes = ({ themeMode }) => {
+const HeartShapes = ({ themeMode, isMobile }) => {
   const group = useRef();
-  const count = 8;
+  const count = isMobile ? 4 : 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const heartShape = useMemo(() => createHeartShape(), []);
 
@@ -495,9 +495,9 @@ const HeartShapes = ({ themeMode }) => {
   );
 };
 
-const FloatingHearts = ({ themeMode }) => {
+const FloatingHearts = ({ themeMode, isMobile }) => {
   const group = useRef();
-  const count = 25;
+  const count = isMobile ? 8 : 25;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const heartShape = useMemo(() => createHeartShape(), []);
 
@@ -573,9 +573,9 @@ const HorizonTrees = () => {
   );
 };
 
-const VoidShapes = ({ themeMode }) => {
+const VoidShapes = ({ themeMode, isMobile }) => {
   const group = useRef();
-  const count = 15;
+  const count = isMobile ? 6 : 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   const shapesData = useMemo(() => {
@@ -590,7 +590,7 @@ const VoidShapes = ({ themeMode }) => {
       });
     }
     return data;
-  }, []);
+  }, [count]);
 
   useFrame((state, delta) => {
     if (group.current) {
@@ -627,8 +627,8 @@ const VoidShapes = ({ themeMode }) => {
   );
 };
 
-const AmbientParticles = ({ themeMode }) => {
-  const count = 150;
+const AmbientParticles = ({ themeMode, isMobile }) => {
+  const count = isMobile ? 50 : 150;
   const mesh = useRef();
   const matRef = useRef();
 
@@ -672,8 +672,8 @@ const AmbientParticles = ({ themeMode }) => {
   );
 };
 
-const BassShockwaves = ({ themeMode }) => {
-  const MAX_RINGS = 6;
+const BassShockwaves = ({ themeMode, isMobile }) => {
+  const MAX_RINGS = isMobile ? 3 : 6;
   const ringsRef = useRef([]);
   const ringState = useRef(Array.from({ length: MAX_RINGS }, () => ({
     active: false,
@@ -731,8 +731,8 @@ const BassShockwaves = ({ themeMode }) => {
   );
 };
 
-const RomanticSparkles = ({ themeMode }) => {
-  const count = 300;
+const RomanticSparkles = ({ themeMode, isMobile }) => {
+  const count = isMobile ? 60 : 300;
   const mesh = useRef();
 
   const particles = useMemo(() => {
@@ -764,9 +764,9 @@ const RomanticSparkles = ({ themeMode }) => {
   );
 };
 
-const AudioVisualizerRing = ({ themeMode }) => {
+const AudioVisualizerRing = ({ themeMode, isMobile }) => {
   const meshRef = useRef();
-  const barCount = 64;
+  const barCount = isMobile ? 32 : 64;
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const radius = 38;
 
@@ -972,8 +972,8 @@ const FAV_SONG_CARDS_DATA = [
 // CARD SYSTEM
 // ═══════════════════════════════════════════════════════════
 
-const CardParticles = ({ materialized, playing, dataIndex }) => {
-  const count = 600;
+const CardParticles = ({ materialized, playing, dataIndex, isMobile }) => {
+  const count = isMobile ? 100 : 600;
   const meshRef = useRef();
   const matRef = useRef();
 
@@ -1051,7 +1051,7 @@ const CardParticles = ({ materialized, playing, dataIndex }) => {
   );
 };
 
-const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert, onFavCardClick }) => {
+const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert, onFavCardClick, isMobile }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
   const [materialized, setMaterialized] = useState(false);
@@ -1148,7 +1148,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
 
   return (
     <group ref={outerGroupRef} rotation={[0, data.angle, 0]}>
-      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} themeMode={themeMode} />
+      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} themeMode={themeMode} isMobile={isMobile} />
       <group ref={innerGroupRef}>
         <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
           <div
@@ -1688,7 +1688,8 @@ const SceneController = ({
 // POST-PROCESSING
 // ═══════════════════════════════════════════════════════════
 
-const Effects = () => {
+const Effects = ({ isMobile }) => {
+  if (isMobile) return null;
   return (
     <EffectComposer>
       <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={1.4} />
@@ -2035,7 +2036,7 @@ function App() {
       <Canvas
         camera={{ position: [0, 150, 100], fov: 60 }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
-        dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1}
+        dpr={isMobile ? 1 : (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1)}
       >
         <color attach="background" args={['#020202']} />
         <fogExp2 attach="fog" args={['#020202', 0.015]} />
@@ -2047,17 +2048,17 @@ function App() {
         <AudioDriver />
         <ReactiveFog />
 
-        <IntroParticles playing={started} themeMode={themeMode} />
+        <IntroParticles playing={started} themeMode={themeMode} isMobile={isMobile} />
 
         <Suspense fallback={null}>
-          <AmbientParticles themeMode={themeMode} />
-          <VoidShapes themeMode={themeMode} />
-          <HeartShapes themeMode={themeMode} />
-          <FloatingHearts themeMode={themeMode} />
-          <RomanticSparkles themeMode={themeMode} />
+          <AmbientParticles themeMode={themeMode} isMobile={isMobile} />
+          <VoidShapes themeMode={themeMode} isMobile={isMobile} />
+          <HeartShapes themeMode={themeMode} isMobile={isMobile} />
+          <FloatingHearts themeMode={themeMode} isMobile={isMobile} />
+          <RomanticSparkles themeMode={themeMode} isMobile={isMobile} />
           <HorizonTrees themeMode={themeMode} />
-          <BassShockwaves themeMode={themeMode} />
-          <AudioVisualizerRing themeMode={themeMode} />
+          <BassShockwaves themeMode={themeMode} isMobile={isMobile} />
+          <AudioVisualizerRing themeMode={themeMode} isMobile={isMobile} />
           <ReactiveFloor themeMode={themeMode} />
 
           <group ref={carouselRef}>
@@ -2071,6 +2072,7 @@ function App() {
                 carouselRef={carouselRef}
                 themeMode={themeMode}
                 favSongStage={favSongStage}
+                isMobile={isMobile}
                 onPlayFavSong={(play = false) => {
                   setThemeMode('favSong');
                   if (play) {
@@ -2100,7 +2102,7 @@ function App() {
             targetAngleCommand={targetAngleCommand}
             onCenterIndexChange={setCurrentCenterIndex}
           />
-          <Effects />
+          <Effects isMobile={isMobile} />
         </Suspense>
       </Canvas>
     </div>

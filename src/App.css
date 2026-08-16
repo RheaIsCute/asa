@@ -1005,11 +1005,26 @@ body.theme-favsong .hud-icon svg {
     font-size: clamp(0.7rem, 2.2vw, 0.85rem);
   }
 
+  .audio-blur-overlay {
+    display: none; /* Avoid heavy full-screen blend mode compositing on mobile */
+  }
+
+  .screen-scanlines {
+    display: none; /* Avoid continuous animation paint loop on mobile */
+  }
+
+  .screen-edge-glow {
+    box-shadow: none;
+  }
+
   .html-panel {
     width: 290px !important;
     height: 430px !important;
     padding: 20px !important;
     border-radius: 16px;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: rgba(12, 4, 24, 0.9) !important;
   }
 
   .html-panel.active {
