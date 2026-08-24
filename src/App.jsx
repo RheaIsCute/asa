@@ -1543,7 +1543,7 @@ const getIsHookloaderRoute = () => {
   );
 };
 
-// ── Web Audio Synth SFX (New Rich Audio Cues) ──
+// ── Web Audio Synth SFX (Distinct Audio Cues for Every Action) ──
 const playCyberSFX = (type = 'click') => {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1551,53 +1551,63 @@ const playCyberSFX = (type = 'click') => {
     const ctx = new AudioContext();
     const t = ctx.currentTime;
 
-    if (type === 'hover') {
+    if (type === 'download') {
+      // Deep cyber charging surge
+      const osc = ctx.createOscillator();
+      const sub = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      sub.type = 'sine';
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.exponentialRampToValueAtTime(880, t + 0.18);
+      sub.frequency.setValueAtTime(110, t);
+      sub.frequency.exponentialRampToValueAtTime(220, t + 0.18);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      osc.connect(gain);
+      sub.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      sub.start(t);
+      osc.stop(t + 0.2);
+      sub.stop(t + 0.2);
+    } else if (type === 'copy') {
+      // Snappy digital glass tap
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1400, t);
+      osc.frequency.exponentialRampToValueAtTime(2800, t + 0.05);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    } else if (type === 'virustotal') {
+      // Radar security scanner ping
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(950, t);
+      osc.frequency.exponentialRampToValueAtTime(1900, t + 0.1);
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } else if (type === 'step') {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, t);
-      osc.frequency.exponentialRampToValueAtTime(900, t + 0.035);
-      gain.gain.setValueAtTime(0.02, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      gain.gain.setValueAtTime(0.03, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(t);
-      osc.stop(t + 0.035);
-    } else if (type === 'click') {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc1.type = 'triangle';
-      osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(320, t);
-      osc1.frequency.exponentialRampToValueAtTime(540, t + 0.07);
-      osc2.frequency.setValueAtTime(140, t);
-      osc2.frequency.exponentialRampToValueAtTime(70, t + 0.07);
-      gain.gain.setValueAtTime(0.06, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      osc1.start(t);
-      osc2.start(t);
-      osc1.stop(t + 0.07);
-      osc2.stop(t + 0.07);
-    } else if (type === 'step') {
-      const osc = ctx.createOscillator();
-      const filter = ctx.createBiquadFilter();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1200, t);
-      filter.frequency.exponentialRampToValueAtTime(300, t + 0.07);
-      osc.frequency.setValueAtTime(480, t);
-      gain.gain.setValueAtTime(0.03, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.07);
+      osc.stop(t + 0.05);
     } else if (type === 'complete') {
       const notes = [523.25, 659.25, 783.99, 1046.5];
       notes.forEach((freq, idx) => {
@@ -1612,18 +1622,6 @@ const playCyberSFX = (type = 'click') => {
         osc.start(t + idx * 0.05);
         osc.stop(t + idx * 0.05 + 0.22);
       });
-    } else if (type === 'toggle') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, t);
-      osc.frequency.exponentialRampToValueAtTime(280, t + 0.05);
-      gain.gain.setValueAtTime(0.035, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.05);
     }
   } catch (e) {}
 };
@@ -1750,7 +1748,7 @@ const CyberCanvas = () => {
   return <canvas ref={canvasRef} className="standalone-canvas" />;
 };
 
-const HookloaderPage = ({ onNavigateHome }) => {
+const HookloaderPage = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("INITIALIZING CONNECTION...");
@@ -1783,7 +1781,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
   const startDownload = () => {
     if (isDownloading) return;
-    playCyberSFX('click');
+    playCyberSFX('download');
     setIsDownloading(true);
     setProgress(0);
     setDownloadLogs([]);
@@ -1832,7 +1830,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
   };
 
   const copyShareLink = () => {
-    playCyberSFX('click');
+    playCyberSFX('copy');
     const url = typeof window !== 'undefined' ? (window.location.origin + '/hookloader') : 'https://asa.vercel.app/hookloader';
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -1852,18 +1850,11 @@ const HookloaderPage = ({ onNavigateHome }) => {
       <div className="standalone-bg-glow" />
 
       {/* ── Top Header ── */}
-      <header className="standalone-header">
-        <div className="standalone-brand" onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>
+      <header className="standalone-header" style={{ justifyContent: 'center' }}>
+        <div className="standalone-brand">
           <img src="/icon.png" alt="ASA Logo" className="standalone-avatar" />
           <span className="standalone-title-text">ASA // VALORANT HOOKLOADER</span>
         </div>
-        <button className="standalone-back-btn" onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>
-          <svg viewBox="0 0 24 24" style={{ width: 15, height: 15, stroke: 'currentColor', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          RETURN TO 3D SITE
-        </button>
       </header>
 
       {/* ── Main Content ── */}
@@ -1890,9 +1881,6 @@ const HookloaderPage = ({ onNavigateHome }) => {
               <span className="standalone-badge project-type">
                 VALORANT HOOKLOADER
               </span>
-              <span className="standalone-badge project-type" style={{ borderColor: 'rgba(0, 240, 255, 0.4)', color: '#00f0ff' }}>
-                OPEN SOURCE // FREE
-              </span>
             </div>
 
             <div className="glitch-title-wrap">
@@ -1903,7 +1891,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
             </div>
 
             <div className="standalone-description">
-              A hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
+              A hookloader designed for Valorant cheats. This project is 100% open-source code completely free to use, inspect, modify, and redistribute without any requirement to credit me.
             </div>
 
             {/* ── Download Progress Bar & Live Cyber Terminal ── */}
@@ -1954,7 +1942,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="standalone-vt-btn"
-                onClick={() => playCyberSFX('click')}
+                onClick={() => playCyberSFX('virustotal')}
               >
                 <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, stroke: '#00f0ff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -1972,14 +1960,6 @@ const HookloaderPage = ({ onNavigateHome }) => {
               <div className="standalone-spec-box">
                 <span className="standalone-spec-label">FILE SIZE</span>
                 <span className="standalone-spec-val">30.9 KB</span>
-              </div>
-              <div className="standalone-spec-box">
-                <span className="standalone-spec-label">TARGET GAME</span>
-                <span className="standalone-spec-val">Valorant</span>
-              </div>
-              <div className="standalone-spec-box">
-                <span className="standalone-spec-label">LICENSE</span>
-                <span className="standalone-spec-val" style={{ color: '#00ffaa' }}>Free / MIT</span>
               </div>
             </div>
 
@@ -2005,7 +1985,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
       {/* ── Footer ── */}
       <footer className="standalone-footer">
-        ASA &copy; 2026 // OPEN-SOURCE INJECTOR &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>Back to 3D Site</span>
+        ASA &copy; 2026 // OPEN-SOURCE INJECTOR
       </footer>
     </div>
   );
