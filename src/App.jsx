@@ -1543,23 +1543,88 @@ const getIsHookloaderRoute = () => {
   );
 };
 
-// ── Web Audio Synth SFX ──
-const playCyberBeep = (freq = 880, type = 'sine', duration = 0.08) => {
+// ── Web Audio Synth SFX (New Rich Audio Cues) ──
+const playCyberSFX = (type = 'click') => {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + duration);
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
+    const t = ctx.currentTime;
+
+    if (type === 'hover') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(900, t + 0.035);
+      gain.gain.setValueAtTime(0.02, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.035);
+    } else if (type === 'click') {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(320, t);
+      osc1.frequency.exponentialRampToValueAtTime(540, t + 0.07);
+      osc2.frequency.setValueAtTime(140, t);
+      osc2.frequency.exponentialRampToValueAtTime(70, t + 0.07);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(t);
+      osc2.start(t);
+      osc1.stop(t + 0.07);
+      osc2.stop(t + 0.07);
+    } else if (type === 'step') {
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1200, t);
+      filter.frequency.exponentialRampToValueAtTime(300, t + 0.07);
+      osc.frequency.setValueAtTime(480, t);
+      gain.gain.setValueAtTime(0.03, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    } else if (type === 'complete') {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.05);
+        gain.gain.setValueAtTime(0.04, t + idx * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + idx * 0.05 + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + idx * 0.05);
+        osc.stop(t + idx * 0.05 + 0.22);
+      });
+    } else if (type === 'toggle') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(280, t + 0.05);
+      gain.gain.setValueAtTime(0.035, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
   } catch (e) {}
 };
 
@@ -1693,6 +1758,8 @@ const HookloaderPage = ({ onNavigateHome }) => {
   const [downloaded, setDownloaded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
+  const [activeExplorerFile, setActiveExplorerFile] = useState('readme');
   const cardRef = useRef(null);
   const logContainerRef = useRef(null);
 
@@ -1718,7 +1785,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
   const startDownload = () => {
     if (isDownloading) return;
-    playCyberBeep(920, 'square', 0.09);
+    playCyberSFX('click');
     setIsDownloading(true);
     setProgress(0);
     setDownloadLogs([]);
@@ -1736,21 +1803,21 @@ const HookloaderPage = ({ onNavigateHome }) => {
         step = 1;
         setStatusText("ALLOCATING VIRTUAL MEMORY BUFFER...");
         addLog("BUFFER ALLOCATED: 30.9 KB (x64_PE_PAYLOAD)");
-        playCyberBeep(640, 'sine', 0.05);
+        playCyberSFX('step');
       } else if (p >= 50 && step === 1) {
         step = 2;
         setStatusText("BYPASSING INTEGRITY CHECKS...");
-        addLog("SIGNATURE CHECK: VIRUSTOTAL 0/72 CLEAN [PASS]");
-        playCyberBeep(780, 'sine', 0.05);
+        addLog("SIGNATURE CHECK: VIRUSTOTAL 2/67 [VERIFIED]");
+        playCyberSFX('step');
       } else if (p >= 80 && step === 2) {
         step = 3;
         setStatusText("DECRYPTING INJECTOR ARTIFACT...");
         addLog("DECRYPTING SHA256: 33456b...64f3");
-        playCyberBeep(980, 'sine', 0.05);
+        playCyberSFX('step');
       } else if (p >= 100) {
         setStatusText("DOWNLOAD COMPLETE // DISPATCHING ARCHIVE");
         addLog("HOOKLOADER_FINAL.ZIP DELIVERED TO BROWSER");
-        playCyberBeep(1200, 'triangle', 0.12);
+        playCyberSFX('complete');
         clearInterval(interval);
         setDownloaded(true);
         setTimeout(() => {
@@ -1767,7 +1834,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
   };
 
   const copyShareLink = () => {
-    playCyberBeep(1100, 'sine', 0.06);
+    playCyberSFX('click');
     const url = typeof window !== 'undefined' ? (window.location.origin + '/hookloader') : 'https://asa.vercel.app/hookloader';
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -1788,11 +1855,11 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
       {/* ── Top Header ── */}
       <header className="standalone-header">
-        <div className="standalone-brand" onClick={() => { playCyberBeep(700); onNavigateHome(); }}>
+        <div className="standalone-brand" onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>
           <img src="/icon.png" alt="ASA Logo" className="standalone-avatar" />
-          <span className="standalone-title-text">ASA // PROJECT HUB</span>
+          <span className="standalone-title-text">ASA // VALORANT HOOKLOADER</span>
         </div>
-        <button className="standalone-back-btn" onClick={() => { playCyberBeep(650); onNavigateHome(); }}>
+        <button className="standalone-back-btn" onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>
           <svg viewBox="0 0 24 24" style={{ width: 15, height: 15, stroke: 'currentColor', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
@@ -1820,7 +1887,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
             <div className="standalone-badge-row">
               <span className="standalone-badge verified">
                 <span className="radar-dot" />
-                VIRUSTOTAL VERIFIED (0/72)
+                VIRUSTOTAL: 2/67 DETECTIONS
               </span>
               <span className="standalone-badge project-type">
                 VALORANT HOOKLOADER
@@ -1831,14 +1898,104 @@ const HookloaderPage = ({ onNavigateHome }) => {
             </div>
 
             <div className="glitch-title-wrap">
-              <h1 className="standalone-hero-title">HOOKLOADER</h1>
+              <h1 className="standalone-hero-title">VALORANT HOOKLOADER</h1>
             </div>
             <div className="standalone-hero-subtitle">
               Valorant Cheat Hook Loader &amp; Memory Injection Utility
             </div>
 
             <div className="standalone-description">
-              A high-performance hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
+              A hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
+            </div>
+
+            {/* ── Interactive Zip File & Source Code Explorer ── */}
+            <div className="standalone-explorer-wrap">
+              <div
+                className="standalone-explorer-header"
+                onClick={() => {
+                  playCyberSFX('toggle');
+                  setIsExplorerOpen(prev => !prev);
+                }}
+              >
+                <div className="standalone-explorer-title">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className={`standalone-arrow-icon ${isExplorerOpen ? 'open' : ''}`}
+                  >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                  <span>EXPLORE ZIP FILES &amp; SOURCE CODE</span>
+                  <span style={{ fontSize: '0.65rem', background: 'rgba(0, 240, 255, 0.15)', border: '1px solid rgba(0, 240, 255, 0.4)', color: '#00f0ff', padding: '2px 6px', borderRadius: 4 }}>
+                    2 FILES
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.7rem', color: isExplorerOpen ? '#00f0ff' : 'rgba(255,255,255,0.5)' }}>
+                  {isExplorerOpen ? 'HIDE CODE ▲' : 'VIEW CODE &amp; FILES ▼'}
+                </span>
+              </div>
+
+              {isExplorerOpen && (
+                <div className="standalone-explorer-body">
+                  <div className="standalone-tabs-bar">
+                    <button
+                      className={`standalone-tab-btn ${activeExplorerFile === 'readme' ? 'active' : ''}`}
+                      onClick={() => { playCyberSFX('hover'); setActiveExplorerFile('readme'); }}
+                    >
+                      📄 README.md (211 B)
+                    </button>
+                    <button
+                      className={`standalone-tab-btn ${activeExplorerFile === 'exe' ? 'active' : ''}`}
+                      onClick={() => { playCyberSFX('hover'); setActiveExplorerFile('exe'); }}
+                    >
+                      ⚙️ hookloader.exe (84.9 KB)
+                    </button>
+                  </div>
+
+                  {activeExplorerFile === 'readme' ? (
+                    <div className="standalone-code-viewer">
+                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>// README.md &bull; Markdown Documentation</span>
+                      {`
+# hookloader
+
+Advanced DLL injection interface.
+
+## Features
+- Web UI based control
+- Safe unhooking process
+- Drag and drop injection
+
+## Instructions
+Run hookloader.exe and navigate to http://127.0.0.1:8080
+`}
+                    </div>
+                  ) : (
+                    <div className="standalone-code-viewer">
+                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>// hookloader.exe &bull; PE32+ x64 Binary Inspector</span>
+                      {`
+[FILE_METADATA]
+Name: hookloader.exe
+Format: Portable Executable (PE32+ x64)
+Size: 84,992 Bytes (84.9 KB)
+Subsystem: Windows GUI / Embedded Local Server (Port 8080)
+Memory Engine: VirtualAllocEx / WriteProcessMemory / CreateRemoteThread Hook
+
+[PE_HEADER_HEX_DUMP]
+00000000: 4D 5A 90 00 03 00 00 00 04 00 00 00 FF FF 00 00  MZ..............
+00000010: B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00  ........@.......
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 E8 00 00 00  ................
+00000040: 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21 54 68  ........!..L.!Th
+00000050: 69 73 20 70 72 6F 67 72 61 6D 20 63 61 6E 6E 6F  is program canno
+00000060: 74 20 62 65 20 72 75 6E 20 69 6E 20 44 4F 53 20  t be run in DOS 
+00000070: 6D 6F 64 65 2E 0D 0D 0A 24 00 00 00 00 00 00 00  mode....$.......
+
+[RUNTIME_TARGET]
+Engine: Web UI Injection Server -> http://127.0.0.1:8080
+`}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Download Progress Bar & Live Cyber Terminal ── */}
@@ -1881,7 +2038,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                {isDownloading ? 'INITIALIZING DISPATCH...' : (downloaded ? 'DOWNLOAD AGAIN (.ZIP)' : 'INITIALIZE & DOWNLOAD .ZIP')}
+                {isDownloading ? 'DOWNLOADING .ZIP...' : (downloaded ? 'DOWNLOAD .ZIP' : 'DOWNLOAD .ZIP')}
               </button>
 
               <a
@@ -1889,28 +2046,13 @@ const HookloaderPage = ({ onNavigateHome }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="standalone-vt-btn"
-                onClick={() => playCyberBeep(800, 'sine', 0.05)}
+                onClick={() => playCyberSFX('click')}
               >
                 <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, stroke: '#00f0ff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
-                VIEW VIRUSTOTAL SCAN (CLEAN // 0 DETECTIONS)
+                VIEW VIRUSTOTAL SCAN (2/67 DETECTIONS)
               </a>
-
-              <button
-                className="standalone-direct-link"
-                onClick={() => {
-                  playCyberBeep(750, 'sine', 0.05);
-                  const link = document.createElement('a');
-                  link.href = '/hookloader_final.zip';
-                  link.download = 'hookloader_final.zip';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-              >
-                Direct download without animation (.zip)
-              </button>
             </div>
 
             {/* ── Specs Grid ── */}
@@ -1935,7 +2077,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
             {/* ── Shareable Standalone Link Box ── */}
             <div className="standalone-share-box">
-              <span className="standalone-share-label">SHAREABLE LINK</span>
+              <span className="standalone-share-label">VALORANT HOOKLOADER DIRECT LINK</span>
               <div className="standalone-share-row">
                 <input
                   type="text"
@@ -1955,7 +2097,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
       {/* ── Footer ── */}
       <footer className="standalone-footer">
-        ASA &copy; 2026 // OPEN-SOURCE INJECTOR &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={() => { playCyberBeep(700); onNavigateHome(); }}>Back to 3D Site</span>
+        ASA &copy; 2026 // OPEN-SOURCE INJECTOR &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={() => { playCyberSFX('click'); onNavigateHome(); }}>Back to 3D Site</span>
       </footer>
     </div>
   );
