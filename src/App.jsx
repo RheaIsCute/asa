@@ -1521,7 +1521,7 @@ const DownloadOverlay = ({ onClose }) => {
         <h2 className="glitch-text" data-text="HOOKLOADER">HOOKLOADER</h2>
         <div className="status-text">{status}</div>
         <div className="progress-container">
-          <div className="progress-bar" style={{ width: \`\${progress}%\` }}></div>
+          <div className="progress-bar" style={{ width: `${progress}%` }}></div>
         </div>
         <div className="progress-percent">{Math.floor(progress)}%</div>
       </div>
