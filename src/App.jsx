@@ -778,10 +778,6 @@ const SECTIONS_DATA = [
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <div class="hud-label" style="margin: 0;">DOWNLOAD .ZIP</div>
           </div>
-          <div id="open-standalone-btn" class="hud-block hoverable" style="margin-top: 8px; cursor: pointer; text-align: center; padding: 12px; background: rgba(0, 240, 255, 0.08); border-color: rgba(0, 240, 255, 0.35); display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
-            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: #00f0ff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            <div class="hud-label" style="margin: 0; color: #00f0ff;">STANDALONE DOWNLOAD PAGE</div>
-          </div>
           <a href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection" target="_blank" rel="noopener noreferrer" class="hud-block hoverable" style="margin-top: 8px; cursor: pointer; text-align: center; padding: 12px; text-decoration: none; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             <div class="hud-label" style="margin: 0;">VIEW ON VIRUSTOTAL</div>
@@ -966,10 +962,6 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, isMobile
                     if (e.target.closest('#download-hookloader-btn')) {
                       e.preventDefault();
                       window.dispatchEvent(new CustomEvent('start-download'));
-                    }
-                    if (e.target.closest('#open-standalone-btn')) {
-                      e.preventDefault();
-                      window.dispatchEvent(new CustomEvent('navigate-hookloader'));
                     }
                   }}
                 />
@@ -1551,35 +1543,214 @@ const getIsHookloaderRoute = () => {
   );
 };
 
+// ── Web Audio Synth SFX ──
+const playCyberBeep = (freq = 880, type = 'sine', duration = 0.08) => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
+};
+
+// ── Interactive Particle Canvas ──
+const CyberCanvas = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const particleCount = width < 768 ? 35 : 70;
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        radius: Math.random() * 1.8 + 0.8,
+        color: Math.random() > 0.5 ? '#a020f0' : '#00f0ff',
+        alpha: Math.random() * 0.6 + 0.2,
+      });
+    }
+
+    let mouse = { x: -1000, y: -1000 };
+    const handleMouseMove = (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Cyber Grid
+      ctx.strokeStyle = 'rgba(160, 32, 240, 0.04)';
+      ctx.lineWidth = 1;
+      const gridSize = 45;
+      for (let x = 0; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          p.x += (dx / dist) * 1.5;
+          p.y += (dy / dist) * 1.5;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dxx = p.x - p2.x;
+          const dyy = p.y - p2.y;
+          const d = Math.sqrt(dxx * dxx + dyy * dyy);
+          if (d < 110) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = '#a020f0';
+            ctx.globalAlpha = (1 - d / 110) * 0.18;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      ctx.globalAlpha = 1.0;
+      ctx.shadowBlur = 0;
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="standalone-canvas" />;
+};
+
 const HookloaderPage = ({ onNavigateHome }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("INITIALIZING CONNECTION...");
+  const [downloadLogs, setDownloadLogs] = useState([]);
   const [downloaded, setDownloaded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const cardRef = useRef(null);
+  const logContainerRef = useRef(null);
+
+  const handleCardMouseMove = (e) => {
+    if (!cardRef.current || window.innerWidth < 768) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({ x: -(y * 8), y: x * 8 });
+  };
+
+  const handleCardMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
+  const addLog = (msg) => {
+    const time = new Date().toISOString().split('T')[1].slice(0, 8);
+    setDownloadLogs(prev => [...prev.slice(-5), { time, msg }]);
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  };
 
   const startDownload = () => {
     if (isDownloading) return;
+    playCyberBeep(920, 'square', 0.09);
     setIsDownloading(true);
     setProgress(0);
+    setDownloadLogs([]);
     setStatusText("ESTABLISHING SECURE HANDSHAKE...");
+    addLog("INITIALIZING HOOKLOADER DISPATCH PROTOCOL...");
 
     let p = 0;
+    let step = 0;
     const interval = setInterval(() => {
-      p += Math.random() * 12 + 6;
+      p += Math.random() * 14 + 8;
       if (p > 100) p = 100;
       setProgress(p);
 
-      if (p < 25) {
-        setStatusText("ESTABLISHING SECURE CONNECTION...");
-      } else if (p < 55) {
-        setStatusText("ALLOCATING BUFFER & PACKETS...");
-      } else if (p < 85) {
-        setStatusText("DOWNLOADING HOOKLOADER_FINAL.ZIP...");
-      } else if (p < 100) {
-        setStatusText("VERIFYING VIRUSTOTAL CHECKSUM (0/72 CLEAN)...");
-      } else {
-        setStatusText("DOWNLOAD COMPLETE // LAUNCHING ARCHIVE");
+      if (p >= 20 && step === 0) {
+        step = 1;
+        setStatusText("ALLOCATING VIRTUAL MEMORY BUFFER...");
+        addLog("BUFFER ALLOCATED: 30.9 KB (x64_PE_PAYLOAD)");
+        playCyberBeep(640, 'sine', 0.05);
+      } else if (p >= 50 && step === 1) {
+        step = 2;
+        setStatusText("BYPASSING INTEGRITY CHECKS...");
+        addLog("SIGNATURE CHECK: VIRUSTOTAL 0/72 CLEAN [PASS]");
+        playCyberBeep(780, 'sine', 0.05);
+      } else if (p >= 80 && step === 2) {
+        step = 3;
+        setStatusText("DECRYPTING INJECTOR ARTIFACT...");
+        addLog("DECRYPTING SHA256: 33456b...64f3");
+        playCyberBeep(980, 'sine', 0.05);
+      } else if (p >= 100) {
+        setStatusText("DOWNLOAD COMPLETE // DISPATCHING ARCHIVE");
+        addLog("HOOKLOADER_FINAL.ZIP DELIVERED TO BROWSER");
+        playCyberBeep(1200, 'triangle', 0.12);
         clearInterval(interval);
         setDownloaded(true);
         setTimeout(() => {
@@ -1590,12 +1761,13 @@ const HookloaderPage = ({ onNavigateHome }) => {
           link.click();
           document.body.removeChild(link);
           setIsDownloading(false);
-        }, 600);
+        }, 500);
       }
-    }, 240);
+    }, 220);
   };
 
   const copyShareLink = () => {
+    playCyberBeep(1100, 'sine', 0.06);
     const url = typeof window !== 'undefined' ? (window.location.origin + '/hookloader') : 'https://asa.vercel.app/hookloader';
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -1610,141 +1782,172 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
   return (
     <div className="standalone-page-container">
-      <div className="standalone-bg-grid" />
+      <CyberCanvas />
+      <div className="standalone-scanlines" />
       <div className="standalone-bg-glow" />
 
       {/* ── Top Header ── */}
       <header className="standalone-header">
-        <div className="standalone-brand" onClick={onNavigateHome}>
+        <div className="standalone-brand" onClick={() => { playCyberBeep(700); onNavigateHome(); }}>
           <img src="/icon.png" alt="ASA Logo" className="standalone-avatar" />
           <span className="standalone-title-text">ASA // PROJECT HUB</span>
         </div>
-        <button className="standalone-back-btn" onClick={onNavigateHome}>
-          <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, stroke: 'var(--accent)', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+        <button className="standalone-back-btn" onClick={() => { playCyberBeep(650); onNavigateHome(); }}>
+          <svg viewBox="0 0 24 24" style={{ width: 15, height: 15, stroke: 'currentColor', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
-          RETURN TO 3D EXPERIENCE
+          RETURN TO 3D SITE
         </button>
       </header>
 
       {/* ── Main Content ── */}
       <main className="standalone-main">
-        <div className="standalone-card">
-          <div className="standalone-badge-row">
-            <span className="standalone-badge verified">
-              <svg viewBox="0 0 24 24" style={{ width: 13, height: 13, stroke: 'currentColor', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              VIRUSTOTAL VERIFIED (0/72)
-            </span>
-            <span className="standalone-badge project-type">
-              VALORANT HOOKLOADER
-            </span>
-            <span className="standalone-badge project-type" style={{ borderColor: 'rgba(0, 240, 255, 0.35)', color: '#00f0ff' }}>
-              OPEN SOURCE // FREE
-            </span>
-          </div>
+        <div className="standalone-card-wrap">
+          <div
+            ref={cardRef}
+            className="standalone-card"
+            style={{ transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` }}
+            onMouseMove={handleCardMouseMove}
+            onMouseLeave={handleCardMouseLeave}
+          >
+            <div className="standalone-card-laser" />
+            <div className="card-corner top-left" />
+            <div className="card-corner top-right" />
+            <div className="card-corner bottom-left" />
+            <div className="card-corner bottom-right" />
 
-          <h1 className="standalone-hero-title">HOOKLOADER</h1>
-          <div className="standalone-hero-subtitle">
-            Valorant Cheat Hook Loader &amp; Memory Injection Utility
-          </div>
+            <div className="standalone-badge-row">
+              <span className="standalone-badge verified">
+                <span className="radar-dot" />
+                VIRUSTOTAL VERIFIED (0/72)
+              </span>
+              <span className="standalone-badge project-type">
+                VALORANT HOOKLOADER
+              </span>
+              <span className="standalone-badge project-type" style={{ borderColor: 'rgba(0, 240, 255, 0.4)', color: '#00f0ff' }}>
+                OPEN SOURCE // FREE
+              </span>
+            </div>
 
-          <div className="standalone-description">
-            A high-performance hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
-          </div>
+            <div className="glitch-title-wrap">
+              <h1 className="standalone-hero-title">HOOKLOADER</h1>
+            </div>
+            <div className="standalone-hero-subtitle">
+              Valorant Cheat Hook Loader &amp; Memory Injection Utility
+            </div>
 
-          {/* ── Download Progress Bar (When Active or Finished) ── */}
-          {isDownloading && (
-            <div className="standalone-progress-section">
-              <div className="status-text" style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{statusText}</div>
-              <div className="progress-container" style={{ height: 6, marginBottom: 8 }}>
-                <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+            <div className="standalone-description">
+              A high-performance hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
+            </div>
+
+            {/* ── Download Progress Bar & Live Cyber Terminal ── */}
+            {isDownloading && (
+              <div className="standalone-progress-section">
+                <div className="status-text" style={{ margin: '0 0 8px 0', fontSize: '0.82rem' }}>{statusText}</div>
+                <div className="progress-container" style={{ height: 6, marginBottom: 8 }}>
+                  <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)' }}>
+                  <span>PROTOCOL: TLS_AES_256</span>
+                  <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>{Math.floor(progress)}%</span>
+                </div>
+
+                {/* ── Live Log Stream ── */}
+                <div ref={logContainerRef} className="standalone-terminal-box">
+                  {downloadLogs.map((log, idx) => (
+                    <div key={idx} className="terminal-line">
+                      <span className="terminal-timestamp">[{log.time}]</span>
+                      <span>{log.msg}</span>
+                    </div>
+                  ))}
+                  <div className="terminal-line" style={{ color: 'rgba(0, 240, 255, 0.6)' }}>
+                    <span>&gt;&gt; STREAMING PAYLOAD BYTES...</span>
+                    <span className="terminal-cursor" />
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
-                <span>ENCRYPTION: AES-256</span>
-                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{Math.floor(progress)}%</span>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* ── Actions ── */}
-          <div className="standalone-actions">
-            <button
-              className="standalone-download-btn"
-              onClick={startDownload}
-              disabled={isDownloading}
-            >
-              <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, stroke: '#fff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              {isDownloading ? 'DOWNLOADING...' : (downloaded ? 'DOWNLOAD AGAIN (.ZIP)' : 'INITIALIZE & DOWNLOAD .ZIP')}
-            </button>
-
-            <a
-              href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="standalone-vt-btn"
-            >
-              <svg viewBox="0 0 24 24" style={{ width: 17, height: 17, stroke: '#00f0ff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              VIEW OFFICIAL VIRUSTOTAL SCAN (CLEAN // 0 DETECTIONS)
-            </a>
-
-            <button
-              className="standalone-direct-link"
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/hookloader_final.zip';
-                link.download = 'hookloader_final.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-            >
-              Skip animation &amp; download directly (.zip)
-            </button>
-          </div>
-
-          {/* ── Specs Grid ── */}
-          <div className="standalone-specs-grid">
-            <div className="standalone-spec-box">
-              <span className="standalone-spec-label">FILE NAME</span>
-              <span className="standalone-spec-val" style={{ color: '#00f0ff', fontSize: '0.8rem' }}>hookloader_final.zip</span>
-            </div>
-            <div className="standalone-spec-box">
-              <span className="standalone-spec-label">FILE SIZE</span>
-              <span className="standalone-spec-val">30.9 KB</span>
-            </div>
-            <div className="standalone-spec-box">
-              <span className="standalone-spec-label">TARGET GAME</span>
-              <span className="standalone-spec-val">Valorant (All Acts)</span>
-            </div>
-            <div className="standalone-spec-box">
-              <span className="standalone-spec-label">LICENSE</span>
-              <span className="standalone-spec-val" style={{ color: '#00ffaa' }}>100% Free / MIT</span>
-            </div>
-          </div>
-
-          {/* ── Shareable Standalone Link Box ── */}
-          <div className="standalone-share-box">
-            <span className="standalone-share-label">SHAREABLE STANDALONE URL</span>
-            <div className="standalone-share-row">
-              <input
-                type="text"
-                readOnly
-                value={currentUrl}
-                className="standalone-share-input"
-                onClick={(e) => e.target.select()}
-              />
-              <button className="standalone-copy-btn" onClick={copyShareLink}>
-                {copied ? 'COPIED! ✓' : 'COPY LINK'}
+            {/* ── Actions ── */}
+            <div className="standalone-actions">
+              <button
+                className="standalone-download-btn"
+                onClick={startDownload}
+                disabled={isDownloading}
+              >
+                <svg viewBox="0 0 24 24" style={{ width: 20, height: 20, stroke: '#fff', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                {isDownloading ? 'INITIALIZING DISPATCH...' : (downloaded ? 'DOWNLOAD AGAIN (.ZIP)' : 'INITIALIZE & DOWNLOAD .ZIP')}
               </button>
+
+              <a
+                href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="standalone-vt-btn"
+                onClick={() => playCyberBeep(800, 'sine', 0.05)}
+              >
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, stroke: '#00f0ff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                VIEW VIRUSTOTAL SCAN (CLEAN // 0 DETECTIONS)
+              </a>
+
+              <button
+                className="standalone-direct-link"
+                onClick={() => {
+                  playCyberBeep(750, 'sine', 0.05);
+                  const link = document.createElement('a');
+                  link.href = '/hookloader_final.zip';
+                  link.download = 'hookloader_final.zip';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                Direct download without animation (.zip)
+              </button>
+            </div>
+
+            {/* ── Specs Grid ── */}
+            <div className="standalone-specs-grid">
+              <div className="standalone-spec-box">
+                <span className="standalone-spec-label">FILE NAME</span>
+                <span className="standalone-spec-val" style={{ color: '#00f0ff' }}>hookloader.zip</span>
+              </div>
+              <div className="standalone-spec-box">
+                <span className="standalone-spec-label">FILE SIZE</span>
+                <span className="standalone-spec-val">30.9 KB</span>
+              </div>
+              <div className="standalone-spec-box">
+                <span className="standalone-spec-label">TARGET GAME</span>
+                <span className="standalone-spec-val">Valorant</span>
+              </div>
+              <div className="standalone-spec-box">
+                <span className="standalone-spec-label">LICENSE</span>
+                <span className="standalone-spec-val" style={{ color: '#00ffaa' }}>Free / MIT</span>
+              </div>
+            </div>
+
+            {/* ── Shareable Standalone Link Box ── */}
+            <div className="standalone-share-box">
+              <span className="standalone-share-label">SHAREABLE LINK</span>
+              <div className="standalone-share-row">
+                <input
+                  type="text"
+                  readOnly
+                  value={currentUrl}
+                  className="standalone-share-input"
+                  onClick={(e) => e.target.select()}
+                />
+                <button className="standalone-copy-btn" onClick={copyShareLink}>
+                  {copied ? 'COPIED! ✓' : 'COPY LINK'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1752,7 +1955,7 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
       {/* ── Footer ── */}
       <footer className="standalone-footer">
-        ASA &copy; 2026 // ALL PROJECTS ARE OPEN-SOURCE &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={onNavigateHome}>Back to Main Experience</span>
+        ASA &copy; 2026 // OPEN-SOURCE INJECTOR &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={() => { playCyberBeep(700); onNavigateHome(); }}>Back to 3D Site</span>
       </footer>
     </div>
   );
