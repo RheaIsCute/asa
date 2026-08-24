@@ -17,10 +17,6 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
-body.theme-favsong {
-  --accent: #ff69b4;
-  --accent-rgb: 255, 105, 180;
-}
 
 body, html {
   margin: 0;
@@ -965,18 +961,6 @@ body {
   stroke: none !important;
 }
 
-body.theme-favsong .social-icon-discord svg,
-body.theme-favsong .discord-svg {
-  fill: #ff69b4 !important;
-  stroke: none !important;
-}
-
-body.theme-favsong .panel-title svg,
-body.theme-favsong .hud-icon svg {
-  stroke: #ff69b4;
-  fill: none;
-  filter: drop-shadow(0 0 6px #ff69b4);
-}
 
 @keyframes modalFadeIn {
   from { opacity: 0; }

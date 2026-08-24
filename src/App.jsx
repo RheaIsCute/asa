@@ -212,112 +212,20 @@ const NORMAL_LYRICS = [
   { start: 123.60, end: 127.00, text: "Would you ever—, uh" }
 ];
 
-const FAV_SONG_LYRICS = [
-  { start: 12.63, end: 14.28, text: "Make me an addict" },
-  { start: 14.28, end: 15.65, text: "Make me an addict" },
-  { start: 15.65, end: 18.57, text: "I'm going dumber\nevery time I answer you" },
-  { start: 18.57, end: 20.15, text: "Ooh ooh ooh ooh ooh" },
-  { start: 20.15, end: 21.46, text: "Can't say no to you" },
-  { start: 21.46, end: 23.01, text: "Ooh ooh ooh ooh ooh" },
-  { start: 23.01, end: 24.62, text: "Can't say no to you" },
-  { start: 24.62, end: 26.34, text: "Make me an addict" },
-  { start: 26.34, end: 27.76, text: "Make me an addict" },
-  { start: 27.76, end: 30.57, text: "I'm falling harder\nevery time I cum for you" },
-  { start: 30.57, end: 32.18, text: "Ooh ooh ooh ooh ooh" },
-  { start: 32.18, end: 33.72, text: "Can't say no to you" },
-  { start: 33.72, end: 35.32, text: "Ooh ooh ooh ooh ooh" },
-  { start: 35.32, end: 36.63, text: "Can't say no to you" },
-  { start: 36.63, end: 39.69, text: "Fall in deeper,\nfalling into you" },
-  { start: 39.69, end: 42.66, text: "Falling deeper,\nlike you want me to" },
-  { start: 42.66, end: 45.64, text: "Fall in deeper,\nfalling into you" },
-  { start: 45.64, end: 48.74, text: "Falling deeper,\nlike you need me to" },
-  { start: 48.74, end: 51.57, text: "Plug me in and baby\nI could be your quick fix" },
-  { start: 51.57, end: 53.07, text: "Loving this addiction" },
-  { start: 53.07, end: 54.67, text: "Entertainment sickness" },
-  { start: 54.67, end: 57.40, text: "Getting off to all\nyour desperation" },
-  { start: 57.40, end: 60.67, text: "I love it, you love\ngiving into temptation" },
-  { start: 60.67, end: 62.13, text: "Love it when you\ncall my name" },
-  { start: 62.13, end: 63.74, text: "I don't wanna\nuse my brain" },
-  { start: 63.74, end: 66.39, text: "I just wanna be your secret\nand your plaything" },
-  { start: 66.39, end: 67.82, text: "Ah ah ah ah" },
-  { start: 67.82, end: 69.43, text: "Love it when\nyou make me" },
-  { start: 69.43, end: 70.94, text: "Ah ah ah ah" },
-  { start: 70.94, end: 72.75, text: "Now come and\nruin me baby" },
-  { start: 72.75, end: 75.66, text: "And we never gave a fuck\nabout each other" },
-  { start: 75.66, end: 78.49, text: "And we never gave a fuck\nabout each other" },
-  { start: 78.49, end: 81.57, text: "Play with me until\nyou go and find another" },
-  { start: 81.57, end: 84.78, text: "Never really gave a fuck,\nnow fuck me up" },
-  { start: 84.78, end: 86.27, text: "Make me an addict" },
-  { start: 86.27, end: 87.78, text: "Make me an addict" },
-  { start: 87.78, end: 90.56, text: "I'm going dumber\nevery time I answer you" },
-  { start: 90.56, end: 92.19, text: "Ooh ooh ooh ooh ooh" },
-  { start: 92.19, end: 93.68, text: "Can't say no to you" },
-  { start: 93.68, end: 95.25, text: "Ooh ooh ooh ooh ooh" },
-  { start: 95.25, end: 96.72, text: "Can't say no to you" },
-  { start: 96.72, end: 98.31, text: "Make me an addict" },
-  { start: 98.31, end: 99.81, text: "Make me an addict" },
-  { start: 99.81, end: 102.61, text: "I'm falling harder\nevery time I cum for you" },
-  { start: 102.61, end: 104.18, text: "Ooh ooh ooh ooh ooh" },
-  { start: 104.18, end: 105.74, text: "Can't say no to you" },
-  { start: 105.74, end: 107.33, text: "Ooh ooh ooh ooh ooh" },
-  { start: 107.33, end: 108.74, text: "Can't say no to you" },
-  { start: 108.74, end: 111.69, text: "Fall in deeper,\nfalling into you" },
-  { start: 111.69, end: 114.66, text: "Falling deeper,\nlike you want me to" },
-  { start: 114.66, end: 117.65, text: "Fall in deeper,\nfalling into you" },
-  { start: 117.65, end: 120.66, text: "Falling deeper,\nlike you need me to" },
-  { start: 120.66, end: 126.67, text: "I'm going dumber\nevery time I answer you" },
-  { start: 126.67, end: 132.71, text: "And I'm falling harder\nevery time I cum for you" },
-  { start: 132.71, end: 134.16, text: "I wanna be your fiend" },
-  { start: 134.16, end: 135.67, text: "I wanna see you pleased" },
-  { start: 135.67, end: 138.44, text: "I wanna prove\nI can match your freak" },
-  { start: 138.44, end: 141.49, text: "Begging down on my knees\nfor you to tease me" },
-  { start: 141.49, end: 144.47, text: "And if I'm good,\nwill I get a treat?" },
-  { start: 144.47, end: 150.54, text: "So come and whisper all the dirty\nlittle things that you wanna do to me" },
-  { start: 150.54, end: 156.70, text: "I'm a junkie, you're the drug\nthat keeps me coming back for more" },
-  { start: 156.70, end: 160.40, text: "I just, I just\ncan't get enough" },
-  { start: 160.40, end: 162.50, text: "I need it so bad" },
-  { start: 162.50, end: 166.47, text: "I'd do anything for you,\nanything you want" },
-  { start: 166.47, end: 168.74, text: "Obsessed with\nthe way you" },
-  { start: 168.74, end: 170.32, text: "Make me an addict" },
-  { start: 170.32, end: 171.78, text: "Make me an addict" },
-  { start: 171.78, end: 174.61, text: "I'm going dumber\nevery time I answer you" },
-  { start: 174.61, end: 176.24, text: "Ooh ooh ooh ooh ooh" },
-  { start: 176.24, end: 177.73, text: "Can't say no to you" },
-  { start: 177.73, end: 179.31, text: "Ooh ooh ooh ooh ooh" },
-  { start: 179.31, end: 180.72, text: "Can't say no to you" },
-  { start: 180.72, end: 182.31, text: "Make me an addict" },
-  { start: 182.31, end: 183.81, text: "Make me an addict" },
-  { start: 183.81, end: 186.65, text: "I'm falling harder\nevery time I cum for you" },
-  { start: 186.65, end: 188.26, text: "Ooh ooh ooh ooh ooh" },
-  { start: 188.26, end: 189.77, text: "Can't say no to you" },
-  { start: 189.77, end: 191.33, text: "Ooh ooh ooh ooh ooh" },
-  { start: 191.33, end: 192.79, text: "Can't say no to you" },
-  { start: 192.79, end: 195.77, text: "Fall in deeper,\nfalling into you" },
-  { start: 195.77, end: 198.73, text: "Falling deeper,\nlike you want me to" },
-  { start: 198.73, end: 201.72, text: "Fall in deeper,\nfalling into you" },
-  { start: 201.72, end: 205.56, text: "Falling deeper,\nlike you need me to" },
-  { start: 205.56, end: 209.00, text: "I need you so bad" }
-];
+
 
 // ── Lyrics Overlay (HTML — dynamic chromatic glitch effect) ──
-const LyricsOverlay = ({ started, themeMode }) => {
+const LyricsOverlay = ({ started }) => {
   const [currentLyric, setCurrentLyric] = useState("");
   const textRef = useRef();
-  const themeModeRef = useRef(themeMode);
-
-  useEffect(() => {
-    themeModeRef.current = themeMode;
-  }, [themeMode]);
 
   useEffect(() => {
     if (!started) return;
     let raf;
     const tick = () => {
       if (audioRef && audioState.playing) {
-        const isFav = (themeModeRef.current === 'favSong') || (audioRef.src && audioRef.src.toLowerCase().includes('addict'));
-        const t = audioRef.currentTime + (isFav ? 0.243 : 0);
-        const activeArray = isFav ? FAV_SONG_LYRICS : NORMAL_LYRICS;
-        const active = activeArray.find(l => t >= l.start && t <= l.end);
+        const t = audioRef.currentTime;
+        const active = NORMAL_LYRICS.find(l => t >= l.start && t <= l.end);
         setCurrentLyric(active ? active.text : "");
 
         if (textRef.current) {
@@ -360,8 +268,7 @@ const LyricsOverlay = ({ started, themeMode }) => {
 
             const coreAlpha = 0.4 + bass * 0.5;
             const outerAlpha = 0.1 + bass * 0.3;
-            const rgbColor = isFav ? '255, 105, 180' : '160, 32, 240';
-            mainLayer.style.textShadow = `0 0 30px rgba(${rgbColor}, ${coreAlpha}), 0 0 80px rgba(${rgbColor}, ${outerAlpha})`;
+            mainLayer.style.textShadow = `0 0 30px rgba(160, 32, 240, ${coreAlpha}), 0 0 80px rgba(160, 32, 240, ${outerAlpha})`;
             mainLayer.style.color = `rgba(255, 255, 255, ${0.05 + bass * 0.2})`;
           }
         }
@@ -432,7 +339,7 @@ const IntroParticles = ({ playing, themeMode, isMobile }) => {
     <group ref={groupRef} position={[0, 0, 0]}>
       <instancedMesh ref={meshRef} args={[null, null, particlesCount]}>
         <sphereGeometry args={[0.25, 6, 6]} />
-        <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial color="#a020f0" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
       </instancedMesh>
     </group>
   );
@@ -450,7 +357,7 @@ const createHeartShape = () => {
   return shape;
 };
 
-const HeartShapes = ({ themeMode, isMobile }) => {
+const HeartShapes = ({ isMobile }) => {
   const group = useRef();
   const count = isMobile ? 4 : 8;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -485,61 +392,15 @@ const HeartShapes = ({ themeMode, isMobile }) => {
     }
   });
 
-  const color = themeMode === 'favSong' ? '#ff1493' : '#a020f0';
-
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <extrudeGeometry args={[heartShape, { depth: 0.5, bevelEnabled: false }]} />
-      <meshBasicMaterial color={color} transparent opacity={0.3} wireframe />
+      <meshBasicMaterial color="#a020f0" transparent opacity={0.3} wireframe />
     </instancedMesh>
   );
 };
 
-const FloatingHearts = ({ themeMode, isMobile }) => {
-  const group = useRef();
-  const count = isMobile ? 8 : 25;
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const heartShape = useMemo(() => createHeartShape(), []);
 
-  const shapesData = useMemo(() => {
-    const data = [];
-    for (let i = 0; i < count; i++) {
-      data.push({
-        pos: [(Math.random() - 0.5) * 120, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 120],
-        rot: [Math.PI, 0, 0],
-        speedY: Math.random() * 0.8 + 0.3,
-        scale: Math.random() * 0.08 + 0.03,
-      });
-    }
-    return data;
-  }, [count]);
-
-  useFrame((state, delta) => {
-    if (group.current && themeMode === 'favSong') {
-      shapesData.forEach((shape, i) => {
-        shape.pos[1] += shape.speedY * delta * 15;
-        if (shape.pos[1] > 100) shape.pos[1] = -40;
-        shape.rot[1] = Math.sin(state.clock.elapsedTime * 2 + i) * 0.3;
-        dummy.position.set(...shape.pos);
-        dummy.rotation.set(shape.rot[0], shape.rot[1], shape.rot[2]);
-        const s = shape.scale * (1 + audioState.smoothBass * 0.3);
-        dummy.scale.set(s, s, s);
-        dummy.updateMatrix();
-        group.current.setMatrixAt(i, dummy.matrix);
-      });
-      group.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  if (themeMode !== 'favSong') return null;
-
-  return (
-    <instancedMesh ref={group} args={[null, null, count]}>
-      <extrudeGeometry args={[heartShape, { depth: 0.2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.1, bevelThickness: 0.1 }]} />
-      <meshBasicMaterial color="#ff69b4" transparent opacity={0.5} blending={THREE.AdditiveBlending} />
-    </instancedMesh>
-  );
-};
 
 const HorizonTrees = () => {
   const texture = useTexture('/trees.png');
@@ -573,7 +434,7 @@ const HorizonTrees = () => {
   );
 };
 
-const VoidShapes = ({ themeMode, isMobile }) => {
+const VoidShapes = ({ isMobile }) => {
   const group = useRef();
   const count = isMobile ? 6 : 15;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -617,17 +478,15 @@ const VoidShapes = ({ themeMode, isMobile }) => {
     }
   });
 
-  const color = themeMode === 'favSong' ? '#ff69b4' : '#a020f0';
-
   return (
     <instancedMesh ref={group} args={[null, null, count]}>
       <icosahedronGeometry args={[1, 0]} />
-      <meshBasicMaterial color={color} wireframe transparent opacity={0.15} />
+      <meshBasicMaterial color="#a020f0" wireframe transparent opacity={0.15} />
     </instancedMesh>
   );
 };
 
-const AmbientParticles = ({ themeMode, isMobile }) => {
+const AmbientParticles = ({ isMobile }) => {
   const count = isMobile ? 50 : 150;
   const mesh = useRef();
   const matRef = useRef();
@@ -653,11 +512,7 @@ const AmbientParticles = ({ themeMode, isMobile }) => {
         matRef.current.opacity = 0.3 + audioState.smoothBass * 0.7;
 
         const b = audioState.smoothBass;
-        if (themeMode === 'favSong') {
-          matRef.current.color.setRGB(1.0, 0.4 + b * 0.6, 0.7 + b * 0.3);
-        } else {
-          matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
-        }
+        matRef.current.color.setRGB(0.63 + b * 0.37, 0.12 * (1 - b), 0.94);
       }
     }
   });
@@ -672,7 +527,7 @@ const AmbientParticles = ({ themeMode, isMobile }) => {
   );
 };
 
-const BassShockwaves = ({ themeMode, isMobile }) => {
+const BassShockwaves = ({ isMobile }) => {
   const MAX_RINGS = isMobile ? 3 : 6;
   const ringsRef = useRef([]);
   const ringState = useRef(Array.from({ length: MAX_RINGS }, () => ({
@@ -710,7 +565,7 @@ const BassShockwaves = ({ themeMode, isMobile }) => {
           if (progress < 0.08) {
             mesh.material.color.setRGB(1, 1, 1);
           } else {
-            mesh.material.color.setHex(themeMode === 'favSong' ? 0xff69b4 : 0xa020f0);
+            mesh.material.color.setHex(0xa020f0);
           }
         }
       } else {
@@ -724,47 +579,16 @@ const BassShockwaves = ({ themeMode, isMobile }) => {
       {Array.from({ length: MAX_RINGS }, (_, i) => (
         <mesh key={i} ref={el => ringsRef.current[i] = el} visible={false}>
           <ringGeometry args={[0.85, 1, 64]} />
-          <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <meshBasicMaterial color="#a020f0" transparent opacity={0} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
       ))}
     </group>
   );
 };
 
-const RomanticSparkles = ({ themeMode, isMobile }) => {
-  const count = isMobile ? 60 : 300;
-  const mesh = useRef();
 
-  const particles = useMemo(() => {
-    const temp = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      temp[i * 3] = (Math.random() - 0.5) * 150;
-      temp[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20;
-      temp[i * 3 + 2] = (Math.random() - 0.5) * 150;
-    }
-    return temp;
-  }, [count]);
 
-  useFrame((state, delta) => {
-    if (mesh.current && themeMode === 'favSong') {
-      mesh.current.rotation.y += delta * 0.15;
-      mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 2;
-    }
-  });
-
-  if (themeMode !== 'favSong') return null;
-
-  return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={particles} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial size={0.6} color="#fff" transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
-    </points>
-  );
-};
-
-const AudioVisualizerRing = ({ themeMode, isMobile }) => {
+const AudioVisualizerRing = ({ isMobile }) => {
   const meshRef = useRef();
   const barCount = isMobile ? 32 : 64;
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -794,23 +618,19 @@ const AudioVisualizerRing = ({ themeMode, isMobile }) => {
   return (
     <instancedMesh ref={meshRef} args={[null, null, barCount]}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshBasicMaterial color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <meshBasicMaterial color="#a020f0" transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
     </instancedMesh>
   );
 };
 
-const ReactiveFloor = ({ themeMode }) => {
+const ReactiveFloor = () => {
   const meshRef = useRef();
 
   useFrame(() => {
     if (meshRef.current) {
       const b = audioState.smoothBass;
       meshRef.current.material.opacity = 0.1 + b * 0.35;
-      if (themeMode === 'favSong') {
-        meshRef.current.material.color.setRGB(b * 0.9 + 0.1, 0.05 + b * 0.2, 0.3 + b * 0.4);
-      } else {
-        meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
-      }
+      meshRef.current.material.color.setRGB(0.02 + b * 0.4, 0, b * 0.6);
     }
   });
 
@@ -844,7 +664,8 @@ const ICONS = {
   socials: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
   archive: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-  status: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'
+  status: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+  projects: '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>'
 };
 
 const SECTIONS_DATA = [
@@ -937,34 +758,33 @@ const SECTIONS_DATA = [
         </div>
       </div>
     `
-  }
-];
-
-const FAV_SONG_CARDS_DATA = [
-  {
-    id: 'fav-1', title: 'LOVE NOTE', icon: ICONS.identity, width: '400px',
-    isFavCard: true,
-    content: `<div class="hud-block full" style="padding: 16px;"><div style="font-size: 1rem; color: #ffb6c1; line-height: 1.6;">You make my heart skip a beat every time I see you. I just wanted to leave this here to remind you how much you mean to me. Every second with you feels like a dream I never want to wake up from.</div></div>`
   },
   {
-    id: 'fav-2', title: 'MEMORIES', icon: ICONS.archive, width: '400px',
-    isFavCard: true,
-    content: `<div class="hud-block full" style="padding: 16px;"><div style="color: #fff; font-size: 0.95rem; line-height: 1.8;">&#x2022; Late night calls<br/>&#x2022; Playing games until 4AM<br/>&#x2022; Your beautiful laugh<br/>&#x2022; When we first met...</div></div>`
-  },
-  {
-    id: 'fav-3', title: 'THINGS I LOVE ABOUT YOU', icon: ICONS.socials, width: '400px',
-    isFavCard: true,
-    content: `<div class="hud-block full" style="padding: 16px;"><div style="color: #ff69b4; font-size: 0.95rem; line-height: 1.8;">Everything. Your smile, your eyes, the way you say my name, how safe you make me feel. I'm addicted to you.</div></div>`
-  },
-  {
-    id: 'fav-4', title: 'CONFESSION', icon: ICONS.identity, width: '400px',
-    isFavCard: true,
-    content: `<div class="hud-block full" style="padding: 16px; text-align: center;"><div class="hud-label">STATUS</div><div class="hud-value" style="color: #ff69b4; font-size: 1.3rem; margin-top: 8px;">Completely Yours</div></div>`
-  },
-  {
-    id: 'fav-5', title: 'IF YOU EVER READ THIS', icon: ICONS.status, width: '400px',
-    isFavCard: true,
-    content: `<div class="hud-block full" style="padding: 16px;"><div style="font-size: 1rem; color: #fff;">I love you. More than anything in this world. Never forget that. 💕</div></div>`
+    id: 'projects',
+    title: 'PROJECTS',
+    icon: ICONS.projects,
+    width: '420px',
+    camOffset: [5, 2, 22],
+    lookOffset: [0, 0, 0],
+    content: `
+      <div class="hud-grid" style="gap: 12px;">
+        <div class="hud-block full" style="padding: 16px;">
+          <div class="hud-label">HOOKLOADER</div>
+          <div class="hud-value" style="font-size: 1.1rem; margin-top: 6px;">Valorant Hook Loader</div>
+          <div style="margin-top: 12px; font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.7;">
+            A hookloader designed for Valorant cheats. This is open-source code &mdash; completely free to use, modify, and redistribute without any need to credit me.
+          </div>
+          <a href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection" target="_blank" rel="noopener noreferrer" class="hud-block hoverable" style="margin-top: 16px; cursor: pointer; text-align: center; padding: 12px; text-decoration: none; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <div class="hud-label" style="margin: 0;">VIEW ON VIRUSTOTAL</div>
+          </a>
+        </div>
+        <div class="hud-block full" style="padding: 12px; background: rgba(var(--accent-rgb), 0.08);">
+          <div class="hud-label" style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">LICENSE</div>
+          <div class="hud-value small" style="margin-top: 4px;">Free &amp; Open Source &mdash; No Credit Required</div>
+        </div>
+      </div>
+    `
   }
 ];
 
@@ -1051,7 +871,7 @@ const CardParticles = ({ materialized, playing, dataIndex, isMobile }) => {
   );
 };
 
-const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMode, favSongStage, onPlayFavSong, onRevert, onFavCardClick, isMobile }) => {
+const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, isMobile }) => {
   const outerGroupRef = useRef();
   const innerGroupRef = useRef();
   const [materialized, setMaterialized] = useState(false);
@@ -1059,57 +879,30 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
   const [isGlitching, setIsGlitching] = useState(false);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
-  const getHeartTarget = (index) => {
-    const map = [
-      { x: 0, y: -22, z: 15 },
-      { x: -12, y: -10, z: 12 },
-      { x: -22, y: 2, z: 9 },
-      { x: -25, y: 16, z: 6 },
-      { x: -12, y: 25, z: 5 },
-      { x: 0, y: 14, z: 8 },
-      { x: 12, y: 25, z: 5 },
-      { x: 25, y: 16, z: 6 },
-      { x: 22, y: 2, z: 9 },
-      { x: 12, y: -10, z: 12 },
-    ];
-    return map[index % 10];
-  };
-
   useFrame((state, delta) => {
     const d = Math.min(delta, 0.1);
     if (outerGroupRef.current && innerGroupRef.current) {
-      if (favSongStage === 'playing') {
-        const tPos = getHeartTarget(data.index);
-        outerGroupRef.current.position.lerp(new THREE.Vector3(tPos.x, tPos.y + Math.sin(state.clock.elapsedTime + data.index) * 2, tPos.z), d * 3);
+      const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
+      const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
+      outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, baseFloat + bassFloat, data.z), d * 5);
 
-        const worldRotY = carouselRef.current ? carouselRef.current.rotation.y : 0;
-        innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -worldRotY - data.angle, d * 3);
-        innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, 0, d * 3);
-        innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, 0, d * 3);
-        innerGroupRef.current.scale.lerp(new THREE.Vector3(0.8, 0.8, 0.8), d * 3);
-      } else {
-        const baseFloat = Math.sin(state.clock.elapsedTime * 1.5 + data.index) * 0.5;
-        const bassFloat = Math.sin(state.clock.elapsedTime * 3 + data.index * 0.7) * audioState.smoothBass * 1.5;
-        outerGroupRef.current.position.lerp(new THREE.Vector3(data.x, baseFloat + bassFloat, data.z), d * 5);
+      const targetScale = isHovered && !activeId ? 1.03 : 1.0;
+      const targetZ = isHovered && !activeId ? 2.0 : 0;
+      let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
+      let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
 
-        const targetScale = isHovered && !activeId ? 1.03 : 1.0;
-        const targetZ = isHovered && !activeId ? 2.0 : 0;
-        let targetRotX = isHovered && !activeId ? hoverPos.y * 0.2 : 0;
-        let targetRotY = isHovered && !activeId ? -hoverPos.x * 0.2 : 0;
-
-        if (isHovered && !activeId && carouselRef?.current) {
-          const worldRotY = carouselRef.current.rotation.y + data.angle;
-          let diff = -worldRotY;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          targetRotY += diff;
-        }
-
-        innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
-        innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
-        innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
-        innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
+      if (isHovered && !activeId && carouselRef?.current) {
+        const worldRotY = carouselRef.current.rotation.y + data.angle;
+        let diff = -worldRotY;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        targetRotY += diff;
       }
+
+      innerGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), d * 10);
+      innerGroupRef.current.position.z = THREE.MathUtils.lerp(innerGroupRef.current.position.z, targetZ, d * 10);
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, targetRotX, d * 10);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, targetRotY, d * 10);
 
       if (playing && !materialized && window.introTime) {
         if (performance.now() - window.introTime > window.INTRO_DELAY_SEC * 1000 + 3300 + data.index * 150) {
@@ -1120,16 +913,9 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
   });
 
   const isActive = activeId === data.id;
-  const isDimmed = activeId && !isActive && favSongStage !== 'playing';
+  const isDimmed = activeId && !isActive;
 
   const handleClick = (e) => {
-    if (favSongStage === 'playing') {
-      setIsGlitching(true);
-      setTimeout(() => setIsGlitching(false), 300);
-      if (onFavCardClick) onFavCardClick(data);
-      return;
-    }
-
     if (!isActive) {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
@@ -1148,7 +934,7 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
 
   return (
     <group ref={outerGroupRef} rotation={[0, data.angle, 0]}>
-      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} themeMode={themeMode} isMobile={isMobile} />
+      <CardParticles materialized={materialized} playing={playing} dataIndex={data.index} isMobile={isMobile} />
       <group ref={innerGroupRef}>
         <Html transform distanceFactor={15} center zIndexRange={[100, 0]}>
           <div
@@ -1174,25 +960,13 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, themeMod
                     <div className="hud-block full" style={{ padding: '20px' }}>
                       <div className="hud-label">NOW PLAYING</div>
                       <div className="hud-value" style={{ fontSize: '1.3rem', marginTop: '6px' }}>
-                        {themeMode === 'favSong' && favSongStage === 'playing' ? 'Addict' : 'Music and me'}
+                        Music and me
                       </div>
                       <div className="hud-value small" style={{ marginTop: '6px', color: 'rgba(255,255,255,0.6)' }}>
-                        {themeMode === 'favSong' && favSongStage === 'playing' ? 'by PiNKII x DAEGHO' : 'by Fakemink'}
+                        by Fakemink
                       </div>
                       <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '20px', position: 'relative', overflow: 'hidden' }}>
                         <div id="music-progress-bar" style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '0%', background: 'var(--accent)', borderRadius: '2px', boxShadow: '0 0 10px var(--accent)' }}></div>
-                      </div>
-
-                      <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                        {favSongStage !== 'playing' ? (
-                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', background: 'rgba(255,20,147,0.2)', borderColor: '#ff69b4', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onPlayFavSong(true); }}>
-                            <div className="hud-label" style={{ margin: 'auto' }}>PLAY FAV SONG</div>
-                          </div>
-                        ) : (
-                          <div className="hud-block hoverable" style={{ cursor: 'pointer', flex: 1, textAlign: 'center', color: '#fff', padding: '12px' }} onClick={(e) => { e.stopPropagation(); onRevert(); }}>
-                            <div className="hud-label" style={{ margin: 'auto' }}>REVERT</div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1216,7 +990,6 @@ const SceneController = ({
   setActiveSection,
   playing,
   carouselRef,
-  favSongStage,
   sections,
   targetAngleCommand,
   onCenterIndexChange
@@ -1619,14 +1392,8 @@ const SceneController = ({
 
       } else {
         // OVERVIEW MODE
-        if (favSongStage === 'playing') {
-          pointerTracker.current.target = 0;
-          pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, 0, 8 * d);
-          targetRot.current = pointerTracker.current.current;
-        } else {
-          pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
-          targetRot.current = pointerTracker.current.current;
-        }
+        pointerTracker.current.current = THREE.MathUtils.lerp(pointerTracker.current.current, pointerTracker.current.target, 8 * d);
+        targetRot.current = pointerTracker.current.current;
 
         if (carouselRef.current) {
           carouselRef.current.rotation.y = THREE.MathUtils.lerp(carouselRef.current.rotation.y, targetRot.current, 10 * d);
@@ -1645,7 +1412,7 @@ const SceneController = ({
         }
 
         const overviewZ = isPortrait ? (aspect < 0.65 ? 88 : 78) : 65;
-        const orbitAngle = favSongStage === 'playing' ? 0 : time * 0.15;
+        const orbitAngle = time * 0.15;
         const orbitRadius = (isPortrait ? 1 : 2) + smoothBass * 3;
         const targetCamPos = new THREE.Vector3(
           Math.sin(orbitAngle) * orbitRadius + parallaxX,
@@ -1713,9 +1480,6 @@ function App() {
   const [introFading, setIntroFading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.45);
-  const [themeMode, setThemeMode] = useState('normal');
-  const [favSongStage, setFavSongStage] = useState('idle');
-  const [favModalData, setFavModalData] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -1736,7 +1500,7 @@ function App() {
   }, []);
 
   const activeSections = useMemo(() => {
-    const dataArray = themeMode === 'favSong' ? [...SECTIONS_DATA, ...FAV_SONG_CARDS_DATA] : SECTIONS_DATA;
+    const dataArray = SECTIONS_DATA;
     return dataArray.map((s, i) => {
       const angle = (i / dataArray.length) * Math.PI * 2;
       return {
@@ -1747,27 +1511,15 @@ function App() {
         z: Math.cos(angle) * R
       };
     });
-  }, [themeMode]);
+  }, []);
 
   useEffect(() => {
-    if (themeMode === 'favSong') {
-      document.body.classList.add('theme-favsong');
-      document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23ff69b4" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto`;
-    } else {
-      document.body.classList.remove('theme-favsong');
-      document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23a020f0" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto`;
-    }
-  }, [themeMode]);
+    document.body.classList.remove('theme-favsong');
+    document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="%23a020f0" opacity="0.8" /><circle cx="12" cy="12" r="1.5" fill="white" /></svg>') 12 12, auto`;
+  }, []);
 
   const carouselRef = useRef();
 
-  const handlePlayFavSong = (playImmediately = false) => {
-    switchAudio('/PiNKII_x_DAEGHO_-_Addict_KLICKAUD.mp3', playImmediately);
-  };
-
-  const handleRevert = () => {
-    switchAudio('/music_and_me.mp3', true);
-  };
 
   const handleStart = () => {
     initAudio();
@@ -1862,85 +1614,7 @@ function App() {
       {started && <div className="audio-blur-overlay"></div>}
 
       {/* ── Lyrics as HTML overlay ── */}
-      <LyricsOverlay started={started} themeMode={themeMode} />
-
-      {/* ── Fav Song Modal Overlay ── */}
-      {favModalData && (
-        <div className="fav-modal-overlay" onClick={() => setFavModalData(null)}>
-          <div className="fav-modal-content" onClick={e => e.stopPropagation()}>
-            <button className="fav-modal-close" onClick={() => setFavModalData(null)}>×</button>
-            <h2 className="fav-modal-title" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <div dangerouslySetInnerHTML={{ __html: favModalData.icon }} style={{ display: 'flex', width: '28px', height: '28px' }} />
-              {favModalData.title}
-            </h2>
-            {favModalData.id === 'music' ? (
-              <div className="hud-block full" style={{ padding: '20px', textAlign: 'center' }}>
-                <div className="hud-label">NOW PLAYING</div>
-                <div className="hud-value" style={{ fontSize: '1.4rem', marginTop: '6px', color: '#ff69b4' }}>
-                  {favSongStage === 'playing' ? 'Addict' : 'Music and me'}
-                </div>
-                <div className="hud-value small" style={{ marginTop: '6px', color: 'rgba(255,255,255,0.6)' }}>
-                  {favSongStage === 'playing' ? 'by PiNKII x DAEGHO' : 'by Fakemink'}
-                </div>
-                <div style={{ marginTop: '20px' }}>
-                  {favSongStage === 'playing' ? (
-                    <button
-                      className="hud-block hoverable"
-                      style={{
-                        cursor: 'pointer',
-                        width: '100%',
-                        padding: '12px',
-                        background: 'rgba(255, 20, 147, 0.25)',
-                        border: '1px solid #ff69b4',
-                        color: '#fff',
-                        borderRadius: '8px',
-                        fontFamily: 'Space Mono, monospace',
-                        fontWeight: 'bold',
-                        letterSpacing: '0.1em'
-                      }}
-                      onClick={() => {
-                        setFavModalData(null);
-                        setThemeMode('normal');
-                        setFavSongStage('idle');
-                        handleRevert();
-                      }}
-                    >
-                      [ REVERT TO NORMAL MODE ]
-                    </button>
-                  ) : (
-                    <button
-                      className="hud-block hoverable"
-                      style={{
-                        cursor: 'pointer',
-                        width: '100%',
-                        padding: '12px',
-                        background: 'rgba(255, 20, 147, 0.25)',
-                        border: '1px solid #ff69b4',
-                        color: '#fff',
-                        borderRadius: '8px',
-                        fontFamily: 'Space Mono, monospace',
-                        fontWeight: 'bold',
-                        letterSpacing: '0.1em'
-                      }}
-                      onClick={() => {
-                        setFavModalData(null);
-                        setThemeMode('favSong');
-                        setFavSongStage('playing');
-                        handlePlayFavSong(true);
-                        setActiveSection(null);
-                      }}
-                    >
-                      [ PLAY FAV SONG ]
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div dangerouslySetInnerHTML={{ __html: favModalData.content }} />
-            )}
-          </div>
-        </div>
-      )}
+      <LyricsOverlay started={started} />
 
       {/* ── UI Layer & Controls ── */}
       {started && (
@@ -1949,7 +1623,7 @@ function App() {
           <div className="top-bar">
             <div className="sys-badge">
               <span className="sys-dot"></span>
-              <span>ASA // {themeMode === 'favSong' ? 'PINK EDITION' : 'ONLINE'}</span>
+              <span>ASA // ONLINE</span>
             </div>
             <div className="audio-controls-group">
               <button className="mute-btn" onClick={handleMute}>
@@ -1977,7 +1651,7 @@ function App() {
           )}
 
           {/* Bottom mobile navigation bar (Mobile only) */}
-          {isMobile && favSongStage !== 'playing' && (
+          {isMobile && (
             <div className="mobile-nav-container">
               <button
                 className="nav-arrow-btn"
@@ -2043,23 +1717,21 @@ function App() {
 
         <ambientLight intensity={0.2} />
         <directionalLight position={[0, 10, 5]} intensity={2} color="#ffffff" />
-        <directionalLight position={[0, -10, -5]} intensity={1} color={themeMode === 'favSong' ? "#ff69b4" : "#a020f0"} />
+        <directionalLight position={[0, -10, -5]} intensity={1} color="#a020f0" />
 
         <AudioDriver />
         <ReactiveFog />
 
-        <IntroParticles playing={started} themeMode={themeMode} isMobile={isMobile} />
+        <IntroParticles playing={started} isMobile={isMobile} />
 
         <Suspense fallback={null}>
-          <AmbientParticles themeMode={themeMode} isMobile={isMobile} />
-          <VoidShapes themeMode={themeMode} isMobile={isMobile} />
-          <HeartShapes themeMode={themeMode} isMobile={isMobile} />
-          <FloatingHearts themeMode={themeMode} isMobile={isMobile} />
-          <RomanticSparkles themeMode={themeMode} isMobile={isMobile} />
-          <HorizonTrees themeMode={themeMode} />
-          <BassShockwaves themeMode={themeMode} isMobile={isMobile} />
-          <AudioVisualizerRing themeMode={themeMode} isMobile={isMobile} />
-          <ReactiveFloor themeMode={themeMode} />
+          <AmbientParticles isMobile={isMobile} />
+          <VoidShapes isMobile={isMobile} />
+          <HeartShapes isMobile={isMobile} />
+          <HorizonTrees />
+          <BassShockwaves isMobile={isMobile} />
+          <AudioVisualizerRing isMobile={isMobile} />
+          <ReactiveFloor />
 
           <group ref={carouselRef}>
             {activeSections.map(s => (
@@ -2070,24 +1742,7 @@ function App() {
                 onClick={setActiveSection}
                 playing={started}
                 carouselRef={carouselRef}
-                themeMode={themeMode}
-                favSongStage={favSongStage}
                 isMobile={isMobile}
-                onPlayFavSong={(play = false) => {
-                  setThemeMode('favSong');
-                  if (play) {
-                    setFavSongStage('playing');
-                    handlePlayFavSong(true);
-                    setActiveSection(null);
-                  }
-                }}
-                onRevert={() => {
-                  setThemeMode('normal');
-                  setFavSongStage('idle');
-                  setFavModalData(null);
-                  handleRevert();
-                }}
-                onFavCardClick={setFavModalData}
               />
             ))}
           </group>
@@ -2097,7 +1752,6 @@ function App() {
             setActiveSection={setActiveSection}
             playing={started}
             carouselRef={carouselRef}
-            favSongStage={favSongStage}
             sections={activeSections}
             targetAngleCommand={targetAngleCommand}
             onCenterIndexChange={setCurrentCenterIndex}
