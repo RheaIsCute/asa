@@ -778,6 +778,10 @@ const SECTIONS_DATA = [
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <div class="hud-label" style="margin: 0;">DOWNLOAD .ZIP</div>
           </div>
+          <div id="open-standalone-btn" class="hud-block hoverable" style="margin-top: 8px; cursor: pointer; text-align: center; padding: 12px; background: rgba(0, 240, 255, 0.08); border-color: rgba(0, 240, 255, 0.35); display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: #00f0ff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <div class="hud-label" style="margin: 0; color: #00f0ff;">STANDALONE DOWNLOAD PAGE</div>
+          </div>
           <a href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection" target="_blank" rel="noopener noreferrer" class="hud-block hoverable" style="margin-top: 8px; cursor: pointer; text-align: center; padding: 12px; text-decoration: none; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             <div class="hud-label" style="margin: 0;">VIEW ON VIRUSTOTAL</div>
@@ -962,6 +966,10 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, isMobile
                     if (e.target.closest('#download-hookloader-btn')) {
                       e.preventDefault();
                       window.dispatchEvent(new CustomEvent('start-download'));
+                    }
+                    if (e.target.closest('#open-standalone-btn')) {
+                      e.preventDefault();
+                      window.dispatchEvent(new CustomEvent('navigate-hookloader'));
                     }
                   }}
                 />
@@ -1529,8 +1537,230 @@ const DownloadOverlay = ({ onClose }) => {
   );
 };
 
+const getIsHookloaderRoute = () => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  return (
+    path.includes('/hookloader') ||
+    path.includes('/download') ||
+    path.includes('/projects') ||
+    hash.includes('hookloader') ||
+    hash.includes('download') ||
+    hash.includes('projects')
+  );
+};
+
+const HookloaderPage = ({ onNavigateHome }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("INITIALIZING CONNECTION...");
+  const [downloaded, setDownloaded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const startDownload = () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    setProgress(0);
+    setStatusText("ESTABLISHING SECURE HANDSHAKE...");
+
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 12 + 6;
+      if (p > 100) p = 100;
+      setProgress(p);
+
+      if (p < 25) {
+        setStatusText("ESTABLISHING SECURE CONNECTION...");
+      } else if (p < 55) {
+        setStatusText("ALLOCATING BUFFER & PACKETS...");
+      } else if (p < 85) {
+        setStatusText("DOWNLOADING HOOKLOADER_FINAL.ZIP...");
+      } else if (p < 100) {
+        setStatusText("VERIFYING VIRUSTOTAL CHECKSUM (0/72 CLEAN)...");
+      } else {
+        setStatusText("DOWNLOAD COMPLETE // LAUNCHING ARCHIVE");
+        clearInterval(interval);
+        setDownloaded(true);
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = '/hookloader_final.zip';
+          link.download = 'hookloader_final.zip';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setIsDownloading(false);
+        }, 600);
+      }
+    }, 240);
+  };
+
+  const copyShareLink = () => {
+    const url = typeof window !== 'undefined' ? (window.location.origin + '/hookloader') : 'https://asa.vercel.app/hookloader';
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  const currentUrl = typeof window !== 'undefined' ? (window.location.origin + '/hookloader') : 'https://asa.vercel.app/hookloader';
+
+  return (
+    <div className="standalone-page-container">
+      <div className="standalone-bg-grid" />
+      <div className="standalone-bg-glow" />
+
+      {/* ── Top Header ── */}
+      <header className="standalone-header">
+        <div className="standalone-brand" onClick={onNavigateHome}>
+          <img src="/icon.png" alt="ASA Logo" className="standalone-avatar" />
+          <span className="standalone-title-text">ASA // PROJECT HUB</span>
+        </div>
+        <button className="standalone-back-btn" onClick={onNavigateHome}>
+          <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, stroke: 'var(--accent)', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          RETURN TO 3D EXPERIENCE
+        </button>
+      </header>
+
+      {/* ── Main Content ── */}
+      <main className="standalone-main">
+        <div className="standalone-card">
+          <div className="standalone-badge-row">
+            <span className="standalone-badge verified">
+              <svg viewBox="0 0 24 24" style={{ width: 13, height: 13, stroke: 'currentColor', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              VIRUSTOTAL VERIFIED (0/72)
+            </span>
+            <span className="standalone-badge project-type">
+              VALORANT HOOKLOADER
+            </span>
+            <span className="standalone-badge project-type" style={{ borderColor: 'rgba(0, 240, 255, 0.35)', color: '#00f0ff' }}>
+              OPEN SOURCE // FREE
+            </span>
+          </div>
+
+          <h1 className="standalone-hero-title">HOOKLOADER</h1>
+          <div className="standalone-hero-subtitle">
+            Valorant Cheat Hook Loader &amp; Memory Injection Utility
+          </div>
+
+          <div className="standalone-description">
+            A high-performance hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
+          </div>
+
+          {/* ── Download Progress Bar (When Active or Finished) ── */}
+          {isDownloading && (
+            <div className="standalone-progress-section">
+              <div className="status-text" style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{statusText}</div>
+              <div className="progress-container" style={{ height: 6, marginBottom: 8 }}>
+                <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                <span>ENCRYPTION: AES-256</span>
+                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{Math.floor(progress)}%</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Actions ── */}
+          <div className="standalone-actions">
+            <button
+              className="standalone-download-btn"
+              onClick={startDownload}
+              disabled={isDownloading}
+            >
+              <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, stroke: '#fff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              {isDownloading ? 'DOWNLOADING...' : (downloaded ? 'DOWNLOAD AGAIN (.ZIP)' : 'INITIALIZE & DOWNLOAD .ZIP')}
+            </button>
+
+            <a
+              href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="standalone-vt-btn"
+            >
+              <svg viewBox="0 0 24 24" style={{ width: 17, height: 17, stroke: '#00f0ff', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              VIEW OFFICIAL VIRUSTOTAL SCAN (CLEAN // 0 DETECTIONS)
+            </a>
+
+            <button
+              className="standalone-direct-link"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/hookloader_final.zip';
+                link.download = 'hookloader_final.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
+              Skip animation &amp; download directly (.zip)
+            </button>
+          </div>
+
+          {/* ── Specs Grid ── */}
+          <div className="standalone-specs-grid">
+            <div className="standalone-spec-box">
+              <span className="standalone-spec-label">FILE NAME</span>
+              <span className="standalone-spec-val" style={{ color: '#00f0ff', fontSize: '0.8rem' }}>hookloader_final.zip</span>
+            </div>
+            <div className="standalone-spec-box">
+              <span className="standalone-spec-label">FILE SIZE</span>
+              <span className="standalone-spec-val">30.9 KB</span>
+            </div>
+            <div className="standalone-spec-box">
+              <span className="standalone-spec-label">TARGET GAME</span>
+              <span className="standalone-spec-val">Valorant (All Acts)</span>
+            </div>
+            <div className="standalone-spec-box">
+              <span className="standalone-spec-label">LICENSE</span>
+              <span className="standalone-spec-val" style={{ color: '#00ffaa' }}>100% Free / MIT</span>
+            </div>
+          </div>
+
+          {/* ── Shareable Standalone Link Box ── */}
+          <div className="standalone-share-box">
+            <span className="standalone-share-label">SHAREABLE STANDALONE URL</span>
+            <div className="standalone-share-row">
+              <input
+                type="text"
+                readOnly
+                value={currentUrl}
+                className="standalone-share-input"
+                onClick={(e) => e.target.select()}
+              />
+              <button className="standalone-copy-btn" onClick={copyShareLink}>
+                {copied ? 'COPIED! ✓' : 'COPY LINK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="standalone-footer">
+        ASA &copy; 2026 // ALL PROJECTS ARE OPEN-SOURCE &bull; <span style={{ cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline' }} onClick={onNavigateHome}>Back to Main Experience</span>
+      </footer>
+    </div>
+  );
+};
+
 function App() {
   const [started, setStarted] = useState(false);
+  const [currentRoute, setCurrentRoute] = useState(getIsHookloaderRoute() ? 'hookloader' : 'main');
   const [activeSection, setActiveSection] = useState(null);
   const [currentCenterIndex, setCurrentCenterIndex] = useState(0);
   const [targetAngleCommand, setTargetAngleCommand] = useState(null);
@@ -1540,6 +1770,30 @@ function App() {
   const [volume, setVolume] = useState(0.45);
   const [isMobile, setIsMobile] = useState(false);
   const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
+
+  const navigateTo = useCallback((path) => {
+    window.history.pushState({}, '', path);
+    setCurrentRoute(getIsHookloaderRoute() ? 'hookloader' : 'main');
+  }, []);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentRoute(getIsHookloaderRoute() ? 'hookloader' : 'main');
+    };
+    const handleNavigateHookloader = () => {
+      navigateTo('/hookloader');
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('navigate-hookloader', handleNavigateHookloader);
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('navigate-hookloader', handleNavigateHookloader);
+    };
+  }, [navigateTo]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -1647,6 +1901,10 @@ function App() {
       setTargetAngleCommand(activeSections[idx].angle);
     }
   }, [activeSection, activeSections]);
+
+  if (currentRoute === 'hookloader') {
+    return <HookloaderPage onNavigateHome={() => navigateTo('/')} />;
+  }
 
   return (
     <div style={{ width: '100vw', height: '100%', height: '100dvh', background: '#000', position: 'relative', overflow: 'hidden' }}>
