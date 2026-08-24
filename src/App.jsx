@@ -772,16 +772,20 @@ const SECTIONS_DATA = [
           <div class="hud-label">HOOKLOADER</div>
           <div class="hud-value" style="font-size: 1.1rem; margin-top: 6px;">Valorant Hook Loader</div>
           <div style="margin-top: 12px; font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.7;">
-            A hookloader designed for Valorant cheats. This is open-source code &mdash; completely free to use, modify, and redistribute without any need to credit me.
+            A hookloader designed for Valorant cheats. This is open-source code - completely free to use, modify, and redistribute without any need to credit me.
           </div>
-          <a href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection" target="_blank" rel="noopener noreferrer" class="hud-block hoverable" style="margin-top: 16px; cursor: pointer; text-align: center; padding: 12px; text-decoration: none; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
+          <div id="download-hookloader-btn" class="hud-block hoverable" style="margin-top: 16px; cursor: pointer; text-align: center; padding: 12px; background: rgba(160, 32, 240, 0.2); border-color: rgba(160, 32, 240, 0.5); display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <div class="hud-label" style="margin: 0;">DOWNLOAD .ZIP</div>
+          </div>
+          <a href="https://www.virustotal.com/gui/file/33456b7de494d2bfe03302f3bc9cdc349e60dce1b6da863e94e767f6555564f3/detection" target="_blank" rel="noopener noreferrer" class="hud-block hoverable" style="margin-top: 8px; cursor: pointer; text-align: center; padding: 12px; text-decoration: none; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px;">
             <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             <div class="hud-label" style="margin: 0;">VIEW ON VIRUSTOTAL</div>
           </a>
         </div>
         <div class="hud-block full" style="padding: 12px; background: rgba(var(--accent-rgb), 0.08);">
           <div class="hud-label" style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">LICENSE</div>
-          <div class="hud-value small" style="margin-top: 4px;">Free &amp; Open Source &mdash; No Credit Required</div>
+          <div class="hud-value small" style="margin-top: 4px;">Free &amp; Open Source - No Credit Required</div>
         </div>
       </div>
     `
@@ -951,7 +955,16 @@ const FloatingPanel = ({ data, activeId, onClick, playing, carouselRef, isMobile
             </h2>
             <div className="panel-content-wrapper">
               {data.id !== 'music' && (
-                <div className="panel-content" dangerouslySetInnerHTML={{ __html: data.content }} />
+                <div 
+                  className="panel-content" 
+                  dangerouslySetInnerHTML={{ __html: data.content }} 
+                  onClick={(e) => {
+                    if (e.target.closest('#download-hookloader-btn')) {
+                      e.preventDefault();
+                      window.dispatchEvent(new CustomEvent('start-download'));
+                    }
+                  }}
+                />
               )}
 
               {data.id === 'music' && (
@@ -1471,6 +1484,51 @@ const Effects = ({ isMobile }) => {
 
 window.INTRO_DELAY_SEC = 3.2;
 
+const DownloadOverlay = ({ onClose }) => {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("INITIALIZING CONNECTION...");
+
+  useEffect(() => {
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 15;
+      if (p > 100) p = 100;
+      setProgress(p);
+      
+      if (p > 10 && p < 40) setStatus("BYPASSING SECURITY PROTOCOLS...");
+      else if (p >= 40 && p < 80) setStatus("DOWNLOADING PAYLOAD...");
+      else if (p >= 80 && p < 100) setStatus("DECRYPTING FILES...");
+      else if (p >= 100) {
+        setStatus("DOWNLOAD COMPLETE");
+        clearInterval(interval);
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = '/hookloader_final.zip';
+          link.download = 'hookloader_final.zip';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(onClose, 1000);
+        }, 500);
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, [onClose]);
+
+  return (
+    <div className="download-overlay">
+      <div className="download-modal">
+        <h2 className="glitch-text" data-text="HOOKLOADER">HOOKLOADER</h2>
+        <div className="status-text">{status}</div>
+        <div className="progress-container">
+          <div className="progress-bar" style={{ width: \`\${progress}%\` }}></div>
+        </div>
+        <div className="progress-percent">{Math.floor(progress)}%</div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [started, setStarted] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
@@ -1481,6 +1539,7 @@ function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.45);
   const [isMobile, setIsMobile] = useState(false);
+  const [showDownloadOverlay, setShowDownloadOverlay] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -1493,9 +1552,14 @@ function App() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     window.addEventListener('orientationchange', checkMobile);
+
+    const handleStartDownload = () => setShowDownloadOverlay(true);
+    window.addEventListener('start-download', handleStartDownload);
+
     return () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('orientationchange', checkMobile);
+      window.removeEventListener('start-download', handleStartDownload);
     };
   }, []);
 
@@ -1586,6 +1650,8 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100%', height: '100dvh', background: '#000', position: 'relative', overflow: 'hidden' }}>
+
+      {showDownloadOverlay && <DownloadOverlay onClose={() => setShowDownloadOverlay(false)} />}
 
       {/* ── Splash Screen ── */}
       <div className={`splash-screen ${started ? 'hidden' : ''}`} onClick={handleStart} onTouchEnd={handleStart}>
