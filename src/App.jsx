@@ -1758,8 +1758,6 @@ const HookloaderPage = ({ onNavigateHome }) => {
   const [downloaded, setDownloaded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
-  const [activeExplorerFile, setActiveExplorerFile] = useState('readme');
   const cardRef = useRef(null);
   const logContainerRef = useRef(null);
 
@@ -1906,96 +1904,6 @@ const HookloaderPage = ({ onNavigateHome }) => {
 
             <div className="standalone-description">
               A hookloader designed for Valorant cheats. This project is 100% open-source code &mdash; completely free to use, inspect, modify, and redistribute without any requirement to credit me.
-            </div>
-
-            {/* ── Interactive Zip File & Source Code Explorer ── */}
-            <div className="standalone-explorer-wrap">
-              <div
-                className="standalone-explorer-header"
-                onClick={() => {
-                  playCyberSFX('toggle');
-                  setIsExplorerOpen(prev => !prev);
-                }}
-              >
-                <div className="standalone-explorer-title">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className={`standalone-arrow-icon ${isExplorerOpen ? 'open' : ''}`}
-                  >
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                  <span>EXPLORE ZIP FILES &amp; SOURCE CODE</span>
-                  <span style={{ fontSize: '0.65rem', background: 'rgba(0, 240, 255, 0.15)', border: '1px solid rgba(0, 240, 255, 0.4)', color: '#00f0ff', padding: '2px 6px', borderRadius: 4 }}>
-                    2 FILES
-                  </span>
-                </div>
-                <span style={{ fontSize: '0.7rem', color: isExplorerOpen ? '#00f0ff' : 'rgba(255,255,255,0.5)' }}>
-                  {isExplorerOpen ? 'HIDE CODE ▲' : 'VIEW CODE &amp; FILES ▼'}
-                </span>
-              </div>
-
-              {isExplorerOpen && (
-                <div className="standalone-explorer-body">
-                  <div className="standalone-tabs-bar">
-                    <button
-                      className={`standalone-tab-btn ${activeExplorerFile === 'readme' ? 'active' : ''}`}
-                      onClick={() => { playCyberSFX('hover'); setActiveExplorerFile('readme'); }}
-                    >
-                      📄 README.md (211 B)
-                    </button>
-                    <button
-                      className={`standalone-tab-btn ${activeExplorerFile === 'exe' ? 'active' : ''}`}
-                      onClick={() => { playCyberSFX('hover'); setActiveExplorerFile('exe'); }}
-                    >
-                      ⚙️ hookloader.exe (84.9 KB)
-                    </button>
-                  </div>
-
-                  {activeExplorerFile === 'readme' ? (
-                    <div className="standalone-code-viewer">
-                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>// README.md &bull; Markdown Documentation</span>
-                      {`
-# hookloader
-
-Advanced DLL injection interface.
-
-## Features
-- Web UI based control
-- Safe unhooking process
-- Drag and drop injection
-
-## Instructions
-Run hookloader.exe and navigate to http://127.0.0.1:8080
-`}
-                    </div>
-                  ) : (
-                    <div className="standalone-code-viewer">
-                      <span style={{ color: 'rgba(255,255,255,0.4)' }}>// hookloader.exe &bull; PE32+ x64 Binary Inspector</span>
-                      {`
-[FILE_METADATA]
-Name: hookloader.exe
-Format: Portable Executable (PE32+ x64)
-Size: 84,992 Bytes (84.9 KB)
-Subsystem: Windows GUI / Embedded Local Server (Port 8080)
-Memory Engine: VirtualAllocEx / WriteProcessMemory / CreateRemoteThread Hook
-
-[PE_HEADER_HEX_DUMP]
-00000000: 4D 5A 90 00 03 00 00 00 04 00 00 00 FF FF 00 00  MZ..............
-00000010: B8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00  ........@.......
-00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000030: 00 00 00 00 00 00 00 00 00 00 00 00 E8 00 00 00  ................
-00000040: 0E 1F BA 0E 00 B4 09 CD 21 B8 01 4C CD 21 54 68  ........!..L.!Th
-00000050: 69 73 20 70 72 6F 67 72 61 6D 20 63 61 6E 6E 6F  is program canno
-00000060: 74 20 62 65 20 72 75 6E 20 69 6E 20 44 4F 53 20  t be run in DOS 
-00000070: 6D 6F 64 65 2E 0D 0D 0A 24 00 00 00 00 00 00 00  mode....$.......
-
-[RUNTIME_TARGET]
-Engine: Web UI Injection Server -> http://127.0.0.1:8080
-`}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* ── Download Progress Bar & Live Cyber Terminal ── */}
