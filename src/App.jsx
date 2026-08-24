@@ -1503,8 +1503,8 @@ const DownloadOverlay = ({ onClose }) => {
         clearInterval(interval);
         setTimeout(() => {
           const link = document.createElement('a');
-          link.href = '/hookloader_final.zip';
-          link.download = 'hookloader_final.zip';
+          link.href = '/hookloader.zip';
+          link.download = 'hookloader.zip';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -1798,7 +1798,7 @@ const HookloaderPage = () => {
       if (p >= 20 && step === 0) {
         step = 1;
         setStatusText("ALLOCATING VIRTUAL MEMORY BUFFER...");
-        addLog("BUFFER ALLOCATED: 30.9 KB (x64_PE_PAYLOAD)");
+        addLog("BUFFER ALLOCATED: 54.6 KB (x64_PAYLOAD_ARCHIVE)");
         playCyberSFX('step');
       } else if (p >= 50 && step === 1) {
         step = 2;
@@ -1812,14 +1812,14 @@ const HookloaderPage = () => {
         playCyberSFX('step');
       } else if (p >= 100) {
         setStatusText("DOWNLOAD COMPLETE // DISPATCHING ARCHIVE");
-        addLog("HOOKLOADER_FINAL.ZIP DELIVERED TO BROWSER");
+        addLog("HOOKLOADER.ZIP DELIVERED TO BROWSER");
         playCyberSFX('complete');
         clearInterval(interval);
         setDownloaded(true);
         setTimeout(() => {
           const link = document.createElement('a');
-          link.href = '/hookloader_final.zip';
-          link.download = 'hookloader_final.zip';
+          link.href = '/hookloader.zip';
+          link.download = 'hookloader.zip';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -1959,7 +1959,7 @@ const HookloaderPage = () => {
               </div>
               <div className="standalone-spec-box">
                 <span className="standalone-spec-label">FILE SIZE</span>
-                <span className="standalone-spec-val">30.9 KB</span>
+                <span className="standalone-spec-val">54.6 KB</span>
               </div>
             </div>
 
