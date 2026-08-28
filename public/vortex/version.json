@@ -1,5 +1,5 @@
 {
-  "version": "4.3.1",
+  "version": "4.3.2",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.1: Live K/D and Headshot % tracking on match rosters, sleek upper-right peak rank badge corner design, and improved stats layout."
+  "changelog": "Vortex v4.3.2: Instant active session account detection, auto-syncing of signed-in Riot accounts, and automatic Hero Card display."
 }
