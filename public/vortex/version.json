@@ -1,5 +1,5 @@
 {
-  "version": "3.9.0",
+  "version": "4.0.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Silent in-place card syncing, enlarged Hero Card, center Dashboard stat tile, and Last Logged In timestamps on all accounts."
+  "changelog": "Vortex v4.0.0: Live match dashboard view, force-launch with Riot Client escalation, verified agent instalock, full Player Stats & Skin Inventory tabs, fixed stat zero-writes, and improved login timestamps."
 }
