@@ -1,5 +1,5 @@
 {
-  "version": "3.2.1",
+  "version": "3.2.2",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Restored the account card layout: Winrate/Matches row with its progress bar, and the boxed User/Pass credentials panel. Also fixed the show-password eye button, which was calling a function that didn't exist and silently doing nothing."
+  "changelog": "Peak rank is back on the account cards as a gold badge with the official rank emblem next to it. Accounts synced before the emblem URL was saved now get their icon derived from the rank, so older entries show it too."
 }
