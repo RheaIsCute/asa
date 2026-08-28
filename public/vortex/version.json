@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.2.1",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Fixed the app freezing on launch when the Riot Client connection was slow. Banned accounts are now kept in their own Banned Accounts panel instead of being deleted, with a Recheck button that moves them back if they're playable again. Accounts are auto-tagged Ranked (level 20+) or Unrated (below 20), the Smurf tag and Delete Banned button are gone, regions are a dropdown, and the settings icon is now a cog."
+  "changelog": "Restored the account card layout: Winrate/Matches row with its progress bar, and the boxed User/Pass credentials panel. Also fixed the show-password eye button, which was calling a function that didn't exist and silently doing nothing."
 }
