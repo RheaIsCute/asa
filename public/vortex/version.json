@@ -1,5 +1,5 @@
 {
   "version": "4.3.6",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.6: Fixed automated updater silent background relaunch and process execution, plus Riot Client auto-login reliability."
+  "changelog": "Vortex v4.3.6: Fixed automated silent background relaunch and installer execution, plus Riot Client auto-login reliability."
 }
