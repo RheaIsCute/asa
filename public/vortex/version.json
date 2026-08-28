@@ -1,5 +1,5 @@
 {
-  "version": "4.3.0",
+  "version": "4.3.1",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.0: Rock-solid automated installer with PowerShell background updater, independent smooth queue and agent select timers, unranked player emblem support, and live match teammate/enemy stats."
+  "changelog": "Vortex v4.3.1: Live K/D and Headshot % tracking on match rosters, sleek upper-right peak rank badge corner design, and improved stats layout."
 }
