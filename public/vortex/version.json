@@ -1,5 +1,5 @@
 {
-  "version": "3.8.0",
-  "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Active Logged-In Hero Card: whichever account you are logged into now automatically expands into a super big featured card at the top, pushing down the rest of your roster. Removed individual account sync buttons to preserve match history. 1-Click Auto-Update: updates now automatically download, silently install, and relaunch Vortex with a single click."
+  "version": "3.9.0",
+  "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
+  "changelog": "Silent in-place card syncing, enlarged Hero Card, center Dashboard stat tile, and Last Logged In timestamps on all accounts."
 }
