@@ -1,5 +1,5 @@
 {
-  "version": "4.3.4",
+  "version": "4.3.5",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.4: Accurate surrender score detection, real played rounds counting, and surrender indicator on match performance cards."
+  "changelog": "Vortex v4.3.5: Fixed Riot Client auto-login and credential entry reliability with DPI awareness, direct input targeting, and instant auth error detection."
 }
