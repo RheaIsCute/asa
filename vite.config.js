@@ -8,4 +8,19 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  build: {
+    // three + postprocessing dominate the bundle and change far less often
+    // than app code, so splitting them out keeps them cached across deploys.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'three', test: /node_modules[\\/](three|postprocessing)[\\/]/ },
+            { name: 'react-vendor', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ }
+          ]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
 })
