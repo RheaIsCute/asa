@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0",
+  "version": "4.1.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.0.0: Live match dashboard view, force-launch with Riot Client escalation, verified agent instalock, full Player Stats & Skin Inventory tabs, fixed stat zero-writes, and improved login timestamps."
+  "changelog": "Vortex v4.1.0: Clean single-hero layout, moved Dashboard button between Matches and Edit in the hero card, and restored center Matches counter."
 }
