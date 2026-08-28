@@ -1,5 +1,5 @@
 {
-  "version": "3.2.2",
+  "version": "3.3.0",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Peak rank is back on the account cards as a gold badge with the official rank emblem next to it. Accounts synced before the emblem URL was saved now get their icon derived from the rank, so older entries show it too."
+  "changelog": "Updating no longer triggers a 'Security validation failure' warning from antivirus software - the app now downloads the installer and opens it in Explorer for you to run, instead of launching it itself. Adding or importing an account that you already have, or that's in your Banned list, is now skipped instead of creating a duplicate."
 }
