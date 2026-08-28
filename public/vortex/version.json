@@ -1,5 +1,5 @@
 {
-  "version": "4.3.2",
+  "version": "4.3.3",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.2: Instant active session account detection, auto-syncing of signed-in Riot accounts, and automatic Hero Card display."
+  "changelog": "Vortex v4.3.3: Exact match-specific Headshot %, ADR, ACS, and KDA performance tracking cards inspired by ValTracker."
 }
