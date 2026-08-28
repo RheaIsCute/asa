@@ -1,5 +1,5 @@
 {
-  "version": "3.6.0",
+  "version": "3.7.0",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Fixed ghost accounts where accounts with missing status became invisible in the roster, added automatic periodic background full refresh for all account ranks, RR, level and ban statuses, and improved update notifications on launch."
+  "changelog": "The login/switch-account/check-account progress popup now shows a clear Working / Ready / Failed status instead of just sitting there, gets a Retry button the moment anything goes wrong, and every attempt is written to a debug log (open it from Settings) so a failed login can actually be diagnosed. Also fixes two cases where that popup could get stuck forever with no way out."
 }
