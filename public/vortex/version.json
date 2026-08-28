@@ -1,5 +1,5 @@
 {
-  "version": "3.3.2",
+  "version": "3.4.0",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Accounts now automatically sort from highest level to lowest by default. Removed auto-applied Main tags so accounts are accurately categorized based on level unless explicitly set."
+  "changelog": "Complete UI redesign: new colour system with six accent themes (Blue, Violet, Emerald, Crimson, Amber, Cyan), fluid animations throughout - staggered card entrances, cursor-tracked card lighting, click ripples, animated winrate meters and redesigned overlays. Also fixes the table view showing values under the wrong column headers, the theme picker never highlighting the active theme, and the unstyled 'Pin to Top' checkbox."
 }
