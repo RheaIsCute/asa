@@ -1,1 +1,5 @@
-{\n  " version\: \3.3.1\,\n \download_url\: \https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe\,\n \changelog\: \Automatically detects and moves banned/suspended accounts to the dedicated Banned Accounts section. Prevents banned accounts from lingering in the active roster.\\n}
+{
+  "version": "3.3.1",
+  "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
+  "changelog": "Automatically detects and moves banned/suspended accounts to the dedicated Banned Accounts section. Prevents banned accounts from lingering in the active roster."
+}
