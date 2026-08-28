@@ -1,0 +1,5 @@
+{
+  "version": "3.0.0",
+  "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
+  "changelog": "Initial auto-update release: fixed peak rank stat sync bug, fixed rank/level sync API, improved Riot Client login reliability."
+}
