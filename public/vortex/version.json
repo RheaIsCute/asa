@@ -1,5 +1,5 @@
 {
-  "version": "4.3.5",
+  "version": "4.3.6",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.5: Fixed Riot Client auto-login and credential entry reliability with DPI awareness, direct input targeting, and instant auth error detection."
+  "changelog": "Vortex v4.3.6: Fixed automated updater silent background relaunch and process execution, plus Riot Client auto-login reliability."
 }
