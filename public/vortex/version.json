@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Initial auto-update release: fixed peak rank stat sync bug, fixed rank/level sync API, improved Riot Client login reliability."
+  "changelog": "New app icon and blue theme (matching the logo) with Purple/Emerald/Crimson theme options in Settings, redesigned header, fixed account levels resetting to 1, fixed list-view level display, responsive window resizing, and uninstaller cleanup."
 }
