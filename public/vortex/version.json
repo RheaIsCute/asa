@@ -1,5 +1,5 @@
 {
-  "version": "4.1.0",
+  "version": "4.1.1",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.1.0: Clean single-hero layout, moved Dashboard button between Matches and Edit in the hero card, and restored center Matches counter."
+  "changelog": "Vortex v4.1.1: Bulletproof auto-installer with automated silent relaunch and file lock clearance, clean single-hero card layout, and Dashboard button repositioned."
 }
