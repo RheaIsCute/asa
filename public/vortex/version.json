@@ -1,5 +1,1 @@
-{
-  "version": "3.3.0",
-  "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "Updating no longer triggers a 'Security validation failure' warning from antivirus software - the app now downloads the installer and opens it in Explorer for you to run, instead of launching it itself. Adding or importing an account that you already have, or that's in your Banned list, is now skipped instead of creating a duplicate."
-}
+{\n  " version\: \3.3.1\,\n \download_url\: \https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe\,\n \changelog\: \Automatically detects and moves banned/suspended accounts to the dedicated Banned Accounts section. Prevents banned accounts from lingering in the active roster.\\n}
