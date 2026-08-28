@@ -1,5 +1,5 @@
 {
-  "version": "3.5.0",
+  "version": "3.6.0",
   "download_url": "https://raw.githubusercontent.com/RheaIsCute/asa/master/public/vortex/VortexSetup.exe",
-  "changelog": "New live match dashboard for whichever account you're signed into: it opens automatically after you log in and tracks the running match round by round - score, map, mode and both team rosters with agents and ranks. From there you can start a ranked match in one click, switch game mode, and arm an agent insta-lock that locks the moment agent select opens. Vortex now also detects which account is logged into the Riot Client right now, badges that card LOGGED IN and turns its button into PLAY to launch VALORANT straight into it. Adding an account highlights the new row, validates the username and password before saving, and anything Riot hasn't confirmed yet gets a 'Check Account' button that logs in once to verify the credentials and pull the real Riot ID, level, rank and ban status."
+  "changelog": "Fixed ghost accounts where accounts with missing status became invisible in the roster, added automatic periodic background full refresh for all account ranks, RR, level and ban statuses, and improved update notifications on launch."
 }
