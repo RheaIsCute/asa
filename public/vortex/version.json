@@ -1,5 +1,5 @@
 {
-  "version": "4.1.1",
+  "version": "4.3.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.1.1: Bulletproof auto-installer with automated silent relaunch and file lock clearance, clean single-hero card layout, and Dashboard button repositioned."
+  "changelog": "Vortex v4.3.0: Rock-solid automated installer with PowerShell background updater, independent smooth queue and agent select timers, unranked player emblem support, and live match teammate/enemy stats."
 }
