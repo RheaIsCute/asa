@@ -1,5 +1,5 @@
 {
-  "version": "5.0.1",
+  "version": "5.0.2",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.1: Login field focus fix, Stay Signed In checkbox auto-selection, live tracking stats, and duo/premade notifier."
+  "changelog": "Vortex v5.0.2: Pure keyboard navigation with zero mouse cursor movement, Stay Signed In checkbox toggle, live tracking stats, and duo/stack notifier."
 }
