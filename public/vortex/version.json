@@ -1,5 +1,5 @@
 {
-  "version": "5.0.8",
+  "version": "5.0.9",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.8: Fixes \"Stay signed in\" selecting Facebook instead of the checkbox. The login no longer tabs its way across the social sign-in buttons - it finds the checkbox directly and reads its state, so it can't overshoot and can't untick a box that was already on."
+  "changelog": "Vortex v5.0.9: The login now restarts the Riot Client first to clear any stale state, and checks every step instead of guessing on timers - VALORANT closed, session signed out, client fully open and showing the sign-in screen, and the username and password actually landing in their boxes. Nothing is submitted unless both fields verified, so a failed login no longer burns a Riot rate-limit attempt and the error names the step that failed."
 }
