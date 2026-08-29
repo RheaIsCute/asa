@@ -1,5 +1,5 @@
 {
-  "version": "5.0.5",
+  "version": "5.0.6",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.5: Direct keyboard submission to red Submit arrow button, live tracking stats, and duo/stack notifier."
+  "changelog": "Vortex v5.0.6: Restored the v3 credential entry that logs in reliably, banned accounts are editable again instead of freezing the logged-in card, live current-match K/D and headshot % instead of past-match averages, and settings profiles (crosshair, keybinds, video) that actually work with a one-click Apply to All Accounts."
 }
