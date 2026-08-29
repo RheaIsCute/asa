@@ -1,5 +1,5 @@
 {
-  "version": "5.3.0",
+  "version": "5.4.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.3.0: New draggable FPS counter (real frame-rate tracing, no game injection), defaulting to the top-right corner. Fixes the Quick Panel opening with three of its four functions silently broken since 5.2.0 - switching accounts and the FPS toggle now actually work. Also fixes the main window's Close not fully quitting the app."
+  "changelog": "Vortex v5.4.0: Removed the FPS counter. Fixed the Quick Panel's \"Full app\" button opening a browser tab instead of the real window, and its Close button/Escape key doing nothing - both are fully working now. Account rows in the panel show the actual rank badge and RR."
 }
