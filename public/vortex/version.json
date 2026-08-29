@@ -1,5 +1,5 @@
 {
-  "version": "5.5.0",
+  "version": "5.5.1",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.0: Quick Panel redesign - text was sitting at 7.75-9.5px, which is why it read as pixelated; everything is now 11-15px and genuinely readable. Every card is real frosted glass (backdrop blur over a richer background) instead of a flat panel. Account rows show rank on its own line instead of a truncated \"UNRANK...\"."
+  "changelog": "Vortex v5.5.1: Quick Panel shortcut default changed from CTRL+SHIFT+F8 to SHIFT+5."
 }
