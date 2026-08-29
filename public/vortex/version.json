@@ -1,5 +1,5 @@
 {
-  "version": "5.5.4",
+  "version": "5.5.5",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.4: live K/D event updates during matches, faster Riot combat refreshes, and an interactive quick-panel overlay that unlocks your mouse."
+  "changelog": "Vortex v5.5.5: more reliable live roster-name resolution, correct current-act ranks, and clearer loading states for players still resolving."
 }
