@@ -1,5 +1,5 @@
 {
-  "version": "5.0.0",
+  "version": "5.0.1",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.0: Hardware-level instant click focus with cursor preservation, Stay Signed In checkbox selection, Live match tracking stats, and teammate & enemy duo notifier."
+  "changelog": "Vortex v5.0.1: Login field focus fix, Stay Signed In checkbox auto-selection, live tracking stats, and duo/premade notifier."
 }
