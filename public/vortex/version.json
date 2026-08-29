@@ -1,5 +1,5 @@
 {
-  "version": "5.2.0",
+  "version": "5.3.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.2.0: New Quick Panel overlay (CTRL+SHIFT+F8 by default, configurable) for switching accounts and applying crosshair codes without opening the full app - a separate floating window, not drawn over the game. Fixes two real region-detection bugs (accounts were being stamped with the wrong or a guessed region that never got corrected) and a stats cache bug where switching accounts quickly could show one account's stats under another's name."
+  "changelog": "Vortex v5.3.0: New draggable FPS counter (real frame-rate tracing, no game injection), defaulting to the top-right corner. Fixes the Quick Panel opening with three of its four functions silently broken since 5.2.0 - switching accounts and the FPS toggle now actually work. Also fixes the main window's Close not fully quitting the app."
 }
