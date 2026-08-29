@@ -1,5 +1,5 @@
 {
-  "version": "4.4.0",
+  "version": "4.4.1",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.4.0: Rebuilt the live match tracker (rounds won/lost, live KDA/HS/ADR, premade party detection), fixed agent auto-lock reliability, fixed the auto-updater so it no longer strands the app on a failed relaunch, and added forced borderless launch plus a copyable settings profile (crosshair/sensitivity/keybinds/video) across accounts."
+  "changelog": "Vortex v4.4.1: The v4.4.0 auto-update could silently no-op on some machines (installer reported success and exit code 0, but Windows Defender or another AV blocked the actual file write) - the updater now verifies a version marker after every silent install and falls back to a visible installer run whenever that verification fails, instead of trusting the exit code alone."
 }
