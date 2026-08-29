@@ -1,5 +1,5 @@
 {
   "version": "4.4.3",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.4.3: Fixes Riot Client auto-login silently entering nothing. The Riot login window reports stable dimensions seconds before its form has actually rendered, so credentials were being pasted into a page that had no focused field yet and an empty form was submitted. Login now confirms the username actually landed in the field before continuing, retries while the form is still loading, falls back to real keystrokes if paste is refused, reports a clear error instead of failing silently, and no longer leaves your password sitting on the clipboard."
+  "changelog": "Vortex v4.4.3: Live match tracking stats (Current Match KD, Current Match Headshot %, Last 5 matches winrate), lobby-wide teammate & enemy duo notifier, and non-hijacking credential autofill fix."
 }
