@@ -1,5 +1,5 @@
 {
-  "version": "5.5.1",
+  "version": "5.5.2",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.1: Quick Panel shortcut default changed from CTRL+SHIFT+F8 to SHIFT+5."
+  "changelog": "Vortex v5.5.2: redesigned rank-first overlay, rank filters, no-focus overlay behavior, and automatic startup updates."
 }
