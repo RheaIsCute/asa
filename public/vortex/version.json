@@ -1,5 +1,5 @@
 {
-  "version": "4.4.3",
+  "version": "4.4.4",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.4.3: Live match tracking stats (Current Match KD, Current Match Headshot %, Last 5 matches winrate), lobby-wide teammate & enemy duo notifier, and non-hijacking credential autofill fix."
+  "changelog": "Vortex v4.4.4: Live match tracking stats (Current Match KD, Current Match Headshot %, Last 5 matches winrate), lobby-wide teammate & enemy duo notifier, and non-hijacking credential autofill fix."
 }
