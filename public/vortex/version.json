@@ -1,5 +1,5 @@
 {
-  "version": "5.0.6",
+  "version": "5.0.7",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.6: Restored the v3 credential entry that logs in reliably, banned accounts are editable again instead of freezing the logged-in card, live current-match K/D and headshot % instead of past-match averages, and settings profiles (crosshair, keybinds, video) that actually work with a one-click Apply to All Accounts."
+  "changelog": "Vortex v5.0.7: Logins now tick Riot's \"Stay signed in\" so you aren't asked for the password every time, a new option starts VALORANT by itself right after logging in, and windowed borderless is forced on every login (plus a button to set every account at once)."
 }
