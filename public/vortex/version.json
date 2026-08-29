@@ -1,5 +1,5 @@
 {
-  "version": "4.3.8",
+  "version": "4.4.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.3.8: Cleared PyInstaller bootloader variables on updater relaunch to eliminate security validation failure."
+  "changelog": "Vortex v4.4.0: Rebuilt the live match tracker (rounds won/lost, live KDA/HS/ADR, premade party detection), fixed agent auto-lock reliability, fixed the auto-updater so it no longer strands the app on a failed relaunch, and added forced borderless launch plus a copyable settings profile (crosshair/sensitivity/keybinds/video) across accounts."
 }
