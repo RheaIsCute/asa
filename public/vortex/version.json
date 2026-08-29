@@ -1,5 +1,5 @@
 {
-  "version": "5.0.2",
+  "version": "5.0.3",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.2: Pure keyboard navigation with zero mouse cursor movement, Stay Signed In checkbox toggle, live tracking stats, and duo/stack notifier."
+  "changelog": "Vortex v5.0.3: Direct password-field submission without social button triggers, live tracking stats, and duo/stack notifier."
 }
