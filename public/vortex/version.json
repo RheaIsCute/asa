@@ -1,5 +1,5 @@
 {
   "version": "5.0.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.0: Live match tracking stats (current match KD & HS%), last 5 matches winrate, teammate & enemy duo/premade notifier banner, and non-hijacking credential autofill fix."
+  "changelog": "Vortex v5.0.0: Hardware-level instant click focus with cursor preservation, Stay Signed In checkbox selection, Live match tracking stats, and teammate & enemy duo notifier."
 }
