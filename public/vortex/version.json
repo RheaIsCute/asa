@@ -1,5 +1,5 @@
 {
-  "version": "5.5.3",
+  "version": "5.5.4",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.3: click any match for full details, inspect the roster, and check another player's public profile and recent match history."
+  "changelog": "Vortex v5.5.4: live K/D event updates during matches, faster Riot combat refreshes, and an interactive quick-panel overlay that unlocks your mouse."
 }
