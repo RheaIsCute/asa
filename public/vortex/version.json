@@ -1,5 +1,5 @@
 {
-  "version": "5.0.9",
+  "version": "5.1.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.9: The login now restarts the Riot Client first to clear any stale state, and checks every step instead of guessing on timers - VALORANT closed, session signed out, client fully open and showing the sign-in screen, and the username and password actually landing in their boxes. Nothing is submitted unless both fields verified, so a failed login no longer burns a Riot rate-limit attempt and the error names the step that failed."
+  "changelog": "Vortex v5.1.0: Settings copying actually works now. Sign into the account whose crosshair, keybinds and video settings you want and press Save Current Account As Preset - it no longer needs that account to have been identified first, which is why copying failed for almost every account before. Load it onto the current account or all of them, and a log shows exactly what moved: every file with its size, plus the crosshair profile, sensitivity, keybind count, display mode and resolution that landed. Forced borderless is now applied once the game is in the menus rather than before launch, so VALORANT can't overwrite it on startup."
 }
