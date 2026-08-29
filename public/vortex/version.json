@@ -1,5 +1,5 @@
 {
-  "version": "5.5.2",
+  "version": "5.5.3",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.2: redesigned rank-first overlay, rank filters, no-focus overlay behavior, and automatic startup updates."
+  "changelog": "Vortex v5.5.3: click any match for full details, inspect the roster, and check another player's public profile and recent match history."
 }
