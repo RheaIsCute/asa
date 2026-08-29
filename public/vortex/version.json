@@ -1,5 +1,5 @@
 {
-  "version": "5.0.4",
+  "version": "5.0.5",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.4: Direct submission from password field with zero social button triggers, live tracking stats, and duo/stack notifier."
+  "changelog": "Vortex v5.0.5: Direct keyboard submission to red Submit arrow button, live tracking stats, and duo/stack notifier."
 }
