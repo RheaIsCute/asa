@@ -1,5 +1,5 @@
 {
-  "version": "5.4.0",
+  "version": "5.5.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.4.0: Removed the FPS counter. Fixed the Quick Panel's \"Full app\" button opening a browser tab instead of the real window, and its Close button/Escape key doing nothing - both are fully working now. Account rows in the panel show the actual rank badge and RR."
+  "changelog": "Vortex v5.5.0: Quick Panel redesign - text was sitting at 7.75-9.5px, which is why it read as pixelated; everything is now 11-15px and genuinely readable. Every card is real frosted glass (backdrop blur over a richer background) instead of a flat panel. Account rows show rank on its own line instead of a truncated \"UNRANK...\"."
 }
