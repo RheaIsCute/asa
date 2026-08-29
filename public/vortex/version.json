@@ -1,5 +1,5 @@
 {
-  "version": "4.4.5",
+  "version": "5.0.0",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.4.5: Fixed Riot Client autofill credential entry sequence, ensuring proper Username focus, Tab to Password, and form submission."
+  "changelog": "Vortex v5.0.0: Live match tracking stats (current match KD & HS%), last 5 matches winrate, teammate & enemy duo/premade notifier banner, and non-hijacking credential autofill fix."
 }
