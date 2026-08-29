@@ -1,5 +1,5 @@
 {
-  "version": "5.5.5",
+  "version": "5.5.6",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.5: more reliable live roster-name resolution, correct current-act ranks, and clearer loading states for players still resolving."
+  "changelog": "Vortex v5.5.6: full two-team match scoreboards, resolved Riot IDs, clickable player profiles, legacy-history upgrades, and smoother taskbar-free overlay focus with a safer default hotkey."
 }
