@@ -1,5 +1,5 @@
 {
-  "version": "4.4.1",
+  "version": "4.4.2",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v4.4.1: The v4.4.0 auto-update could silently no-op on some machines (installer reported success and exit code 0, but Windows Defender or another AV blocked the actual file write) - the updater now verifies a version marker after every silent install and falls back to a visible installer run whenever that verification fails, instead of trusting the exit code alone."
+  "changelog": "Vortex v4.4.2: Fixes the broken v4.4.0/v4.4.1 releases, whose installers shipped the previous build's files under a new version number - PyInstaller had refused to overwrite a non-empty output directory and the build script mistook the leftover executable for a successful build. This release is the first to actually deliver the v4.4.x work: rebuilt live match tracker (rounds won/lost, live KDA/HS/ADR, premade party detection), agent auto-lock reliability fix, auto-updater relaunch fix, forced borderless launch, and a copyable settings profile for crosshair/sensitivity/keybinds/video across accounts."
 }
