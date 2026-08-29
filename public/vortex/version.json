@@ -1,5 +1,5 @@
 {
-  "version": "5.0.7",
+  "version": "5.0.8",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.0.7: Logins now tick Riot's \"Stay signed in\" so you aren't asked for the password every time, a new option starts VALORANT by itself right after logging in, and windowed borderless is forced on every login (plus a button to set every account at once)."
+  "changelog": "Vortex v5.0.8: Fixes \"Stay signed in\" selecting Facebook instead of the checkbox. The login no longer tabs its way across the social sign-in buttons - it finds the checkbox directly and reads its state, so it can't overshoot and can't untick a box that was already on."
 }
