@@ -1,5 +1,5 @@
 {
-  "version": "5.5.6",
+  "version": "5.5.7",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.6: full two-team match scoreboards, resolved Riot IDs, clickable player profiles, legacy-history upgrades, and smoother taskbar-free overlay focus with a safer default hotkey."
+  "changelog": "Vortex v5.5.7: fixes intermittent desktop startup hangs by deferring Quick Panel native-window setup until the panel is opened, with persistent startup diagnostics for future failures."
 }
