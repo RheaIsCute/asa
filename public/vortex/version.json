@@ -1,5 +1,5 @@
 {
-  "version": "5.5.10",
+  "version": "5.5.11",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.10: removes the live-data notice, adds a round-by-round aim trace, and adds an optional click-through upper-right Live Aim HUD with current HS%, K/D/A, damage, and hit distribution."
+  "changelog": "Vortex v5.5.11: bundles high-resolution Valorant rank emblems, agent art, weapon icons, and ability icons locally so the app stays crisp instead of stretching small remote images."
 }
