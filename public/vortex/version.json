@@ -1,5 +1,5 @@
 {
-  "version": "5.5.14",
-  "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.14: fixes the unclickable app/overlay state, keeps the live HUD click-through while restoring interactive quick-panel and main-window input, and fixes packaged startup."
+  "version": "5.5.15",
+  "download_url": "https://github.com/RheaIsCute/vortex/releases/latest/download/VortexSetup.exe",
+  "changelog": "Vortex v5.5.15: fixes the incomplete 5.5.14 update that could leave the app unable to start. This release reinstalls the full application. (Update delivery has moved to GitHub - this is the last update served from this manifest.)"
 }
