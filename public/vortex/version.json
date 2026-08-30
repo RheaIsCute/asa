@@ -1,5 +1,5 @@
 {
-  "version": "5.5.9",
-  "download_url": "https://github.com/RheaIsCute/vortex/releases/download/v5.5.9/VortexSetup.exe",
-  "changelog": "Vortex v5.5.9: warm login - when the Riot Client is already open, Vortex signs the current session out through its API and types into the sign-in page in place instead of killing and relaunching it. A client already on the sign-in page skips straight to typing."
+  "version": "5.5.10",
+  "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
+  "changelog": "Vortex v5.5.10: removes the live-data notice, adds a round-by-round aim trace, and adds an optional click-through upper-right Live Aim HUD with current HS%, K/D/A, damage, and hit distribution."
 }
