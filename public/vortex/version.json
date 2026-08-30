@@ -1,5 +1,5 @@
 {
-  "version": "5.5.7",
-  "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.7: fixes intermittent desktop startup hangs by deferring Quick Panel native-window setup until the panel is opened, with persistent startup diagnostics for future failures."
+  "version": "5.5.8",
+  "download_url": "https://github.com/RheaIsCute/vortex/releases/download/v5.5.8/VortexSetup.exe",
+  "changelog": "Vortex v5.5.8: live combat now reads Overwolf's official VALORANT event provider - exact live K/D/A, headshot % and ADR on your card, plus live K/D on the roster for players the kill feed names. Falls back to recent-match averages when Overwolf isn't running."
 }
