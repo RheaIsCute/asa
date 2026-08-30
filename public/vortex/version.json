@@ -1,5 +1,5 @@
 {
-  "version": "5.5.8",
-  "download_url": "https://github.com/RheaIsCute/vortex/releases/download/v5.5.8/VortexSetup.exe",
-  "changelog": "Vortex v5.5.8: live combat now reads Overwolf's official VALORANT event provider - exact live K/D/A, headshot % and ADR on your card, plus live K/D on the roster for players the kill feed names. Falls back to recent-match averages when Overwolf isn't running."
+  "version": "5.5.9",
+  "download_url": "https://github.com/RheaIsCute/vortex/releases/download/v5.5.9/VortexSetup.exe",
+  "changelog": "Vortex v5.5.9: warm login - when the Riot Client is already open, Vortex signs the current session out through its API and types into the sign-in page in place instead of killing and relaunching it. A client already on the sign-in page skips straight to typing."
 }
