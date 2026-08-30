@@ -1,5 +1,5 @@
 {
-  "version": "5.5.12",
+  "version": "5.5.13",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.12: bundles high-resolution Valorant rank emblems, agent art, weapon icons, and ability icons locally, plus the latest login watchdog fixes."
+  "changelog": "Vortex v5.5.13: fixes placement wins and lifetime records, rebuilds Recent Form and its ACS graph from real matches, enlarges agent art, and enables native per-monitor DPI rendering to remove WebView blur."
 }
