@@ -1,5 +1,5 @@
 {
-  "version": "5.5.11",
+  "version": "5.5.12",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.11: bundles high-resolution Valorant rank emblems, agent art, weapon icons, and ability icons locally so the app stays crisp instead of stretching small remote images."
+  "changelog": "Vortex v5.5.12: bundles high-resolution Valorant rank emblems, agent art, weapon icons, and ability icons locally, plus the latest login watchdog fixes."
 }
