@@ -1,5 +1,5 @@
 {
-  "version": "5.5.13",
+  "version": "5.5.14",
   "download_url": "https://asarii.xyz/vortex/VortexSetup.exe",
-  "changelog": "Vortex v5.5.13: fixes placement wins and lifetime records, rebuilds Recent Form and its ACS graph from real matches, enlarges agent art, and enables native per-monitor DPI rendering to remove WebView blur."
+  "changelog": "Vortex v5.5.14: fixes the unclickable app/overlay state, keeps the live HUD click-through while restoring interactive quick-panel and main-window input, and fixes packaged startup."
 }
