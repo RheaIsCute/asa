@@ -1,5 +1,5 @@
 {
-  "version": "5.5.15",
+  "version": "5.5.32",
   "download_url": "https://github.com/RheaIsCute/vortex/releases/latest/download/VortexSetup.exe",
-  "changelog": "Vortex v5.5.15: fixes the incomplete 5.5.14 update that could leave the app unable to start. This release reinstalls the full application. (Update delivery has moved to GitHub - this is the last update served from this manifest.)"
+  "changelog": "Update delivery moved to GitHub releases. This manifest is no longer used by the app - see https://github.com/RheaIsCute/vortex/releases/latest for the current version. VortexSetup.exe on this host now redirects to the latest GitHub release."
 }

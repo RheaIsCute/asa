@@ -1,4 +1,21 @@
 {
+  "redirects": [
+    {
+      "source": "/vortex/VortexSetup.exe",
+      "destination": "https://github.com/RheaIsCute/vortex/releases/latest/download/VortexSetup.exe",
+      "permanent": false
+    },
+    {
+      "source": "/vortex",
+      "destination": "https://github.com/RheaIsCute/vortex/releases/latest",
+      "permanent": false
+    },
+    {
+      "source": "/vortex/",
+      "destination": "https://github.com/RheaIsCute/vortex/releases/latest",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
