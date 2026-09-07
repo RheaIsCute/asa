@@ -12,8 +12,8 @@ const TransactionPage = lazy(() => import('./TransactionPage.jsx'));
 // ═══════════════════════════════════════════════════════════
 
 const HOOKLOADER_PATTERN = /(hookloader|download|projects)/;
-// /tx opens the lookup form; /tx/<hash> opens that receipt.
-const TRANSACTION_PATTERN = /^\/tx(?:\/([a-f0-9]{16,}))?\/?$/i;
+// Only direct receipt links render the transaction page. /tx itself stays on the home experience.
+const TRANSACTION_PATTERN = /^\/tx\/([a-f0-9]{16,})\/?$/i;
 
 const readRoute = () => {
   if (typeof window === 'undefined') return 'main';
@@ -60,7 +60,7 @@ export default function App() {
   if (route === 'transaction') {
     return (
       <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#08050d' }} />}>
-        <TransactionPage txid={readTransactionId()} onNavigate={navigate} />
+        <TransactionPage txid={readTransactionId()} />
       </Suspense>
     );
   }

@@ -11,8 +11,6 @@ const FINALITY = 6;
 /** How often an unconfirmed transaction is re-checked. */
 const POLL_MS = 20_000;
 
-const TXID_RE = /^[a-f0-9]{16,}$/i;
-
 const short = (value = '', left = 12, right = 10) =>
   value.length > left + right ? `${value.slice(0, left)}…${value.slice(-right)}` : value;
 
@@ -204,14 +202,12 @@ function FlowDiagram({ inputs, outputs }) {
 
 /* ── Page ──────────────────────────────────────────────── */
 
-export default function TransactionPage({ txid, onNavigate }) {
+export default function TransactionPage({ txid }) {
   const [record, setRecord] = useState(null);
   const [failure, setFailure] = useState(null);
   const [price, setPrice] = useState(null);
   const [toast, setToast] = useState('');
   const [expanded, setExpanded] = useState(false);
-  const [lookup, setLookup] = useState('');
-  const [lookupError, setLookupError] = useState('');
   const [progress, setProgress] = useState(0);
 
 
@@ -313,17 +309,6 @@ export default function TransactionPage({ txid, onNavigate }) {
     }
   }, [notify]);
 
-  const submitLookup = (event) => {
-    event.preventDefault();
-    const value = lookup.trim().replace(/^.*\/tx\//, '');
-    if (!TXID_RE.test(value)) {
-      setLookupError('That does not look like a Litecoin transaction hash.');
-      return;
-    }
-    setLookupError('');
-    onNavigate?.(`/tx/${value.toLowerCase()}`);
-  };
-
   const status = error
     ? { className: 'is-error', label: 'NOT FOUND' }
     : !txid
@@ -334,83 +319,31 @@ export default function TransactionPage({ txid, onNavigate }) {
           ? { className: '', label: 'CONFIRMED' }
           : { className: 'is-pending', label: confirmations > 0 ? 'CONFIRMING' : 'IN MEMPOOL' };
 
-  const headline = error ? 'Receipt unavailable.' : !txid ? 'Follow your transfer.' : !tx ? 'loading.' : confirmations >= FINALITY ? 'confirmed.' : 'confirming.';
+  const headline = error ? 'Receipt unavailable.' : !tx ? 'loading.' : confirmations >= FINALITY ? 'confirmed.' : 'confirming.';
 
   return (
     <main className="tx-page">
       <TxBackground />
       <div className="tx-rail" aria-hidden="true"><span style={{ width: `${progress * 100}%` }} /></div>
 
-      <header className="tx-header">
-        <a className="tx-brand" href="/" aria-label="Back to ASARII home">
-          <span className="tx-mark">A</span>
-          <span>ASARII<span className="tx-brand-muted"> / TX</span></span>
-        </a>
-        <span className="tx-network">
-          <i className="tx-dot" />
-          LITECOIN MAINNET
-          {tx?.block_height > 0 && <b className="tx-height"># {tx.block_height.toLocaleString()}</b>}
-        </span>
-      </header>
-
       <section className="tx-shell">
-        <div className="tx-kicker tx-in"><i /> TRANSACTION RECEIPT</div>
-
         <h1 className="tx-title tx-in tx-d1">
-          {error || !txid ? headline : <>Transfer <em>{headline}</em></>}
+          {error ? headline : <>Transfer <em>{headline}</em></>}
         </h1>
-
-        <p className="tx-intro tx-in tx-d2">
-          {txid
-            ? 'A public, read-only record of a Litecoin transaction, pulled live from the chain. No keys, no custody, nothing to sign.'
-            : 'Check confirmations, trace the transfer, and share a live receipt. All you need is a Litecoin transaction hash.'}
-        </p>
 
         <div className="tx-card tx-in tx-d3">
           <div className="tx-card-top">
             <div>
-              <span className="tx-label">{txid ? 'TRANSACTION ID' : 'LITECOIN RECEIPT LOOKUP'}</span>
-              {txid ? (
-                <button type="button" className="tx-copyable" onClick={() => copy(txid, 'Transaction hash copied')}>
-                  <code>{short(txid, 18, 16)}</code>
-                  <CopyIcon />
-                </button>
-              ) : (
-                <code style={{ opacity: 0.4 }}>—</code>
-              )}
+              <span className="tx-label">TRANSACTION ID</span>
+              <button type="button" className="tx-copyable" onClick={() => copy(txid, 'Transaction hash copied')}>
+                <code>{short(txid, 18, 16)}</code>
+                <CopyIcon />
+              </button>
             </div>
             <span className={`tx-status ${status.className}`}>
               <i className="tx-dot" /> {status.label}
             </span>
           </div>
-
-          {/* ── No hash: lookup form ── */}
-          {!txid && (
-            <form className="tx-lookup" onSubmit={submitLookup}>
-              <label className="tx-input-label" htmlFor="tx-hash">Transaction hash</label>
-              <div className="tx-field">
-                <input
-                  id="tx-hash"
-                  className="tx-input"
-                  aria-describedby="tx-lookup-hint"
-                  aria-invalid={Boolean(lookupError)}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  enterKeyHint="go"
-                  value={lookup}
-                  onChange={(event) => { setLookup(event.target.value); setLookupError(''); }}
-                  placeholder="Paste a transaction hash or explorer link"
-                  aria-label="Litecoin transaction hash"
-                  spellCheck="false"
-                  autoComplete="off"
-                />
-                <button type="submit" className="tx-btn">Open receipt →</button>
-              </div>
-              <p id="tx-lookup-hint" aria-live="polite" className={`tx-hint${lookupError ? ' bad' : ''}`}>
-                {lookupError || 'Find the transaction hash in your wallet’s transfer history. No wallet connection needed.'}
-              </p>
-            </form>
-          )}
 
           {/* ── Error ── */}
           {txid && error && (
@@ -426,7 +359,6 @@ export default function TransactionPage({ txid, onNavigate }) {
               <p>{error} It may be too recent to have propagated, or the hash may belong to another chain.</p>
               <div className="tx-actions" style={{ border: 0, padding: '4px 0 0' }}>
                 <a className="tx-btn" href={`${EXPLORER}${txid}`} target="_blank" rel="noreferrer">Try the explorer ↗</a>
-                <a className="tx-btn ghost" href="/tx">Look up another</a>
               </div>
             </div>
           )}
@@ -546,7 +478,6 @@ export default function TransactionPage({ txid, onNavigate }) {
                 <a className="tx-btn ghost" href={`${EXPLORER}${txid}`} target="_blank" rel="noreferrer">
                   Open explorer ↗
                 </a>
-                <a className="tx-btn ghost" href="/tx">Look up another</a>
               </div>
             </>
           )}
