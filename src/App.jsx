@@ -34,6 +34,7 @@ import { SceneController } from './camera.jsx';
 import { FloatingPanel } from './Panel.jsx';
 import { LYRICS } from './lyrics.js';
 import './App.css';
+import TransactionPage from './TransactionPage.jsx';
 
 // Lazily loaded: the standalone page needs none of the 3D stack.
 const HookloaderPage = lazy(() =>
@@ -50,11 +51,18 @@ const CARD_DELAY = INTRO_HOLD + 2.6;
 // ═══════════════════════════════════════════════════════════
 
 const HOOKLOADER_PATTERN = /(hookloader|download|projects)/;
+const TRANSACTION_PATTERN = /^\/tx\/([a-f0-9]{16,})$/i;
 
 const readRoute = () => {
   if (typeof window === 'undefined') return 'main';
   const target = `${window.location.pathname}${window.location.hash}`.toLowerCase();
+  if (TRANSACTION_PATTERN.test(window.location.pathname)) return 'transaction';
   return HOOKLOADER_PATTERN.test(target) ? 'hookloader' : 'main';
+};
+
+const readTransactionId = () => {
+  if (typeof window === 'undefined') return '';
+  return window.location.pathname.match(TRANSACTION_PATTERN)?.[1] || '';
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -459,6 +467,10 @@ export default function App() {
         <HookloaderPage onNavigateHome={() => navigate('/')} reducedMotion={reducedMotion} />
       </Suspense>
     );
+  }
+
+  if (route === 'transaction') {
+    return <TransactionPage txid={readTransactionId()} />;
   }
 
   const activeTitle = activeSection
