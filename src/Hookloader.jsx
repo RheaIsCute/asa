@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { playSFX } from './audio.js';
 import { Icon, VIRUSTOTAL_URL } from './sections.jsx';
+import './App.css';
 
 // ═══════════════════════════════════════════════════════════
 // AMBIENT PARTICLE FIELD
