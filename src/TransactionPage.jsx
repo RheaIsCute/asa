@@ -9,9 +9,12 @@ const PRICE_API = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs
 const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
 /** Litecoin is widely treated as settled at six confirmations. */
 const FINALITY = 6;
-/** How often an unconfirmed transaction is re-checked. */
-const POLL_MS = 10_000;
-const BALANCE_POLL_MS = 60_000;
+/**
+ * The free BlockCypher tier is intentionally rate-limited. These are status
+ * displays rather than trading data, so favour a modest refresh rate.
+ */
+const POLL_MS = 5 * 60_000;
+const BALANCE_POLL_MS = 15 * 60_000;
 
 const short = (value = '', left = 12, right = 10) =>
   value.length > left + right ? `${value.slice(0, left)}…${value.slice(-right)}` : value;
@@ -352,8 +355,8 @@ export default function TransactionPage({ txid }) {
     return { from, to };
   }, [parties, tx]);
 
-  // Refresh both wallet balances independently of the transaction poll so the
-  // receipt stays useful while either wallet receives new funds.
+  // Refresh wallet balances occasionally; opening several receipts must not
+  // consume the provider quota just to display a near-real-time figure.
   useEffect(() => {
     const addresses = [...new Set([walletAddresses.from, walletAddresses.to].filter(Boolean))];
     if (!addresses.length) {
