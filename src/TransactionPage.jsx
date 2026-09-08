@@ -4,6 +4,7 @@ import TxSigil from './TxSigil.jsx';
 import './tx.css';
 
 const API_ROOT = 'https://api.blockcypher.com/v1/ltc/main/txs/';
+const FALLBACK_TX_API = 'https://litecoinspace.org/api/tx/';
 const BALANCE_API = 'https://litecoinspace.org/api/address/';
 const PRICE_API = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd';
 const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
@@ -33,6 +34,33 @@ const normaliseBalance = (data) => {
     total_received: data.chain_stats?.funded_txo_sum || 0,
   };
 };
+
+const normaliseLitecoinSpaceTx = (data) => ({
+  id: data.txid,
+  confirmations: data.status?.confirmed ? FINALITY : 0,
+  inputs: (data.vin || []).map((input) => ({
+    addresses: input.prevout?.scriptpubkey_address ? [input.prevout.scriptpubkey_address] : [],
+    output_value: input.prevout?.value || 0,
+  })),
+  outputs: (data.vout || []).map((output) => ({
+    addresses: output.scriptpubkey_address ? [output.scriptpubkey_address] : [],
+    value: output.value || 0,
+  })),
+  fees: data.fee || 0,
+  block_height: data.status?.block_height || 0,
+  size: data.size || 0,
+  received: data.status?.block_time ? new Date(data.status.block_time * 1000).toISOString() : null,
+  confirmed: data.status?.block_time ? new Date(data.status.block_time * 1000).toISOString() : null,
+});
+
+async function fetchTransaction(txid) {
+  const primary = await fetch(`${API_ROOT}${encodeURIComponent(txid)}`);
+  if (primary.ok) return primary.json();
+
+  const fallback = await fetch(`${FALLBACK_TX_API}${encodeURIComponent(txid)}`);
+  if (!fallback.ok) throw new Error('transaction unavailable');
+  return normaliseLitecoinSpaceTx(await fallback.json());
+}
 
 const reducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -286,11 +314,7 @@ export default function TransactionPage({ txid }) {
     let timer = 0;
 
     const load = () => {
-      fetch(`${API_ROOT}${encodeURIComponent(txid)}`)
-        .then((response) => {
-          if (!response.ok) throw new Error('not found');
-          return response.json();
-        })
+      fetchTransaction(txid)
         .then((data) => {
           if (!active) return;
           setRecord({ id: txid, data });
