@@ -418,18 +418,25 @@
   text-shadow: 0 0 12px rgba(var(--violet-rgb), 0.9);
 }
 .tx-ring { position: relative; display: grid; place-items: center; flex-shrink: 0; }
+.tx-ring::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(var(--violet-rgb), 0.65);
+  pointer-events: none;
+}
 .tx-ring svg { transform: rotate(-90deg); }
 .tx-ring circle { fill: none; stroke-linecap: round; }
 .tx-ring .track { stroke: rgba(255, 255, 255, 0.08); }
 .tx-ring .fill {
   stroke: var(--violet);
-  filter: drop-shadow(0 0 6px rgba(var(--violet-rgb), 0.7));
   transition: stroke-dashoffset 1.1s var(--ease);
 }
-.tx-ring .fill.done { stroke: var(--lime); filter: drop-shadow(0 0 6px rgba(189, 255, 102, 0.7)); }
+.tx-ring .fill.done { stroke: var(--violet); }
 .tx-ring .scanner {
   stroke: var(--violet);
-  filter: drop-shadow(0 0 5px rgba(var(--violet-rgb), 0.82));
   transform-origin: 36px 36px;
   animation: tx-confirmation-scan 1.8s linear infinite;
 }

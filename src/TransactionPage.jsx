@@ -150,7 +150,7 @@ function ConfirmationRing({ confirmations }) {
       </svg>
       <span className="tx-ring-label">
         <b>{confirmations > 999 ? `${Math.floor(confirmations / 1000)}k` : confirmations}</b>
-        <span>{done ? 'SETTLED' : `/${FINALITY}`}</span>
+        {!done && <span>/{FINALITY}</span>}
       </span>
     </div>
   );
