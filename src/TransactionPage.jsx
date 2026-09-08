@@ -9,7 +9,7 @@ const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
 /** Litecoin is widely treated as settled at six confirmations. */
 const FINALITY = 6;
 /** How often an unconfirmed transaction is re-checked. */
-const POLL_MS = 20_000;
+const POLL_MS = 10_000;
 
 const short = (value = '', left = 12, right = 10) =>
   value.length > left + right ? `${value.slice(0, left)}…${value.slice(-right)}` : value;
@@ -79,7 +79,10 @@ function ConfirmationRing({ confirmations }) {
   const done = ratio >= 1;
 
   return (
-    <div className="tx-ring">
+    <div
+      className={`tx-ring${done ? ' is-settled' : ' is-watching'}`}
+      aria-label={done ? 'Transaction settled' : `${confirmations} of ${FINALITY} confirmations; monitoring the Litecoin network live`}
+    >
       <svg width="72" height="72">
         <circle className="track" cx="36" cy="36" r={radius} strokeWidth="4" />
         <circle
@@ -91,10 +94,20 @@ function ConfirmationRing({ confirmations }) {
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - ratio)}
         />
+        {!done && (
+          <circle
+            className="scanner"
+            cx="36"
+            cy="36"
+            r={radius}
+            strokeWidth="2"
+            strokeDasharray="10 178.5"
+          />
+        )}
       </svg>
       <span className="tx-ring-label">
         <b>{confirmations > 999 ? `${Math.floor(confirmations / 1000)}k` : confirmations}</b>
-        <span>{done ? 'SETTLED' : `OF ${FINALITY}`}</span>
+        <span>{done ? 'SETTLED' : confirmations === 0 ? 'SCANNING' : `OF ${FINALITY}`}</span>
       </span>
     </div>
   );
@@ -296,9 +309,29 @@ export default function TransactionPage({ txid }) {
     })),
   }), [tx]);
 
+  // UTXO transactions return any unspent balance to the sender as a change
+  // output. The headline should show what left the wallet, not every output
+  // (which would count that returned balance as payment too).
+  const sentAmount = useMemo(() => {
+    if (!tx) return 0;
+    const inputAddresses = new Set(
+      (tx.inputs || [])
+        .flatMap((input) => input.addresses || [])
+        .map((address) => address.toLowerCase()),
+    );
+    const externalOutputs = (tx.outputs || []).filter((output) =>
+      !(output.addresses || []).some((address) => inputAddresses.has(address.toLowerCase())),
+    );
+
+    // Keep a useful result for transactions where the sender deliberately
+    // pays one of their own addresses and there is no externally identifiable
+    // recipient.
+    return externalOutputs.reduce((sum, output) => sum + (output.value || 0), 0) || totals.output;
+  }, [tx, totals.output]);
+
   const confirmations = tx?.confirmations || 0;
-  const animatedLtc = useCountUp(toLtc(totals.output), 1500);
-  const animatedUsd = useCountUp(price ? toLtc(totals.output) * price : 0, 1700);
+  const animatedLtc = useCountUp(toLtc(sentAmount), 1500);
+  const animatedUsd = useCountUp(price ? toLtc(sentAmount) * price : 0, 1700);
 
   const copy = useCallback(async (value, message) => {
     try {
@@ -379,7 +412,7 @@ export default function TransactionPage({ txid }) {
             <>
               <div className="tx-hero">
                 <div>
-                  <span className="tx-label">TOTAL OUTPUT</span>
+                  <span className="tx-label">AMOUNT SENT</span>
                   <strong className="tx-amount">
                     {animatedLtc.toFixed(8)}<b>LTC</b>
                   </strong>
