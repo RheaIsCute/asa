@@ -4,7 +4,7 @@ import TxSigil from './TxSigil.jsx';
 import './tx.css';
 
 const API_ROOT = 'https://api.blockcypher.com/v1/ltc/main/txs/';
-const BALANCE_API = 'https://api.blockcypher.com/v1/ltc/main/addrs/';
+const BALANCE_API = 'https://litecoinspace.org/api/address/';
 const PRICE_API = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd';
 const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
 /** Litecoin is widely treated as settled at six confirmations. */
@@ -23,6 +23,16 @@ const toLtc = (satoshis = 0) => Number(satoshis) / 100_000_000;
 const formatLtc = (satoshis = 0) => toLtc(satoshis).toFixed(8);
 const formatUsd = (amount) =>
   amount.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+
+const normaliseBalance = (data) => {
+  const confirmed = (data.chain_stats?.funded_txo_sum || 0) - (data.chain_stats?.spent_txo_sum || 0);
+  const unconfirmed = (data.mempool_stats?.funded_txo_sum || 0) - (data.mempool_stats?.spent_txo_sum || 0);
+  return {
+    balance: confirmed,
+    unconfirmed_balance: unconfirmed,
+    total_received: data.chain_stats?.funded_txo_sum || 0,
+  };
+};
 
 const reducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -373,7 +383,7 @@ export default function TransactionPage({ txid }) {
         try {
           const response = await fetch(`${BALANCE_API}${encodeURIComponent(address)}`, { signal: controller.signal });
           if (!response.ok) throw new Error('balance unavailable');
-          return [address, await response.json()];
+          return [address, normaliseBalance(await response.json())];
         } catch {
           return [address, null];
         }
