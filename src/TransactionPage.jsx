@@ -4,12 +4,14 @@ import TxSigil from './TxSigil.jsx';
 import './tx.css';
 
 const API_ROOT = 'https://api.blockcypher.com/v1/ltc/main/txs/';
+const BALANCE_API = 'https://api.blockcypher.com/v1/ltc/main/addrs/';
 const PRICE_API = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd';
 const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
 /** Litecoin is widely treated as settled at six confirmations. */
 const FINALITY = 6;
 /** How often an unconfirmed transaction is re-checked. */
 const POLL_MS = 10_000;
+const BALANCE_POLL_MS = 60_000;
 
 const short = (value = '', left = 12, right = 10) =>
   value.length > left + right ? `${value.slice(0, left)}…${value.slice(-right)}` : value;
@@ -110,6 +112,35 @@ function ConfirmationRing({ confirmations }) {
         <span>{done ? 'SETTLED' : `/${FINALITY}`}</span>
       </span>
     </div>
+  );
+}
+
+function WalletBalanceCard({ label, address, balance, price, onCopy }) {
+  const value = (satoshis = 0) => `${formatLtc(satoshis)} LTC`;
+  const usd = (satoshis = 0) => (price ? formatUsd(toLtc(satoshis) * price) : '—');
+
+  return (
+    <article className="tx-wallet-card">
+      <div className="tx-wallet-card-head">
+        <span className="tx-label">{label}</span>
+        <span className={`tx-wallet-state${balance ? '' : ' is-loading'}`}>
+          <i className="tx-dot" /> {balance ? 'LIVE' : 'LOADING'}
+        </span>
+      </div>
+      <button type="button" className="tx-wallet-address tx-copyable" onClick={() => onCopy(address, 'Wallet address copied')}>
+        <code>{short(address, 17, 12)}</code>
+        <CopyIcon />
+      </button>
+      {balance ? (
+        <div className="tx-wallet-stats">
+          <div><span>Confirmed</span><b>{value(balance.balance)}</b><small>{usd(balance.balance)}</small></div>
+          <div><span>Unconfirmed</span><b>{value(balance.unconfirmed_balance)}</b><small>{usd(balance.unconfirmed_balance)}</small></div>
+          <div><span>Total received</span><b>{value(balance.total_received)}</b><small>{usd(balance.total_received)}</small></div>
+        </div>
+      ) : (
+        <div className="tx-wallet-loading">Fetching wallet balance…</div>
+      )}
+    </article>
   );
 }
 
@@ -222,6 +253,7 @@ export default function TransactionPage({ txid }) {
   const [toast, setToast] = useState('');
   const [expanded, setExpanded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [balances, setBalances] = useState({});
 
 
   const notify = useCallback((message) => {
@@ -308,6 +340,54 @@ export default function TransactionPage({ txid }) {
       value: item.value || 0,
     })),
   }), [tx]);
+
+  const walletAddresses = useMemo(() => {
+    const from = parties.inputs.find((item) => item.address !== 'Unknown')?.address || '';
+    const inputAddresses = new Set(
+      (tx?.inputs || []).flatMap((input) => input.addresses || []).map((address) => address.toLowerCase()),
+    );
+    const to = parties.outputs.find((item) => (
+      item.address !== 'OP_RETURN' && !inputAddresses.has(item.address.toLowerCase())
+    ))?.address || parties.outputs.find((item) => item.address !== 'OP_RETURN')?.address || '';
+    return { from, to };
+  }, [parties, tx]);
+
+  // Refresh both wallet balances independently of the transaction poll so the
+  // receipt stays useful while either wallet receives new funds.
+  useEffect(() => {
+    const addresses = [...new Set([walletAddresses.from, walletAddresses.to].filter(Boolean))];
+    if (!addresses.length) {
+      setBalances({});
+      return undefined;
+    }
+
+    let active = true;
+    let controller;
+    const loadBalances = () => {
+      controller?.abort();
+      controller = new AbortController();
+      Promise.all(addresses.map(async (address) => {
+        try {
+          const response = await fetch(`${BALANCE_API}${encodeURIComponent(address)}`, { signal: controller.signal });
+          if (!response.ok) throw new Error('balance unavailable');
+          return [address, await response.json()];
+        } catch {
+          return [address, null];
+        }
+      })).then((entries) => {
+        if (!active) return;
+        setBalances(Object.fromEntries(entries));
+      });
+    };
+
+    loadBalances();
+    const timer = window.setInterval(loadBalances, BALANCE_POLL_MS);
+    return () => {
+      active = false;
+      controller?.abort();
+      window.clearInterval(timer);
+    };
+  }, [walletAddresses.from, walletAddresses.to]);
 
   // UTXO transactions return any unspent balance to the sender as a change
   // output. The headline should show what left the wallet, not every output
@@ -422,7 +502,10 @@ export default function TransactionPage({ txid }) {
                     network fee {formatLtc(tx.fees || 0)} LTC
                   </span>
                 </div>
-                <ConfirmationRing confirmations={confirmations} />
+                <div className="tx-ring-wrap">
+                  <span className="tx-ring-caption">CONFIRMATIONS</span>
+                  <ConfirmationRing confirmations={confirmations} />
+                </div>
                 <TxSigil txid={txid} />
               </div>
 
@@ -458,6 +541,29 @@ export default function TransactionPage({ txid }) {
                   <span>{tx.confirmed ? new Date(tx.confirmed).toLocaleString() : 'Pending'}</span>
                 </div>
               </div>
+
+              <section className="tx-wallets" aria-label="Wallet balances">
+                <div className="tx-wallets-head">
+                  <span className="tx-label">WALLET BALANCES</span>
+                  <span className="tx-wallets-refresh"><i className="tx-dot" /> UPDATES LIVE</span>
+                </div>
+                <div className="tx-wallet-grid">
+                  <WalletBalanceCard
+                    label="FROM WALLET"
+                    address={walletAddresses.from || 'Unknown'}
+                    balance={balances[walletAddresses.from]}
+                    price={price}
+                    onCopy={copy}
+                  />
+                  <WalletBalanceCard
+                    label="TO WALLET"
+                    address={walletAddresses.to || 'Unknown'}
+                    balance={balances[walletAddresses.to]}
+                    price={price}
+                    onCopy={copy}
+                  />
+                </div>
+              </section>
 
               <div className="tx-flow">
                 <div className="tx-flow-head">

@@ -410,6 +410,13 @@
 .tx-usd { color: var(--lime); }
 
 /* confirmation ring */
+.tx-ring-wrap { display: grid; justify-items: center; gap: 8px; flex-shrink: 0; }
+.tx-ring-caption {
+  color: var(--violet);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 12px rgba(var(--violet-rgb), 0.9);
+}
 .tx-ring { position: relative; display: grid; place-items: center; flex-shrink: 0; }
 .tx-ring svg { transform: rotate(-90deg); }
 .tx-ring circle { fill: none; stroke-linecap: round; }
@@ -487,6 +494,37 @@
 .tx-grid > div > span:last-child { color: rgba(255, 255, 255, 0.7); font-size: 0.76rem; }
 .tx-grid code { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx-grid .tx-copyable { max-width: 100%; }
+
+/* Wallet balance cards */
+.tx-wallets {
+  padding: 24px 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tx-wallets-head,
+.tx-wallet-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tx-wallets-head .tx-label,
+.tx-wallet-card-head .tx-label { margin-bottom: 0; }
+.tx-wallets-refresh,
+.tx-wallet-state { display: inline-flex; align-items: center; gap: 7px; color: var(--faint); font-size: 0.62rem; letter-spacing: 0.1em; white-space: nowrap; }
+.tx-wallet-state.is-loading { color: var(--violet); }
+.tx-wallet-state.is-loading .tx-dot { background: var(--violet); box-shadow: 0 0 10px var(--violet); }
+.tx-wallet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.tx-wallet-card { min-width: 0; padding: 16px; border: 1px solid rgba(var(--violet-rgb), 0.2); border-radius: 12px; background: rgba(255, 255, 255, 0.025); }
+.tx-wallet-address { display: flex; width: 100%; margin: 12px 0 15px; overflow: hidden; }
+.tx-wallet-address code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-wallet-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tx-wallet-stats > div { display: grid; gap: 4px; min-width: 0; }
+.tx-wallet-stats span { color: var(--faint); font-size: 0.62rem; }
+.tx-wallet-stats b { overflow: hidden; color: #fff; font-size: 0.68rem; font-weight: 500; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.tx-wallet-stats small { overflow: hidden; color: var(--lime); font-size: 0.6rem; text-overflow: ellipsis; white-space: nowrap; }
+.tx-wallet-loading { padding: 8px 0 2px; color: var(--faint); font-size: 0.68rem; }
 
 /* ── Flow diagram ──────────────────────────────────────── */
 
@@ -893,6 +931,7 @@ body:has(.tx-page) { user-select: text; -webkit-user-select: text; cursor: auto;
   .tx-height { display: none; }
   .tx-shell { width: calc(100% - 32px); padding-top: 36px; padding-bottom: max(32px, env(safe-area-inset-bottom)); }
   .tx-card-top, .tx-lookup, .tx-hero, .tx-grid, .tx-flow, .tx-actions { padding: 20px; }
+  .tx-wallets { padding: 20px; }
   .tx-card-top { flex-wrap: wrap; }
   .tx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; }
   .tx-field { flex-direction: column; }
@@ -903,6 +942,8 @@ body:has(.tx-page) { user-select: text; -webkit-user-select: text; cursor: auto;
   .tx-node { padding: 10px 8px; }
   .tx-node .val { font-size: 10px; }
   .tx-flow-values { flex-wrap: wrap; gap: 8px; }
+  .tx-wallet-grid { grid-template-columns: 1fr; }
+  .tx-wallet-stats { gap: 8px; }
   .tx-aurora { animation: none; filter: blur(55px); }
 }
 @media (max-width: 380px) { .tx-grid { grid-template-columns: 1fr; } .tx-brand { font-size: 12px; } .tx-card-top, .tx-lookup, .tx-hero, .tx-grid, .tx-flow, .tx-actions { padding: 16px; } }
