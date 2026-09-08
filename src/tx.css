@@ -421,8 +421,8 @@
 }
 .tx-ring .fill.done { stroke: var(--lime); filter: drop-shadow(0 0 6px rgba(189, 255, 102, 0.7)); }
 .tx-ring .scanner {
-  stroke: #ffc466;
-  filter: drop-shadow(0 0 5px rgba(255, 196, 102, 0.82));
+  stroke: var(--violet);
+  filter: drop-shadow(0 0 5px rgba(var(--violet-rgb), 0.82));
   transform-origin: 36px 36px;
   animation: tx-confirmation-scan 1.8s linear infinite;
 }
@@ -430,7 +430,7 @@
   content: '';
   position: absolute;
   inset: -5px;
-  border: 1px solid rgba(255, 196, 102, 0.22);
+  border: 1px solid rgba(var(--violet-rgb), 0.3);
   border-radius: 50%;
   animation: tx-confirmation-ping 2.2s ease-out infinite;
 }
