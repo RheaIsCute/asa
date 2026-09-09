@@ -5,7 +5,8 @@ import './tx.css';
 
 const API_ROOT = 'https://api.blockcypher.com/v1/ltc/main/txs/';
 const FALLBACK_TX_API = 'https://litecoinspace.org/api/tx/';
-const BALANCE_API = 'https://litecoinspace.org/api/address/';
+const BALANCE_API = 'https://api.blockcypher.com/v1/ltc/main/addrs/';
+const FALLBACK_BALANCE_API = 'https://litecoinspace.org/api/address/';
 const PRICE_API = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd';
 const EXPLORER = 'https://live.blockcypher.com/ltc/tx/';
 /** Litecoin is widely treated as settled at six confirmations. */
@@ -34,6 +35,16 @@ const normaliseBalance = (data) => {
     total_received: data.chain_stats?.funded_txo_sum || 0,
   };
 };
+
+async function fetchBalance(address, signal) {
+  const encodedAddress = encodeURIComponent(address);
+  const primary = await fetch(`${BALANCE_API}${encodedAddress}/balance`, { signal });
+  if (primary.ok) return primary.json();
+
+  const fallback = await fetch(`${FALLBACK_BALANCE_API}${encodedAddress}`, { signal });
+  if (!fallback.ok) throw new Error('balance unavailable');
+  return normaliseBalance(await fallback.json());
+}
 
 const normaliseLitecoinSpaceTx = (data) => ({
   id: data.txid,
@@ -405,9 +416,7 @@ export default function TransactionPage({ txid }) {
       controller = new AbortController();
       Promise.all(addresses.map(async (address) => {
         try {
-          const response = await fetch(`${BALANCE_API}${encodeURIComponent(address)}`, { signal: controller.signal });
-          if (!response.ok) throw new Error('balance unavailable');
-          return [address, normaliseBalance(await response.json())];
+          return [address, await fetchBalance(address, controller.signal)];
         } catch {
           return [address, null];
         }
