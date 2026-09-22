@@ -6,6 +6,7 @@ const HookloaderPage = lazy(() =>
   import('./Hookloader.jsx').then((m) => ({ default: m.HookloaderPage }))
 );
 const TransactionPage = lazy(() => import('./TransactionPage.jsx'));
+const CryptoGuide = lazy(() => import('./CryptoGuide.jsx'));
 
 // ═══════════════════════════════════════════════════════════
 // ROUTING
@@ -14,11 +15,13 @@ const TransactionPage = lazy(() => import('./TransactionPage.jsx'));
 const HOOKLOADER_PATTERN = /(hookloader|download|projects)/;
 // Only direct receipt links render the transaction page. /tx itself stays on the home experience.
 const TRANSACTION_PATTERN = /^\/tx\/([a-f0-9]{16,})\/?$/i;
+const CRYPTO_GUIDE_PATTERN = /^\/(crypto|crypto-guide)\/?$/i;
 
 const readRoute = () => {
   if (typeof window === 'undefined') return 'main';
   const target = `${window.location.pathname}${window.location.hash}`.toLowerCase();
   if (TRANSACTION_PATTERN.test(window.location.pathname)) return 'transaction';
+  if (CRYPTO_GUIDE_PATTERN.test(window.location.pathname)) return 'crypto-guide';
   return HOOKLOADER_PATTERN.test(target) ? 'hookloader' : 'main';
 };
 
@@ -61,6 +64,14 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#08050d' }} />}>
         <TransactionPage txid={readTransactionId()} />
+      </Suspense>
+    );
+  }
+
+  if (route === 'crypto-guide') {
+    return (
+      <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#09070d' }} />}>
+        <CryptoGuide />
       </Suspense>
     );
   }
